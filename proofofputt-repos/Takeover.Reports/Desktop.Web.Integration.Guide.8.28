@@ -1,0 +1,243 @@
+# Desktop-Web Integration Architecture Guide
+**Date:** August 28, 2025  
+**Integration Type:** Desktop Computer Vision → Web Analytics Pipeline  
+**Status:** Complete Implementation Ready  
+
+---
+
+## Overview
+
+This integration connects the desktop application's local computer vision processing with the web application's analytics and verification systems. The desktop app generates detailed session data locally, then submits it to the web backend for processing and display in the web dashboard.
+
+## **Architecture Flow**
+
+```
+Desktop App (Local CV) → Backend API → Web Dashboard
+       ↓                    ↓              ↓
+   1. Session Start    → Health Check  → Real-time Stats
+   2. Frame Analysis   → Data Submit   → Career Analytics  
+   3. Putt Classification → Verification → League Integration
+   4. Session End      → Processing    → Historical Data
+```
+
+---
+
+## **1. Desktop Session Management**
+
+### **Core Components Created:**
+
+**`desktop/src-tauri/src/session_data.rs`**
+- **PuttLogEntry**: Frame-by-frame putt data structure
+- **SessionMetadata**: Session context and settings
+- **SessionSubmissionData**: Complete session package
+- **SessionVerification**: Data integrity checking
+
+**Key Features:**
+- Generates same data format as backend `SessionReporter` expects
+- Real-time session statistics calculation
+- Data integrity verification with hash validation
+- Support for practice, league, and duel session types
+
+### **Sample Data Structure:**
+```rust
+PuttLogEntry {
+    current_frame_time: 45.67,
+    classification: "MAKE",
+    detailed_classification: "MAKE - Direct to Hole", 
+    ball_x: 298.4,
+    ball_y: 201.2,
+    transition_history: "WAITING->PUTT_IN_PROGRESS->BALL_IN_HOLE"
+}
+```
+
+---
+
+## **2. Backend API Integration**
+
+### **New Endpoints Created:**
+
+**`POST /sessions/submit`** - Desktop session submission
+```json
+{
+  "session_data": {
+    "metadata": {
+      "player_id": 123,
+      "session_id": "uuid-string",
+      "start_time": "2025-08-28T15:30:00Z",
+      "session_type": "practice"
+    },
+    "putt_log_entries": [...],
+    "session_summary": {
+      "total_putts": 45,
+      "total_makes": 32,
+      "session_duration_seconds": 458.67
+    }
+  },
+  "verification": {
+    "verification_hash": "abc123...",
+    "data_integrity_check": true
+  }
+}
+```
+
+**`GET /sessions/{id}/verify`** - Session processing verification
+**`GET /health`** - Desktop connectivity check
+
+### **Integration with Existing Systems:**
+- Uses existing `SessionReporter` class for processing
+- Integrates with `data_manager.store_session_results()`
+- Maintains compatibility with web dashboard analytics
+
+---
+
+## **3. Desktop UI Components**
+
+### **`DesktopSession.jsx`** - Session Control Panel
+**Features:**
+- Player login integration
+- Session start/stop controls  
+- Real-time session status
+- Backend connectivity indicators
+- Offline mode support
+
+### **`DesktopAnalytics.jsx`** - Analytics Integration
+**Features:**
+- Current session real-time stats
+- Career analytics from web backend
+- Data flow visualization
+- Putt simulation for demonstration
+- Web backend synchronization
+
+**Visual Data Flow Indicator:**
+```
+🖥️ Desktop Session → ☁️ Backend Processing → 📊 Web Analytics
+```
+
+---
+
+## **4. Session Data Verification**
+
+### **Multi-Level Verification System:**
+
+**1. Data Integrity Checking:**
+- Hash-based verification of session data
+- Frame count vs classification count validation
+- Timestamp sequence verification
+
+**2. Backend Processing Verification:**
+- Confirms data received and processed
+- Validates statistics calculation accuracy
+- Stores processing metadata
+
+**3. Web Dashboard Integration:**
+- Real-time analytics updates
+- Historical data consistency
+- Cross-platform data synchronization
+
+---
+
+## **5. Demonstration & Testing**
+
+### **Built-in Testing Features:**
+
+**Putt Simulation System:**
+```javascript
+// Add make/miss for testing
+await invoke('add_putt_data', {
+  classification: 'MAKE',
+  detailedClassification: 'MAKE - Direct to Hole',
+  ballX: 298.4,
+  ballY: 201.2
+});
+```
+
+**Real-time Analytics Display:**
+- Current session stats update immediately
+- Backend submission status tracking
+- Web analytics refresh integration
+
+### **Testing Workflow:**
+1. **Start Desktop Session** - Initializes session data collection
+2. **Simulate Putts** - Add make/miss data for testing
+3. **Monitor Real-time Stats** - Verify local calculations
+4. **Stop Session** - Submit data to backend
+5. **Verify Web Integration** - Check analytics in web dashboard
+
+---
+
+## **6. Production Deployment**
+
+### **Environment Configuration:**
+```rust
+// Desktop app automatically detects environment
+let api_base_url = std::env::var("API_BASE_URL")
+    .unwrap_or_else(|_| "http://127.0.0.1:5001".to_string());
+```
+
+**Development:** `http://127.0.0.1:5001` (local backend)  
+**Production:** `https://your-backend.vercel.app` (deployed backend)
+
+### **Offline Capability:**
+- Sessions continue locally if backend unavailable
+- Data cached for later submission
+- Graceful degradation of web features
+
+---
+
+## **7. Future Computer Vision Integration**
+
+### **Current State:**
+- Desktop session management ✅
+- Data submission pipeline ✅  
+- Web analytics integration ✅
+- Verification system ✅
+
+### **Next Phase (CV Integration):**
+```
+desktop/python/
+├── video_processor.py    # Move from backend
+├── putt_classifier.py   # Move from backend  
+├── run_tracker.py       # Move from backend
+└── requirements.txt     # Python dependencies
+```
+
+**Integration Points:**
+- Replace `add_putt_data` simulation with real CV processing
+- Connect YOLOv8 detection to `PuttLogEntry` generation
+- Implement ROI analysis → classification pipeline
+
+---
+
+## **8. Key Benefits Achieved**
+
+### **For Users:**
+- **Privacy**: No video streaming to server
+- **Performance**: Real-time local processing
+- **Reliability**: Offline session capability
+- **Integration**: Seamless web analytics sync
+
+### **For System:**
+- **Scalability**: Each desktop handles own processing
+- **Cost Efficiency**: Reduced server computational load
+- **Data Integrity**: Multi-level verification
+- **Compatibility**: Uses existing web analytics infrastructure
+
+---
+
+## **Usage Instructions**
+
+### **Development Testing:**
+1. Start backend: `cd backend && python api.py`
+2. Start desktop app: `cd desktop && npm run tauri dev`
+3. Login with player ID
+4. Start session and simulate putts
+5. Stop session and verify web analytics
+
+### **Production Deployment:**
+1. Set `API_BASE_URL` environment variable in desktop build
+2. Deploy backend with new `/sessions/submit` endpoint
+3. Desktop sessions automatically sync with web analytics
+
+---
+
+This architecture provides a complete bridge between local computer vision processing and cloud-based analytics, maintaining the privacy and performance benefits of local processing while enabling the social and analytical features of the web platform.

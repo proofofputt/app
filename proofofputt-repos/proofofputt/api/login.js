@@ -13,16 +13,26 @@ export default function handler(req, res) {
     
     if (email === 'pop@proofofputt.com' && password === 'passwordpop123') {
       return res.status(200).json({
-        success: true,
         player_id: 1,
-        name: 'Pop',
+        name: 'Pop', 
         email: email,
-        token: 'mock-jwt-token'
+        stats: {
+          total_makes: 0,
+          total_misses: 0,
+          best_streak: 0,
+          make_percentage: 0,
+          total_putts: 0,
+          avg_distance: 0,
+          sessions_played: 0
+        },
+        sessions: [],
+        timezone: 'America/New_York',
+        subscription_status: 'active',
+        is_new_user: false
       });
     } else {
       return res.status(401).json({
-        success: false,
-        message: 'Invalid email or password'
+        error: 'Invalid credentials'
       });
     }
   }
