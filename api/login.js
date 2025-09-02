@@ -6,9 +6,6 @@ import jwt from 'jsonwebtoken';
 // environment variable when deployed on a platform like Vercel.
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false, // Required for NeonDB connections
-  },
 });
 
 export default async function handler(req, res) {
