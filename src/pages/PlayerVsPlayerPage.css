@@ -1,0 +1,137 @@
+.pvp-page {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 2rem auto;
+}
+
+.pvp-page h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+.player-selection-area {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  gap: 2rem;
+}
+
+.player-search-container {
+  width: 45%;
+  position: relative;
+}
+
+.player-search-container label {
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.player-search-container input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.search-results {
+  position: absolute;
+  width: 100%;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.search-result-item {
+  padding: 0.75rem;
+  cursor: pointer;
+}
+
+.search-result-item:hover {
+  background-color: #f0f2f5;
+}
+
+.comparison-area {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 1rem;
+}
+
+.player-card {
+  flex: 1;
+  padding: 1.5rem;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  text-align: center;
+}
+
+.player-card h3 {
+  font-size: 22px;
+  margin-bottom: 1.5rem;
+}
+
+.player-card .stat-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #eee;
+  font-size: 16px;
+}
+
+.player-card .stat-item:last-child {
+  border-bottom: none;
+}
+
+.player-card .stat-label {
+  color: #555;
+}
+
+.player-card .stat-value {
+  font-weight: 600;
+  color: #333;
+}
+
+.h2h-results {
+  flex: 0 0 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.h2h-results h4 {
+  margin: 0;
+  font-size: 18px;
+  color: #555;
+}
+
+.h2h-score {
+  font-size: 48px;
+  font-weight: bold;
+  margin: 1rem 0;
+  color: #333;
+}
+
+.pvp-loading,
+.pvp-error {
+  text-align: center;
+  margin-top: 3rem;
+  font-size: 18px;
+  color: #555;
+}
+
+.pvp-error {
+  color: #d93025;
+}

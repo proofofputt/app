@@ -1,0 +1,78 @@
+.fundraiser-create-page {
+  padding: 2rem;
+  max-width: 800px;
+  margin: 2rem auto;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.fundraiser-create-page h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+.fundraiser-form .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.fundraiser-form label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.fundraiser-form input[type="text"],
+.fundraiser-form input[type="number"],
+.fundraiser-form input[type="date"],
+.fundraiser-form textarea,
+.fundraiser-form select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.fundraiser-form textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.fundraiser-form .char-counter {
+  text-align: right;
+  font-size: 12px;
+  color: #888;
+}
+
+.fundraiser-submit-btn {
+  display: block;
+  width: 100%;
+  padding: 0.85rem;
+  border: none;
+  border-radius: 4px;
+  background-color: #28a745;
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.fundraiser-submit-btn:hover {
+  background-color: #218838;
+}
+
+.fundraiser-submit-btn:disabled {
+  background-color: #94d3a2;
+  cursor: not-allowed;
+}
+
+.fundraiser-form-error {
+  color: #d93025;
+  margin-bottom: 1rem;
+  text-align: center;
+}
