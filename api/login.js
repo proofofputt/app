@@ -33,7 +33,8 @@ export default async function handler(req, res) {
 
   try {
     // 1. Find the user by email
-    const userQuery = await pool.query('SELECT player_id, email, username, password_hash FROM players WHERE email = $1', [email]);
+    // The 'username' column was removed from the query as it does not exist in the current schema.
+    const userQuery = await pool.query('SELECT player_id, email, password_hash FROM players WHERE email = $1', [email]);
     const player = userQuery.rows[0];
 
     if (!player) {
@@ -58,11 +59,15 @@ export default async function handler(req, res) {
 
     const token = jwt.sign({ playerId: player.player_id, email: player.email }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
-    // 4. Prepare player data for the response (omitting the hash)
+    // 4. Prepare player data for the response.
+    // We derive a temporary username from the email to satisfy the client-side code.
+    // TODO: Consider adding a dedicated 'username' column to the 'players' table.
+    const username = player.email.split('@')[0];
     const playerResponseData = {
       player_id: player.player_id,
       email: player.email,
-      username: player.username,
+      username: username,
+      name: username, // The client also expects a "name" property.
     };
 
     console.log(`Login successful for player_id: ${player.player_id}`);
