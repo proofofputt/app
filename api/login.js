@@ -1,6 +1,6 @@
-import { Pool } from 'pg';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+const { Pool } = require('pg');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 let pool = null;
 if (process.env.DATABASE_URL) {
@@ -9,7 +9,7 @@ if (process.env.DATABASE_URL) {
   });
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
