@@ -32,20 +32,31 @@ const SessionHistoryPage = () => {
       if (!playerId) return;
       setIsLoading(true);
       setError('');
-      try {
-        // Fetch player stats to get their name and subscription status
-        const statsData = await apiGetCareerStats(playerId);
-        setViewedPlayer({ name: statsData.player_name, is_subscribed: statsData.is_subscribed });
 
-        // Always fetch session data - the subscription limiting will be handled in the UI
-        const sessionData = await apiGetPlayerSessions(playerId, currentPage);
+      const [statsResult, sessionsResult] = await Promise.allSettled([
+        apiGetCareerStats(playerId),
+        apiGetPlayerSessions(playerId, currentPage),
+      ]);
+
+      if (statsResult.status === 'fulfilled') {
+        const statsData = statsResult.value;
+        setViewedPlayer({ name: statsData.player_name, is_subscribed: statsData.is_subscribed });
+      } else {
+        console.error('Failed to load player stats:', statsResult.reason);
+        setError(statsResult.reason.message || 'Failed to load player stats.');
+      }
+
+      if (sessionsResult.status === 'fulfilled') {
+        const sessionData = sessionsResult.value;
         setSessions(sessionData.sessions || []);
         setTotalPages(sessionData.total_pages || 1);
-      } catch (err) {
-        setError(err.message || 'Failed to load session history.');
-      } finally {
-        setIsLoading(false);
+      } else {
+        console.warn('Could not load session history (this is expected for new players):', sessionsResult.reason);
+        setSessions([]);
+        setTotalPages(1);
       }
+
+      setIsLoading(false);
   }, [playerId, currentPage]);
 
   useEffect(() => {
@@ -107,8 +118,8 @@ const SessionHistoryPage = () => {
       {/* Show upgrade prompt for non-subscribers if they have more than 1 session */}
       {shouldShowUpgradePrompt && isViewingOwnProfile && <UpgradePrompt />}
       
-      {/* Show pagination only for subscribers */}
-      {isSubscribed && totalPages > 1 && (
+      {/* Show pagination if there are multiple pages of sessions */}
+      {totalPages > 1 && (
         <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
       )}
     </div>

@@ -60,12 +60,19 @@ const DuelsPage = () => {
     const fetchDuels = async () => {
         if (!playerData?.player_id) return;
         setIsLoading(true);
+        setError('');
         try {
             const data = await apiListDuels(playerData.player_id);
             setDuels(data || []);
         } catch (err) {
-            setError(err.message || 'Failed to load duels.');
-            showNotification(err.message || 'Failed to load duels.', true);
+            // A 404 is not a "real" error in this context, it just means no duels exist.
+            // We can check for a message that indicates this.
+            if (err.message && (err.message.includes('404') || err.message.toLowerCase().includes('not found'))) {
+                setDuels([]);
+            } else {
+                setError(err.message || 'Failed to load duels.');
+                showNotification(err.message || 'Failed to load duels.', true);
+            }
         } finally {
             setIsLoading(false);
         }

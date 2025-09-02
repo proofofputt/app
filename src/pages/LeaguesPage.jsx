@@ -63,13 +63,21 @@ const LeaguesPage = () => {
   const fetchLeagues = useCallback(async () => {
     if (!playerData?.player_id) return;
     setIsLoading(true);
+    setError('');
     try {
       const { my_leagues, public_leagues, pending_invites } = await apiListLeagues(playerData.player_id);
       setMyLeagues(my_leagues || []);
       setPublicLeagues(public_leagues || []);
       setPendingInvites(pending_invites || []);
     } catch (err) {
-      setError(err.message || 'Failed to load leagues.');
+      // A 404 is not a "real" error in this context, it just means no leagues exist.
+      if (err.message && (err.message.includes('404') || err.message.toLowerCase().includes('not found'))) {
+        setMyLeagues([]);
+        setPublicLeagues([]);
+        setPendingInvites([]);
+      } else {
+        setError(err.message || 'Failed to load leagues.');
+      }
     } finally {
       setIsLoading(false);
     }

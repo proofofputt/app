@@ -102,10 +102,10 @@ const FundraiserDetailPage = () => {
       </header>
 
       <div className="fundraiser-stats-grid">
-        <div className="stat-card"><h4>Amount Raised</h4><p className="stat-value">${fundraiser.amount_raised.toFixed(2)}</p></div>
-        <div className="stat-card"><h4>Goal</h4><p className="stat-value">${fundraiser.goal_amount.toFixed(2)}</p></div>
-        <div className="stat-card"><h4>Total Putts Made</h4><p className="stat-value">{fundraiser.total_putts_made}</p></div>
-        <div className="stat-card"><h4>Total Pledged Per Putt</h4><p className="stat-value">${totalPledgePerPutt.toFixed(2)}</p></div>
+        <div className="stat-card"><h4>Amount Raised</h4><p className="stat-value">${(fundraiser.amount_raised || 0).toFixed(2)}</p></div>
+        <div className="stat-card"><h4>Goal</h4><p className="stat-value">${(fundraiser.goal_amount || 0).toFixed(2)}</p></div>
+        <div className="stat-card"><h4>Total Putts Made</h4><p className="stat-value">{fundraiser.total_putts_made || 0}</p></div>
+        <div className="stat-card"><h4>Total Pledged Per Putt</h4><p className="stat-value">${(totalPledgePerPutt || 0).toFixed(2)}</p></div>
       </div>
 
       <div className="card chart-card">

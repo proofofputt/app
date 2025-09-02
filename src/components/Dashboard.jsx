@@ -53,38 +53,47 @@ function Dashboard() {
   // Load real player data
   useEffect(() => {
     const loadData = async () => {
-      if (!playerData?.player_id) return;
-
-      try {
-        // Load career stats
-        setIsLoadingStats(true);
-        const stats = await apiGetCareerStats(playerData.player_id);
-        setCareerStats(stats);
-      } catch (error) {
-        console.error('Error loading career stats:', error);
-        setActionError('Failed to load career stats');
-      } finally {
+      if (!playerData?.player_id) {
         setIsLoadingStats(false);
-      }
-
-      try {
-        // Load recent sessions
-        setIsLoadingSessions(true);
-        const sessions = await apiGetLatestSessions(playerData.player_id, 5);
-        setRecentSessions(sessions || []);
-      } catch (error) {
-        console.error('Error loading recent sessions:', error);
-        setActionError('Failed to load recent sessions');
-      } finally {
         setIsLoadingSessions(false);
+        return;
       }
 
-      try {
-        // Load leaderboards
-        const leaderboards = await apiGetLeaderboards();
-        setLeaderboardData(leaderboards);
-      } catch (error) {
-        console.error('Error loading leaderboards:', error);
+      setIsLoadingStats(true);
+      setIsLoadingSessions(true);
+      setActionError('');
+
+      const results = await Promise.allSettled([
+        apiGetCareerStats(playerData.player_id),
+        apiGetLatestSessions(playerData.player_id, 5),
+        apiGetLeaderboards(),
+      ]);
+
+      const [statsResult, sessionsResult, leaderboardsResult] = results;
+
+      if (statsResult.status === 'fulfilled') {
+        setCareerStats(statsResult.value);
+      } else {
+        console.error('Error loading career stats:', statsResult.reason);
+        setActionError('Failed to load career stats');
+      }
+      setIsLoadingStats(false);
+
+      if (sessionsResult.status === 'fulfilled') {
+        setRecentSessions(sessionsResult.value || []);
+      } else {
+        // A 404 from the sessions endpoint is expected if the user has no sessions.
+        // This is not an error we should show to the user.
+        console.warn('Could not load recent sessions:', sessionsResult.reason);
+        setRecentSessions([]);
+      }
+      setIsLoadingSessions(false);
+
+      if (leaderboardsResult.status === 'fulfilled') {
+        setLeaderboardData(leaderboardsResult.value);
+      } else {
+        console.error('Error loading leaderboards:', leaderboardsResult.reason);
+        // Optionally set an error for leaderboards if needed
       }
     };
 

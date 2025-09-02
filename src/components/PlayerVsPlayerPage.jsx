@@ -22,18 +22,27 @@ const PlayerVsPlayerPage = () => {
         const fetchData = async () => {
             setIsLoading(true);
             setError('');
-            try {
-                const [leaderboardData, duelsData] = await Promise.all([
-                    apiGetPlayerVsPlayerLeaderboard(player1Id, player2Id),
-                    apiGetPlayerVsPlayerDuels(player1Id, player2Id)
-                ]);
-                setLeaderboard(leaderboardData);
-                setDuels(duelsData);
-            } catch (err) {
-                setError(err.message || 'Failed to load head-to-head data.');
-            } finally {
-                setIsLoading(false);
+
+            const [leaderboardResult, duelsResult] = await Promise.allSettled([
+                apiGetPlayerVsPlayerLeaderboard(player1Id, player2Id),
+                apiGetPlayerVsPlayerDuels(player1Id, player2Id)
+            ]);
+
+            if (leaderboardResult.status === 'fulfilled') {
+                setLeaderboard(leaderboardResult.value);
+            } else {
+                console.error('Failed to load PvP leaderboard:', leaderboardResult.reason);
+                setError(leaderboardResult.reason.message || 'Failed to load head-to-head leaderboard.');
             }
+
+            if (duelsResult.status === 'fulfilled') {
+                setDuels(duelsResult.value || []);
+            } else {
+                console.warn('Failed to load PvP duels (expected for new matchups):', duelsResult.reason);
+                setDuels([]);
+            }
+
+            setIsLoading(false);
         };
 
         fetchData();

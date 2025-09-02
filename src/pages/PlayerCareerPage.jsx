@@ -41,20 +41,35 @@ const PlayerCareerPage = () => {
   const fetchAllData = useCallback(async () => {
       setIsLoading(true);
       setError('');
-      try {
-        const [careerStats, playerDuels, playerLeagues] = await Promise.all([
-          apiGetCareerStats(playerId),
-          apiListDuels(playerId),
-          apiListLeagues(playerId)
-        ]);
-        setStats(careerStats);
-        setDuels(playerDuels);
-        setLeagues(playerLeagues.my_leagues || []); // Assuming my_leagues is the relevant part
-      } catch (err) {
-        setError(err.message || 'Failed to fetch data.');
-      } finally {
-        setIsLoading(false);
+
+      const [statsResult, duelsResult, leaguesResult] = await Promise.allSettled([
+        apiGetCareerStats(playerId),
+        apiListDuels(playerId),
+        apiListLeagues(playerId),
+      ]);
+
+      if (statsResult.status === 'fulfilled') {
+        setStats(statsResult.value);
+      } else {
+        console.error('Failed to load career stats:', statsResult.reason);
+        setError(statsResult.reason.message || 'Failed to load career stats.');
       }
+
+      if (duelsResult.status === 'fulfilled') {
+        setDuels(duelsResult.value || []);
+      } else {
+        console.warn('Could not load player duels (expected for new players):', duelsResult.reason);
+        setDuels([]);
+      }
+
+      if (leaguesResult.status === 'fulfilled') {
+        setLeagues(leaguesResult.value.my_leagues || []);
+      } else {
+        console.warn('Could not load player leagues (expected for new players):', leaguesResult.reason);
+        setLeagues([]);
+      }
+
+      setIsLoading(false);
   }, [playerId]);
 
   useEffect(() => {
