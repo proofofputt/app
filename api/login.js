@@ -10,20 +10,23 @@ if (process.env.DATABASE_URL) {
 }
 
 module.exports = async function handler(req, res) {
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  try {
+    console.log('Login API called:', req.method, req.body);
+    
+    // Set CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
+    }
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, message: 'Method not allowed' });
-  }
+    if (req.method !== 'POST') {
+      return res.status(405).json({ success: false, message: 'Method not allowed' });
+    }
 
-  const { email, password } = req.body;
+    const { email, password } = req.body;
   
   if (!email || !password) {
     return res.status(400).json({
@@ -35,6 +38,7 @@ module.exports = async function handler(req, res) {
   try {
     if (!pool) {
       // Fallback for development/testing
+      console.log('Using fallback auth - no database configured');
       if (email === 'pop@proofofputt.com' && password === 'testpassword') {
         const token = jwt.sign(
           { playerId: 1, email: email },
@@ -104,6 +108,13 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({
       success: false,
       message: 'Internal server error'
+    });
+  }
+  } catch (outerError) {
+    console.error('Top-level API error:', outerError);
+    return res.status(500).json({
+      success: false,
+      message: 'Server initialization error'
     });
   }
 }
