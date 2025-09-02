@@ -1,6 +1,8 @@
 import React from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
+import { PersistentNotificationProvider } from './context/PersistentNotificationContext';
 import Dashboard from './components/Dashboard';
 import DuelsPage from './components/DuelsPage';
 import SettingsPage from './pages/SettingsPage';
@@ -39,7 +41,11 @@ const AppContent = () => {
 const App = () => {
   return (
     <AuthProvider>
-      <AppContent />
+      <NotificationProvider>
+        <PersistentNotificationProvider>
+          <AppContent />
+        </PersistentNotificationProvider>
+      </NotificationProvider>
     </AuthProvider>
   );
 };
