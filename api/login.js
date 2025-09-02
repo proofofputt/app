@@ -53,6 +53,12 @@ export default async function handler(req, res) {
     }
 
     // 3. Passwords match, generate a JWT
+    if (!process.env.JWT_SECRET) {
+      // This is a server-side configuration error, so we'll log it and throw.
+      console.error('FATAL: JWT_SECRET environment variable is not set.');
+      throw new Error('Server configuration error: JWT secret is missing.');
+    }
+
     const token = jwt.sign({ playerId: player.player_id, email: player.email }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
     // 4. Prepare player data for the response (omitting the hash)
