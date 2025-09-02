@@ -51,8 +51,16 @@ const PlayerCareerPage = () => {
       if (statsResult.status === 'fulfilled') {
         setStats(statsResult.value);
       } else {
-        console.error('Failed to load career stats:', statsResult.reason);
-        setError(statsResult.reason.message || 'Failed to load career stats.');
+        const reason = statsResult.reason;
+        console.error('Failed to load career stats:', reason);
+        // A 404 is not a fatal error; it likely means the player has no sessions.
+        if (reason?.message?.includes('404')) {
+          // We can show a default state. The player's name might not be available if we're not viewing our own profile.
+          const name = (playerData && playerData.player_id === parseInt(playerId)) ? playerData.name : 'Player';
+          setStats({ player_name: name }); // Set a default object to prevent a crash
+        } else {
+          setError(reason.message || 'Failed to load career stats.');
+        }
       }
 
       if (duelsResult.status === 'fulfilled') {

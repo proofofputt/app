@@ -74,8 +74,13 @@ function Dashboard() {
       if (statsResult.status === 'fulfilled') {
         setCareerStats(statsResult.value);
       } else {
-        console.error('Error loading career stats:', statsResult.reason);
-        setActionError('Failed to load career stats');
+        const reason = statsResult.reason;
+        console.error('Error loading career stats:', reason);
+        if (reason?.message?.includes('404')) {
+          setCareerStats({}); // Player has no stats yet, show default 0s.
+        } else {
+          setActionError('Failed to load career stats');
+        }
       }
       setIsLoadingStats(false);
 
