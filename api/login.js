@@ -34,7 +34,7 @@ export default async function handler(req, res) {
   try {
     // 1. Find the user by email
     // The 'username' column was removed from the query as it does not exist in the current schema.
-    const userQuery = await pool.query('SELECT player_id, email, password_hash FROM players WHERE email = $1', [email]);
+    const userQuery = await pool.query('SELECT player_id, email, password_hash, subscription_status FROM players WHERE email = $1', [email]);
     const player = userQuery.rows[0];
 
     if (!player) {
@@ -68,6 +68,7 @@ export default async function handler(req, res) {
       email: player.email,
       username: username,
       name: username, // The client also expects a "name" property.
+      subscription_status: player.subscription_status,
     };
 
     console.log(`Login successful for player_id: ${player.player_id}`);

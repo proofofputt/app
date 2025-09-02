@@ -100,7 +100,7 @@ function Dashboard() {
   };
 
   return (
-    <div className="dashboard-container">
+    <>
       <main className="dashboard-main">
         <div className="dashboard-actions">
           <button 
@@ -194,7 +194,7 @@ function Dashboard() {
           onClose={() => setIsContactsModalOpen(false)}
         />
       )}
-    </div>
+    </>
   );
 }
 
