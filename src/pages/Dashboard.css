@@ -1,0 +1,10 @@
+.dashboard-main {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Add other relevant styles from your main stylesheet here */
+/* This is just a placeholder to ensure the component renders without breaking */
+
+.error-message { color: red; }
