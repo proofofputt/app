@@ -28,17 +28,33 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const loadAndRefreshData = async () => {
-      if (playerData && playerData.player_id) {
+      // Check for existing auth token and player data
+      const token = localStorage.getItem('authToken');
+      const storedPlayerData = localStorage.getItem('playerData');
+      
+      if (token && storedPlayerData && !playerData) {
         try {
-          const freshData = await apiGetPlayerData(playerData.player_id);
-          localStorage.setItem('playerData', JSON.stringify(freshData));
-          setPlayerData(freshData);
+          const parsedPlayerData = JSON.parse(storedPlayerData);
+          setPlayerData(parsedPlayerData);
+          
+          // Optionally refresh data if player_id exists
+          if (parsedPlayerData && parsedPlayerData.player_id) {
+            try {
+              const freshData = await apiGetPlayerData(parsedPlayerData.player_id);
+              localStorage.setItem('playerData', JSON.stringify(freshData));
+              setPlayerData(freshData);
+            } catch (error) {
+              console.error('Failed to refresh player data on mount:', error);
+              // Keep existing playerData if refresh fails
+            }
+          }
         } catch (error) {
-          console.error('Failed to refresh player data on mount:', error);
-          // Keep existing playerData if refresh fails, don't corrupt the state
+          console.error('Failed to parse stored player data:', error);
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('playerData');
         }
       }
-      setIsLoading(false); // Set loading to false after attempt to load/refresh
+      setIsLoading(false);
     };
 
     loadAndRefreshData();
@@ -46,18 +62,36 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const authData = await apiLogin(email, password);
-      // Fetch complete player data after successful authentication
-      const playerData = await apiGetPlayerData(authData.player_id);
-      localStorage.setItem('playerData', JSON.stringify(playerData));
-      setPlayerData(playerData);
-      const from = location.state?.from?.pathname || '/';
-      navigate(from, { replace: true });
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Login failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.token && data.player) {
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('playerData', JSON.stringify(data.player));
+        setPlayerData(data.player);
+        const from = location.state?.from?.pathname || '/';
+        navigate(from, { replace: true });
+        return { success: true };
+      } else {
+        throw new Error(data.message || 'Login failed');
+      }
     } catch (error) {
-      // Clear any potentially stale data on login failure
+      console.error('Login error:', error);
+      localStorage.removeItem('authToken');
       localStorage.removeItem('playerData');
       setPlayerData(null);
-      throw error;
+      return { success: false, error: error.message };
     }
   };
 
@@ -77,6 +111,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    localStorage.removeItem('authToken');
     localStorage.removeItem('playerData');
     setPlayerData(null);
     navigate('/login');

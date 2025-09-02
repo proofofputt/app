@@ -24,6 +24,11 @@ const handleResponse = async (response) => {
 
 const getAuthToken = () => {
   try {
+    // First try the authToken directly
+    const token = localStorage.getItem('authToken');
+    if (token) return token;
+    
+    // Fallback to checking playerData.token
     const playerData = JSON.parse(localStorage.getItem('playerData'));
     return playerData?.token;
   } catch {
