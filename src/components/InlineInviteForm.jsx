@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { apiSearchPlayers } from '@/api.js';
+import { apiSearchPlayers } from '../api.js';
 
 const InlineInviteForm = ({ onInvite }) => {
   const [inviteeName, setInviteeName] = useState('');

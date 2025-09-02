@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext.jsx';
-import { useNotification } from '@/context/NotificationContext.jsx';
-import { apiCreateFundraiser } from '@/api.js';
+import { useAuth } from '../context/AuthContext.jsx';
+import { useNotification } from '../context/NotificationContext.jsx';
+import { apiCreateFundraiser } from '../api.js';
 import './FundraiserCreatePage.css';
 
 const FundraiserCreatePage = () => {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { apiGetCareerStats, apiListDuels, apiListLeagues } from '@/api.js';
-import { useAuth } from '@/context/AuthContext.jsx';
+import { apiGetCareerStats, apiListDuels, apiListLeagues } from '../api.js';
+import { useAuth } from '../context/AuthContext.jsx';
 import './PlayerCareerPage.css';
 
 const StatRow = ({ label, best, cumulative, isSubscribed, unit = '' }) => {

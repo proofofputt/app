@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useAuth } from '@/context/AuthContext.jsx';
-import { apiForgotPassword } from '@/api.js';
+import { useAuth } from '../context/AuthContext.jsx';
+import { apiForgotPassword } from '../api.js';
 
 function Auth() {
   const [mode, setMode] = useState('login'); // 'login', 'register', 'forgotPassword'

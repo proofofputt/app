@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './ConnectionStatus.css';
-import { apiCheckDesktopStatus } from '@/api.js';
+import { apiCheckDesktopStatus } from '../api.js';
 
 const DesktopConnectionStatus = ({ onConnectionChange }) => {
   const [isConnected, setIsConnected] = useState(false);

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { apiGetFundraiserDetails, apiStartSession } from '@/api.js';
-import { useAuth } from '@/context/AuthContext.jsx';
-import { useNotification } from '@/context/NotificationContext.jsx';
+import { apiGetFundraiserDetails, apiStartSession } from '../api.js';
+import { useAuth } from '../context/AuthContext.jsx';
+import { useNotification } from '../context/NotificationContext.jsx';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import PledgeModal from './PledgeModal.jsx';
 import './FundraiserDetail.css';

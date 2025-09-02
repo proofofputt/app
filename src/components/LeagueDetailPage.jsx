@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext.jsx';
-import { useNotification } from '@/context/NotificationContext.jsx';
-import { apiGetLeagueDetails, apiJoinLeague, apiInviteToLeague, apiStartSession } from '@/api.js';
+import { useAuth } from '../context/AuthContext.jsx';
+import { useNotification } from '../context/NotificationContext.jsx';
+import { apiGetLeagueDetails, apiJoinLeague, apiInviteToLeague, apiStartSession } from '../api.js';
 import EditLeagueModal from './EditLeagueModal.jsx';
 import CountdownTimer from './CountdownTimer.jsx';
 import InlineInviteForm from './InlineInviteForm.jsx';

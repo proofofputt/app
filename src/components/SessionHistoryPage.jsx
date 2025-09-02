@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext.jsx';
-import { apiGetPlayerSessions, apiGetCareerStats } from '@/api.js';
-import SessionRow from '@/components/SessionRow.jsx';
-import Pagination from '@/components/Pagination.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
+import { apiGetPlayerSessions, apiGetCareerStats } from '../api.js';
+import SessionRow from '../components/SessionRow.jsx';
+import Pagination from '../components/Pagination.jsx';
 import './SessionHistoryPage.css';
 
 const UpgradePrompt = () => (

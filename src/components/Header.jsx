@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext.jsx';
-import { useNotification } from '@/context/NotificationContext.jsx';
-import { usePersistentNotifications } from '@/context/PersistentNotificationContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
+import { useNotification } from '../context/NotificationContext.jsx';
+import { usePersistentNotifications } from '../context/PersistentNotificationContext.jsx';
 import ProfileDropdown from './ProfileDropdown.jsx';
 
 const Header = () => {

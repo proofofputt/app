@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useAuth } from '@/context/AuthContext.jsx';
-import { apiCoachChat, apiListConversations, apiGetConversationHistory } from '@/api.js'; // Keep all imports
+import { useAuth } from '../context/AuthContext.jsx';
+import { apiCoachChat, apiListConversations, apiGetConversationHistory } from '../api.js'; // Keep all imports
 import ReactMarkdown from 'react-markdown';
 import './Coach.css';
 

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { apiGetPlayerVsPlayerDuels, apiGetPlayerVsPlayerLeaderboard, apiCreateDuel } from '@/api.js';
-import { useAuth } from '@/context/AuthContext.jsx';
-import { useNotification } from '@/context/NotificationContext.jsx';
+import { apiGetPlayerVsPlayerDuels, apiGetPlayerVsPlayerLeaderboard, apiCreateDuel } from '../api.js';
+import { useAuth } from '../context/AuthContext.jsx';
+import { useNotification } from '../context/NotificationContext.jsx';
 import './PlayerVsPlayerPage.css';
 
 const PlayerVsPlayerPage = () => {

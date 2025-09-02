@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useAuth } from '@/context/AuthContext.jsx';
-import { useNotification } from '@/context/NotificationContext.jsx';
-import { apiCreatePledge } from '@/api.js';
+import { useAuth } from '../context/AuthContext.jsx';
+import { useNotification } from '../context/NotificationContext.jsx';
+import { apiCreatePledge } from '../api.js';
 import './PledgeModal.css';
 
 const PledgeModal = ({ fundraiserId, fundraiserName, onClose, onPledgeSuccess }) => {

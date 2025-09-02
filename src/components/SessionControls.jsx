@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext.jsx';
-import { useNotification } from '@/context/NotificationContext.jsx';
-import { apiStartSession, apiStartCalibration, apiGetCalibrationStatus } from '@/api.js';
+import { useAuth } from '../context/AuthContext.jsx';
+import { useNotification } from '../context/NotificationContext.jsx';
+import { apiStartSession, apiStartCalibration, apiGetCalibrationStatus } from '../api.js';
 
 const SessionControls = ({ isDesktopConnected }) => {
   const { playerData } = useAuth();

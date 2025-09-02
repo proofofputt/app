@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext.jsx';
-import { useNotification } from '@/context/NotificationContext.jsx';
-import { apiListLeagues, apiJoinLeague, apiRespondToLeagueInvite } from '@/api.js';
-import CreateLeagueModal from '@/components/CreateLeagueModal.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
+import { useNotification } from '../context/NotificationContext.jsx';
+import { apiListLeagues, apiJoinLeague, apiRespondToLeagueInvite } from '../api.js';
+import CreateLeagueModal from '../components/CreateLeagueModal.jsx';
 import './Leagues.css';
  
 // New component for a row in the main leagues table

@@ -3,11 +3,11 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Dashboard from './components/Dashboard';
 import DuelsPage from './components/DuelsPage';
-import SettingsPage from './components/SettingsPage';
-import LeaguesPage from './components/LeaguesPage';
-import PlayerCareerPage from './components/PlayerCareerPage';
+import SettingsPage from './pages/SettingsPage';
+import LeaguesPage from './pages/LeaguesPage';
+import PlayerCareerPage from './pages/PlayerCareerPage';
 import Header from './components/Header';
-import LoginPage from './components/LoginPage';
+import LoginPage from './pages/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 

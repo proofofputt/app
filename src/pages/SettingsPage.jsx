@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext.jsx';
-import { useNotification } from '@/context/NotificationContext.jsx';
-import { apiUpdatePlayer, apiUpdatePlayerSocials, apiRedeemCoupon, apiCancelSubscription, apiUpdateNotificationPreferences } from '@/api.js';
-import ChangePassword from './ChangePassword.jsx'; // Assuming this component exists and handles its own state
+import { useAuth } from '../context/AuthContext.jsx';
+import { useNotification } from '../context/NotificationContext.jsx';
+import { apiUpdatePlayer, apiUpdatePlayerSocials, apiRedeemCoupon, apiCancelSubscription, apiUpdateNotificationPreferences } from '../api.js';
+import ChangePassword from '../components/ChangePassword.jsx'; // Assuming this component exists and handles its own state
 import './SettingsPage.css';
 
 const SettingsPage = () => {

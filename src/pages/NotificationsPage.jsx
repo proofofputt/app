@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { usePersistentNotifications } from '@/context/PersistentNotificationContext.jsx';
+import { usePersistentNotifications } from '../context/PersistentNotificationContext.jsx';
 import { Link } from 'react-router-dom';
 import './NotificationsPage.css';
 

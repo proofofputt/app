@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext.jsx';
-import { apiListFundraisers } from '@/api';
+import { useAuth } from '../context/AuthContext.jsx';
+import { apiListFundraisers } from '../api';
 import { format } from 'date-fns';
 import './Fundraising.css';
 

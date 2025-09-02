@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useAuth } from '@/context/AuthContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import { useNavigate } from 'react-router-dom';
-import { apiUpdateLeagueSettings, apiDeleteLeague } from '@/api.js';
+import { apiUpdateLeagueSettings, apiDeleteLeague } from '../api.js';
 
 const EditLeagueModal = ({ league, onClose, onLeagueUpdated }) => {
   const { playerData } = useAuth();

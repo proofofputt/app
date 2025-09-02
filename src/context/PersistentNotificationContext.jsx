@@ -6,7 +6,7 @@ import {
   apiMarkNotificationAsRead,
   apiMarkAllNotificationsAsRead,
   apiDeleteNotification,
-} from '@/api.js';
+} from '../api.js';
 
 const PersistentNotificationContext = createContext();
 
