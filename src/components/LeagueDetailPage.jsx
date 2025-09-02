@@ -6,7 +6,7 @@ import { apiGetLeagueDetails, apiJoinLeague, apiInviteToLeague, apiStartSession 
 import EditLeagueModal from './EditLeagueModal.jsx';
 import CountdownTimer from './CountdownTimer.jsx';
 import InlineInviteForm from './InlineInviteForm.jsx';
-import './Leagues.css'; // Reusing the same CSS file
+import '../pages/Leagues.css'; // Reusing the same CSS file
 
 const LeagueDetailPage = () => {
   const { leagueId } = useParams();
