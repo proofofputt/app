@@ -153,6 +153,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     playerData,
     playerTimezone,
+    isAuthenticated: !!playerData,
     isLoading,
     login,
     register,
