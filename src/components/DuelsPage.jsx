@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { apiListDuels, apiRespondToDuel, apiSubmitSessionToDuel } from '../api';
-import { useAuth } from '../context/AuthContext';
-import { useNotification } from '../context/NotificationContext';
+import { apiListDuels, apiRespondToDuel, apiSubmitSessionToDuel } from '@/api';
+import { useAuth } from '@/context/AuthContext';
+import { useNotification } from '@/context/NotificationContext';
 import { useNavigate, Link } from 'react-router-dom';
 import CreateDuelModal from './CreateDuelModal';
 import SessionSelectModal from './SessionSelectModal';
