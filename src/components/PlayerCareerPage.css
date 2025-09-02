@@ -1,0 +1,133 @@
+/*
+  Styles for the Career Stats page.
+  Base table styles (font, padding, basic borders) are inherited from App.css.
+  This file adds container styles, hover effects, and specific header styles.
+*/
+
+.career-stats-page .career-stats-table {
+  border: 1px solid var(--border-color);
+  background-color: var(--surface-color);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 1.5rem;
+  border-spacing: 0; /* Removes default spacing between cells */
+  border-collapse: collapse; /* Ensure borders align perfectly */
+}
+
+/* Add vertical borders between columns, using the same color as row underlines */
+.career-stats-page .career-stats-table th:not(:last-child),
+.career-stats-page .career-stats-table td:not(:last-child) {
+  border-right: 1px solid var(--border-color);
+}
+
+/* General cell padding */
+.career-stats-page .career-stats-table th,
+.career-stats-page .career-stats-table td {
+  padding: 0.6rem 0.8rem; /* Reduced padding for a tighter look */
+}
+
+/* Style for the main table headers to give them a distinct look */
+.career-stats-page .career-stats-table thead th {
+  background-color: var(--background-color);
+  color: var(--primary-color);
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 2px solid var(--primary-color); /* Add a distinct, primary-colored border */
+}
+
+.career-stats-page .career-stats-table thead th:first-child {
+  text-align: left;
+  font-size: 1.1rem; /* Make the title larger */
+  text-transform: none; /* Normal case for titles */
+  color: var(--primary-color); /* Use primary accent color for the title */
+}
+
+/* Column alignment is now handled globally in App.css for consistency */
+/* Style for the category header rows within the table body */
+.career-stats-page .career-stats-table .table-category-header td {
+  background-color: var(--background-color);
+  color: var(--primary-color);
+  font-weight: bold;
+  text-align: center;
+  border-top: 1px solid var(--border-color);
+}
+
+/* Add hover effect to data rows, but not header rows */
+.career-stats-page .career-stats-table tbody tr:not(.table-category-header):hover {
+  background-color: var(--masters-green-light);
+}
+
+/* Remove bottom border from the last row in a table body */
+.career-stats-page .career-stats-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Style for placeholder rows like "No data" */
+.career-stats-page .career-stats-table td[style*="italic"] {
+  text-align: center;
+  color: var(--text-color-secondary);
+  opacity: 0.7;
+  padding: 1rem 0.8rem; /* Adjusted padding for consistency */
+}
+
+/* New styles for the split table layout */
+.stats-split-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  align-items: start; /* Prevents tables from stretching to match height */
+}
+
+
+
+.upgrade-prompt {
+  background-color: var(--surface-color);
+  border: 1px solid var(--primary-color);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.upgrade-prompt h3 {
+  color: var(--primary-color);
+  margin-top: 0;
+}
+
+/* New styles for the summary tables at the bottom */
+.summary-tables-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.summary-table-container {
+  background-color: var(--surface-color);
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  border: 1px solid var(--border-color);
+}
+
+.summary-table-container h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+  text-align: center;
+  font-size: 1.2rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.75rem;
+}
+
+.summary-table-container .career-stats-table a {
+  color: var(--sand-color);
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.summary-table-container .career-stats-table a:hover {
+  color: var(--sand-color-hover);
+  text-decoration: underline;
+}

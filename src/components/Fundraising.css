@@ -1,0 +1,132 @@
+/* FundraisingPage.css */
+
+.fundraising-page .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline; /* Aligns title and button along their text baseline */
+  width: 80%;
+  margin: 1rem auto 1.5rem;
+}
+
+.fundraising-page .page-header .btn {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.fundraising-page .page-header h2 {
+  margin: 0;
+}
+
+.fundraiser-list-container {
+  width: 80%; /* Corresponds to 10% margin on each side */
+  margin: 0 auto;
+}
+
+.fundraiser-table {
+  width: 100%;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  border-spacing: 0;
+  overflow: hidden;
+}
+
+.fundraiser-table .grid-row {
+  display: grid;
+  grid-template-columns: 2.5fr 1.5fr 1.2fr 1.2fr 1fr;
+  gap: 1rem;
+  align-items: center;
+  width: 100%;
+}
+
+.fundraiser-table th, .fundraiser-table td {
+  padding: 1rem 1.5rem;
+}
+
+.fundraiser-table-header {
+  font-weight: bold;
+  color: var(--text-color-secondary);
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  background-color: var(--background-color);
+}
+
+.fundraiser-table-header th {
+  text-align: left;
+}
+
+.fundraiser-table-row {
+  border-top: 1px solid var(--border-color);
+}
+
+.fundraiser-table-row td a {
+  color: var(--text-color-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.fundraiser-table-row td a:hover {
+  text-decoration: underline;
+}
+
+.fundraiser-name-cause {
+  display: flex;
+  flex-direction: column;
+}
+
+.fundraiser-name {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--highlighter-yellow);
+}
+
+
+
+.action-cell {
+  justify-self: end;
+}
+
+.btn-yellow {
+  background-color: var(--highlighter-yellow);
+  color: var(--masters-green-dark);
+  font-weight: bold;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-yellow:hover {
+  background-color: var(--highlighter-yellow-hover);
+}
+
+.fundraiser-progress-row td {
+  /* Remove padding from the cell to let the progress bar container manage it */
+  padding: 0 1.5rem 1rem 1.5rem;
+}
+
+.fundraiser-table-row + .fundraiser-progress-row {
+  /* No top border needed as it's visually part of the row above */
+}
+
+.progress-bar {
+  height: 10px;
+  background-color: var(--masters-green-dark);
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: var(--primary-color);
+  transition: width 0.5s ease-in-out;
+}
+
+.progress-text {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+  text-align: right;
+  margin-top: 0.25rem;
+}

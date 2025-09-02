@@ -1,0 +1,101 @@
+/* PlayerVsPlayerPage.css */
+
+.pvp-page {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+
+.pvp-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2.5rem;
+  text-align: center;
+}
+
+.pvp-header h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  color: var(--text-color-primary);
+  font-weight: 700;
+}
+
+.pvp-vs {
+  font-size: 1.5rem;
+  color: var(--text-color-secondary);
+  font-weight: 300;
+}
+
+.pvp-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pvp-summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.pvp-summary-card {
+  background-color: var(--surface-color);
+  padding: 1.5rem;
+  border-radius: 12px;
+  text-align: center;
+  border: 1px solid var(--border-color);
+}
+
+.pvp-summary-card h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  color: var(--text-color-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pvp-summary-card p {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin: 0;
+  line-height: 1;
+}
+
+.pvp-summary-card.total-duels p {
+    color: var(--text-color-primary);
+}
+
+.pvp-history h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.pvp-history .duels-table-container {
+  background-color: var(--surface-color);
+  border-radius: 12px;
+  padding: 0 1.5rem 1rem;
+  border: 1px solid var(--border-color);
+}
+
+.pvp-history .duels-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.pvp-history .duels-table .score-cell {
+    text-align: center;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.pvp-history .duels-table .winner-cell.draw {
+    font-style: italic;
+    color: var(--text-color-secondary);
+}

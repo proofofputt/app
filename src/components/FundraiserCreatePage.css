@@ -1,0 +1,74 @@
+.fundraiser-create-page {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.fundraiser-create-page .form-section {
+  background-color: var(--surface-color);
+  padding: 2rem;
+  border-radius: 12px;
+}
+
+.fundraiser-create-page h2 {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+}
+
+.fundraiser-create-page .form-hint {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: var(--text-color-secondary);
+  font-size: 1rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.fundraiser-create-page .form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.fundraiser-create-page .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.fundraiser-create-page .form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.fundraiser-create-page .form-group input,
+.fundraiser-create-page .form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-color);
+  font-size: 1rem;
+  font-family: var(--font-family);
+}
+
+.fundraiser-create-page .form-group textarea {
+  resize: vertical;
+}
+
+.fundraiser-create-page .btn {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1.1rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+  .fundraiser-create-page .form-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}

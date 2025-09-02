@@ -1,0 +1,82 @@
+.session-history-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  /* Break out of parent container constraints for full-width layout */
+  margin-left: calc(-1 * var(--app-padding, 0.75rem));
+  margin-right: calc(-1 * var(--app-padding, 0.75rem));
+  padding-left: var(--app-padding, 0.75rem);
+  padding-right: var(--app-padding, 0.75rem);
+  max-width: none !important; /* Override any parent max-width constraints */
+}
+
+.session-list-container.full-height {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* Important for flexbox scrolling */
+}
+
+.session-table-wrapper {
+  flex-grow: 1;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background-color: var(--surface-color);
+  /* Ensure table utilizes full available width */
+  width: 100%;
+  min-height: 400px; /* Minimum height even with few sessions */
+}
+
+.session-history-page .session-table {
+  width: 100%;
+  min-width: 1000px; /* Ensure minimum width for proper column spacing */
+}
+
+.session-history-page .session-table th,
+.session-history-page .session-table td {
+  padding: 1rem 0.75rem; /* More generous padding for full-width layout */
+}
+
+/* Better column width distribution for full-width table */
+.session-history-page .session-table th:nth-child(1) { width: 100px; }  /* Details button */
+.session-history-page .session-table th:nth-child(2) { width: 180px; }  /* Session Date */
+.session-history-page .session-table th:nth-child(3) { width: 100px; }  /* Duration */
+.session-history-page .session-table th:nth-child(4) { width: 80px; }   /* Makes */
+.session-history-page .session-table th:nth-child(5) { width: 80px; }   /* Misses */
+.session-history-page .session-table th:nth-child(6) { width: 100px; }  /* Best Streak */
+.session-history-page .session-table th:nth-child(7) { width: 100px; }  /* Fastest 21 */
+.session-history-page .session-table th:nth-child(8) { width: 80px; }   /* PPM */
+.session-history-page .session-table th:nth-child(9) { width: 80px; }   /* MPM */
+.session-history-page .session-table th:nth-child(10) { width: 100px; } /* Most in 60s */
+
+/* Enhanced spacing for session details on full-width layout */
+.session-history-page .session-details-content {
+  padding: 2rem;
+}
+
+.session-history-page .details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2.5rem;
+  max-width: none; /* Allow grid to use full available width */
+}
+
+.upgrade-prompt-sessions {
+  background-color: var(--surface-color);
+  border: 1px solid var(--primary-color);
+  border-radius: 12px;
+  padding: 3rem;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.upgrade-prompt-sessions h3 {
+  color: var(--primary-color);
+  margin-top: 0;
+  font-size: 1.5rem;
+}
+
+.upgrade-prompt-sessions .btn {
+  margin-top: 1.5rem;
+}

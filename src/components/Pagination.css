@@ -1,0 +1,19 @@
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: var(--surface-color);
+  border-radius: 12px;
+}
+
+.pagination-controls span {
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.pagination-controls .btn {
+  min-width: 120px;
+}

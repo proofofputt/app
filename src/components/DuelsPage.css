@@ -1,0 +1,69 @@
+/* DuelsPage.css */
+
+.duels-page {
+  display: flex;
+  flex-direction: column;
+}
+
+.duel-category-section {
+  margin-bottom: 2.5rem;
+}
+
+.duel-category-title {
+  color: var(--primary-color);
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 1.1rem;
+}
+
+.duels-table-container {
+  /* Define a max-height to make the container scrollable */
+  max-height: 60vh; /* Adjust as needed */
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+}
+
+.duels-table thead th {
+  position: -webkit-sticky; /* For Safari */
+  position: sticky;
+  top: 0;
+  background-color: var(--background-color); /* Darker background for sticky header */
+  z-index: 2; /* Ensure header is above scrolling content */
+}
+
+/* Add vertical borders to all table cells except the last one in a row */
+.duels-table th:not(:last-child),
+.duels-table td:not(:last-child) {
+  border-right: 1px solid var(--border-color);
+}
+
+.duels-table .actions-header,
+.duels-table .actions-cell {
+  padding-left: 0;
+  padding-right: 0;
+  text-align: center;
+  width: 1%; /* Helps the column shrink to fit its content */
+  white-space: nowrap; /* Prevents buttons from wrapping on smaller screens */
+}
+
+/* This overrides any global styles to ensure the actions are centered. */
+.duels-table .actions-cell {
+  text-align: center;
+}
+
+/* This handles the case where there are two buttons (Accept/Decline) */
+.duel-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Reduce padding on the expiration cell to better fit the styled box */
+.duels-table .expiration-cell {
+  padding: 0.25rem 0.5rem;
+  vertical-align: middle;
+}
