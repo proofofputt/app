@@ -55,7 +55,7 @@ export default async function handler(req, res) {
     }
 
     const client = await pool.connect();
-    const couponResult = await client.query('SELECT * FROM coupons WHERE code = $1 AND is_active = TRUE', [coupon_code]);
+    const couponResult = await client.query('SELECT * FROM coupons WHERE UPPER(code) = UPPER($1) AND is_active = TRUE', [coupon_code]);
     const coupon = couponResult.rows[0];
 
     if (!coupon || (coupon.redemption_limit !== null && coupon.times_redeemed >= coupon.redemption_limit)) {
