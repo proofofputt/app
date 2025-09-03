@@ -559,7 +559,7 @@ button.btn-danger:hover, .btn-danger:hover {
 
 .leaderboard-card h3 {
   margin: 0 0 0.75rem 0;
-  color: var(--text-color-secondary);
+  color: var(--primary-color); /* Changed from secondary text to primary (yellow) */
   font-size: 1.1rem;
   font-weight: 600;
   border-bottom: 1px solid var(--border-color);
@@ -589,7 +589,7 @@ button.btn-danger:hover, .btn-danger:hover {
 
 .leaderboard-card .leader-value {
   font-weight: bold;
-  color: var(--primary-color);
+  color: var(--text-white); /* Changed from primary (yellow) to white */
 }
 
 .leaderboard-card li.unclaimed {

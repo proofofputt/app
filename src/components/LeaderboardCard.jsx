@@ -1,32 +1,30 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
-const formatValue = (title, value) => {
-  if (value === null || value === undefined) return 'N/A';
-  
-  const isTime = title === 'Fastest 21';
-  
-  if (typeof value === 'number' && value % 1 !== 0) {
-    return `${value.toFixed(2)}${isTime ? 's' : ''}`;
-  }
-  
-  return `${value}${isTime ? 's' : ''}`;
-};
-
-const LeaderboardCard = ({ title, leaders }) => {
-  // Ensure there are always 3 leaders to display, filling empty slots with "Unclaimed".
-  const displayLeaders = [...(leaders || [])];
+const LeaderboardCard = ({ title, leaders = [] }) => {
+  // Ensure we always have an array of 3 for the podium display
+  const displayLeaders = [...leaders];
   while (displayLeaders.length < 3) {
-    displayLeaders.push({ name: 'Unclaimed', value: null });
+    displayLeaders.push({ is_unclaimed: true });
   }
 
   return (
     <div className="leaderboard-card">
       <h3>{title}</h3>
       <ol>
-        {displayLeaders.map((leader, index) => (
-          <li key={index} className={leader.name === 'Unclaimed' ? 'unclaimed' : ''}>
-            <span className="leader-name">{leader.name}</span>
-            <span className="leader-value">{leader.name === 'Unclaimed' ? '—' : formatValue(title, leader.value)}</span>
+        {displayLeaders.slice(0, 3).map((leader, index) => (
+          <li key={index} className={leader.is_unclaimed ? 'unclaimed' : ''}>
+            {leader.is_unclaimed ? (
+              <>
+                <span className="leader-name">Unclaimed</span>
+                <span className="leader-value">—</span>
+              </>
+            ) : (
+              <>
+                <span className="leader-name"><Link to={`/player/${leader.player_id}/stats`}>{leader.player_name}</Link></span>
+                <span className="leader-value">{leader.value}</span>
+              </>
+            )}
           </li>
         ))}
       </ol>
