@@ -82,9 +82,6 @@ export const apiUpdateSocials = (playerId, data) =>
 export const apiUpdateNotificationPreferences = (playerId, data) => 
   fetch(`${API_BASE_URL}/player/${playerId}/notification-preferences`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(data) }).then(handleResponse);
 
-export const apiRedeemCoupon = (playerId, coupon_code) => 
-  fetch(`${API_BASE_URL}/player/${playerId}/redeem-coupon`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ coupon_code }) }).then(handleResponse);
-
 export const apiCancelSubscription = (playerId) => 
   fetch(`${API_BASE_URL}/player/${playerId}/subscription/cancel`, { method: 'POST', headers: getHeaders() }).then(handleResponse);
 
@@ -205,3 +202,13 @@ export const apiMarkAllNotificationsAsRead = (playerId) =>
 
 export const apiDeleteNotification = (playerId, notificationId) => 
   fetch(`${API_BASE_URL}/player/${playerId}/notifications/${notificationId}`, { method: 'DELETE', headers: getHeaders() }).then(handleResponse);
+
+// --- Subscription / Coupon ---
+export const apiRedeemCoupon = (playerId, couponCode) => {
+  const token = getAuthToken();
+  return fetch(`${API_BASE_URL}/player/${playerId}/redeem-coupon`, {
+    method: 'POST',
+    headers: getHeaders(token),
+    body: JSON.stringify({ coupon_code: couponCode })
+  }).then(handleResponse);
+};
