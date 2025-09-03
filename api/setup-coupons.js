@@ -29,7 +29,6 @@ export default async function handler(req, res) {
           coupon_id SERIAL PRIMARY KEY,
           code VARCHAR(50) UNIQUE NOT NULL,
           description TEXT,
-          membership_tier VARCHAR(20) DEFAULT 'regular',
           redemption_limit INTEGER NULL, -- NULL = unlimited
           times_redeemed INTEGER DEFAULT 0,
           is_active BOOLEAN DEFAULT TRUE,
@@ -37,6 +36,15 @@ export default async function handler(req, res) {
           expires_at TIMESTAMP NULL
       );
     `);
+
+    // Add missing columns if they don't exist
+    try {
+      await client.query(`
+        ALTER TABLE coupons ADD COLUMN IF NOT EXISTS membership_tier VARCHAR(20) DEFAULT 'regular';
+      `);
+    } catch (e) {
+      console.log('Column membership_tier already exists or cannot be added:', e.message);
+    }
 
     // Insert the early access coupon codes
     await client.query(`
