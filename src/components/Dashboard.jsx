@@ -192,18 +192,10 @@ function Dashboard() {
               <h2>Leaderboard</h2>
           </div>
           <div className="leaderboard-grid">
-              {leaderboardData ? (
-                  <>
-                      <LeaderboardCard title="Most Makes" leaders={leaderboardData.top_makes} />
-                      <LeaderboardCard title="Best Streak" leaders={leaderboardData.top_streaks} />
-                      <LeaderboardCard title="Makes/Min" leaders={leaderboardData.top_makes_per_minute} />
-                      <LeaderboardCard title="Fastest 21" leaders={leaderboardData.fastest_21} />
-                  </>
-              ) : (
-                isLoadingLeaderboards 
-                  ? <p>Loading leaderboards...</p> 
-                  : <p className="placeholder-text">No leaderboard data available.</p>
-              )}
+              <LeaderboardCard title="Most Makes" leaders={leaderboardData?.top_makes} />
+              <LeaderboardCard title="Best Streak" leaders={leaderboardData?.top_streaks} />
+              <LeaderboardCard title="Makes/Min" leaders={leaderboardData?.top_makes_per_minute} />
+              <LeaderboardCard title="Fastest 21" leaders={leaderboardData?.fastest_21} />
           </div>
         </div>
       </main>

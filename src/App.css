@@ -593,8 +593,9 @@ button.btn-danger:hover, .btn-danger:hover {
 }
 
 .leaderboard-card li.unclaimed {
-  opacity: 0.6;
+  /* opacity: 0.6; */ /* Removed for better visibility */
   font-style: italic;
+  color: var(--text-color-secondary); /* Explicitly set color */
 }
 
 .leaderboard-card .placeholder-text {
