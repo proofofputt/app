@@ -199,8 +199,10 @@ function Dashboard() {
                       <LeaderboardCard title="Makes/Min" leaders={leaderboardData.top_makes_per_minute} />
                       <LeaderboardCard title="Fastest 21" leaders={leaderboardData.fastest_21} />
                   </>
-              ) : isLoadingLeaderboards ? (
-                  <p>Loading leaderboards...</p>
+              ) : (
+                isLoadingLeaderboards 
+                  ? <p>Loading leaderboards...</p> 
+                  : <p className="placeholder-text">No leaderboard data available.</p>
               )}
           </div>
         </div>
