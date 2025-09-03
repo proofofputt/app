@@ -33,3 +33,4 @@ const LeaderboardCard = ({ title, leaders = [] }) => {
 };
 
 export default LeaderboardCard;
+
