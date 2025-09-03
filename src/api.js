@@ -89,7 +89,7 @@ export const apiCancelSubscription = (playerId) =>
 export const apiGetSessions = (playerId) => 
   fetch(`${API_BASE_URL}/sessions?player_id=${playerId}`, { headers: getHeaders() }).then(handleResponse);
 
-export const apiGetPlayerSessions = (playerId, page = 1, limit = 25) => 
+export const apiGetPlayerSessions = (playerId, page = 1, limit = 21) => 
   fetch(`${API_BASE_URL}/player/${playerId}/sessions?page=${page}&limit=${limit}`, { headers: getHeaders() }).then(handleResponse);
 
 export const apiStartSession = (player_id, duel_id = null, league_round_id = null) => {

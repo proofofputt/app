@@ -35,6 +35,63 @@
 .session-history-page .session-table th,
 .session-history-page .session-table td {
   padding: 1rem 0.75rem; /* More generous padding for full-width layout */
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.session-history-page .session-table th {
+  background-color: var(--surface-color);
+  color: var(--primary-color);
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.session-history-page .session-table th:first-child {
+  text-align: left;
+}
+
+.session-history-page .session-table tbody tr {
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.session-history-page .session-table tbody tr:hover {
+  background-color: var(--masters-green-light);
+}
+
+.session-history-page .session-table tbody tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.02); /* Subtle zebra striping */
+}
+
+.session-history-page .session-table tbody tr:nth-child(even):hover {
+  background-color: var(--masters-green-light);
+}
+
+/* Locked session styling for non-subscribers */
+.session-history-page .session-table tbody tr.is-locked {
+  opacity: 0.6;
+  position: relative;
+}
+
+.session-history-page .session-table tbody tr.is-locked:after {
+  content: '🔒';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.2rem;
+  opacity: 0.7;
+}
+
+.session-history-page .session-table tbody tr.is-locked:hover {
+  opacity: 0.8;
+  background-color: rgba(24, 132, 0, 0.3);
 }
 
 /* Better column width distribution for full-width table */
@@ -78,4 +135,35 @@
 
 .upgrade-prompt-sessions .btn {
   margin-top: 1.5rem;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 1200px) {
+  .session-history-page .session-table {
+    min-width: 900px; /* Reduced minimum width for tablets */
+  }
+  
+  .session-history-page .session-table th,
+  .session-history-page .session-table td {
+    padding: 0.75rem 0.5rem; /* Reduced padding for smaller screens */
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .session-history-page {
+    padding: 0 5%; /* Reduced margins on mobile */
+  }
+  
+  .session-history-page .session-table {
+    min-width: 800px; /* Further reduced for mobile */
+  }
+  
+  .session-history-page .session-table th,
+  .session-history-page .session-table td {
+    padding: 0.5rem 0.25rem; /* Minimal padding for mobile */
+    font-size: 0.8rem;
+  }
+  
+  .session-history-page .session-table th:nth-child(2) { width: 140px; } /* Shorter date column */
 }
