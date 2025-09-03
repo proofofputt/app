@@ -202,13 +202,11 @@ export const apiMarkAllNotificationsAsRead = (playerId) =>
 
 export const apiDeleteNotification = (playerId, notificationId) => 
   fetch(`${API_BASE_URL}/player/${playerId}/notifications/${notificationId}`, { method: 'DELETE', headers: getHeaders() }).then(handleResponse);
-
 // --- Subscription / Coupon ---
 export const apiRedeemCoupon = (playerId, couponCode) => {
-  const token = getAuthToken();
   return fetch(`${API_BASE_URL}/player/${playerId}/redeem-coupon`, {
     method: 'POST',
-    headers: getHeaders(token),
+    headers: getHeaders(),
     body: JSON.stringify({ coupon_code: couponCode })
   }).then(handleResponse);
 };
