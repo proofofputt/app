@@ -2,6 +2,23 @@ import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
+export function verifyToken(req) {
+  return new Promise((resolve) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return resolve(null);
+    }
+
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+        return resolve(null);
+      }
+      resolve(decoded);
+    });
+  });
+}
+
 // Initialize the database pool. It will automatically use the DATABASE_URL
 // environment variable when deployed on a platform like Vercel.
 const pool = new Pool({
