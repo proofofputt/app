@@ -209,7 +209,7 @@ main {
 
 .stats-card h3 {
   margin: 0;
-  color: var(--text-color-secondary);
+  color: var(--primary-color); /* Changed from secondary text to primary (yellow) */
   font-size: 1.5rem;
   font-weight: 600;
   border-bottom: 1px solid var(--border-color);
@@ -220,7 +220,7 @@ main {
 .stat-value {
   font-size: 1.5rem;
   font-weight: bold;
-  color: var(--primary-color);
+  color: var(--text-white); /* Changed from primary (yellow) to white */
   margin: 0; /* p tags have margin by default, ensure it's off */
 }
 
@@ -257,7 +257,7 @@ main {
 }
 
 .session-table th {
-  color: var(--text-color-secondary);
+  color: var(--primary-color); /* Changed from secondary text to primary (yellow) */
   position: -webkit-sticky; /* For Safari */
   position: sticky;
   top: 0;
@@ -291,6 +291,7 @@ main {
   display: flex;
   align-items: center;
   gap: 8px;
+  text-transform: uppercase; /* Added to match other buttons */
 }
 
 /* Target the SVG inside the profile button to give it a fixed size */

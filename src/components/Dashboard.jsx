@@ -23,6 +23,7 @@ function Dashboard() {
   const [careerStats, setCareerStats] = useState(null);
   const [recentSessions, setRecentSessions] = useState([]);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const [isLoadingLeaderboards, setIsLoadingLeaderboards] = useState(true);
   const [isLoadingSessions, setIsLoadingSessions] = useState(true);
   const tableWrapperRef = useRef(null);
 
@@ -56,11 +57,13 @@ function Dashboard() {
       if (!playerData?.player_id) {
         setIsLoadingStats(false);
         setIsLoadingSessions(false);
+        setIsLoadingLeaderboards(false);
         return;
       }
 
       setIsLoadingStats(true);
       setIsLoadingSessions(true);
+      setIsLoadingLeaderboards(true);
       setActionError('');
 
       const results = await Promise.allSettled([
@@ -100,6 +103,7 @@ function Dashboard() {
         console.error('Error loading leaderboards:', leaderboardsResult.reason);
         // Optionally set an error for leaderboards if needed
       }
+      setIsLoadingLeaderboards(false);
     };
 
     loadData();
@@ -195,7 +199,7 @@ function Dashboard() {
                       <LeaderboardCard title="Makes/Min" leaders={leaderboardData.top_makes_per_minute} />
                       <LeaderboardCard title="Fastest 21" leaders={leaderboardData.fastest_21} />
                   </>
-              ) : (
+              ) : isLoadingLeaderboards ? (
                   <p>Loading leaderboards...</p>
               )}
           </div>
