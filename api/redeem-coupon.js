@@ -43,10 +43,9 @@ export default async function handler(req, res) {
       return res.status(401).json({ success: false, message: 'Authentication failed' });
     }
 
-    const { playerId } = req.query;
-    const { coupon_code } = req.body;
+    const { player_id, coupon_code } = req.body;
 
-    if (parseInt(user.playerId, 10) !== parseInt(playerId, 10)) {
+    if (parseInt(user.playerId, 10) !== parseInt(player_id, 10)) {
       return res.status(403).json({ success: false, message: 'Forbidden' });
     }
 
@@ -63,7 +62,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, message: 'Invalid or expired coupon code.' });
     }
 
-    await client.query("UPDATE players SET membership_tier = 'regular' WHERE player_id = $1", [playerId]);
+    await client.query("UPDATE players SET membership_tier = 'regular' WHERE player_id = $1", [player_id]);
     await client.query('UPDATE coupons SET times_redeemed = times_redeemed + 1 WHERE coupon_id = $1', [coupon.coupon_id]);
     client.release();
 

@@ -204,9 +204,9 @@ export const apiDeleteNotification = (playerId, notificationId) =>
   fetch(`${API_BASE_URL}/player/${playerId}/notifications/${notificationId}`, { method: 'DELETE', headers: getHeaders() }).then(handleResponse);
 // --- Subscription / Coupon ---
 export const apiRedeemCoupon = (playerId, couponCode) => {
-  return fetch(`${API_BASE_URL}/player/${playerId}/redeem-coupon`, {
+  return fetch(`${API_BASE_URL}/redeem-coupon`, {
     method: 'POST',
     headers: getHeaders(),
-    body: JSON.stringify({ coupon_code: couponCode })
+    body: JSON.stringify({ player_id: playerId, coupon_code: couponCode })
   }).then(handleResponse);
 };

@@ -39,9 +39,13 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, message: 'Method Not Allowed' });
   }
 
+  console.log(`[dev-server] Received login request at ${new Date().toISOString()}`);
+
   const { email, password } = req.body || {};
+  console.log(`[dev-server] Request body parsed - email: ${email ? 'present' : 'missing'}, password: ${password ? 'present' : 'missing'}`);
 
   if (!email || !password) {
+    console.log('[dev-server] Missing email or password in request');
     return res.status(400).json({
       success: false,
       message: 'Email and password are required',
@@ -49,6 +53,7 @@ export default async function handler(req, res) {
   }
 
   try {
+    console.log('[dev-server] Connecting to database...');
     // 1. Find the user by email
     // The 'username' column was removed from the query as it does not exist in the current schema.
     const userQuery = await pool.query('SELECT player_id, email, password_hash, subscription_status, timezone FROM players WHERE email = $1', [email]);
@@ -59,6 +64,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
+    console.log(`[dev-server] Found player ${player.player_id}. Comparing password...`);
     // 2. Compare the provided password with the stored hash
     const isMatch = await bcrypt.compare(password, player.password_hash);
 
@@ -67,6 +73,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
+    console.log('[dev-server] Password matches. Checking for JWT_SECRET...');
     // 3. Passwords match, generate a JWT
     if (!process.env.JWT_SECRET) {
       // This is a server-side configuration error, so we'll log it and throw.
@@ -74,6 +81,7 @@ export default async function handler(req, res) {
       throw new Error('Server configuration error: JWT secret is missing.');
     }
 
+    console.log('[dev-server] JWT_SECRET found. Generating token...');
     const token = jwt.sign({ playerId: player.player_id, email: player.email }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
     // 4. Prepare player data for the response.

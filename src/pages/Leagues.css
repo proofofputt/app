@@ -1,5 +1,12 @@
 /* LeaguesPage.css */
 
+.leagues-page {
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 10.5%;
+  box-sizing: border-box;
+}
+
 .leagues-page .page-header {
   display: flex;
   justify-content: space-between;
