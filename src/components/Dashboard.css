@@ -6,8 +6,8 @@
 }
 
 .header-content {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
   padding: 0 20px;
   display: flex;
   justify-content: space-between;
@@ -76,8 +76,8 @@
 }
 
 .dashboard-main {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
   padding: 40px 20px;
 }
 

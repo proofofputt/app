@@ -33,7 +33,7 @@ const AppContent = () => {
   return (
     <div className="App">
       {playerData && <Header />}
-      <main className={location.pathname === '/coach' ? 'container-fluid' : 'container'}>
+      <main className="container-fluid">
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<LoginPage />} />
