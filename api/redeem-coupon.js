@@ -68,7 +68,7 @@ export default async function handler(req, res) {
     client.release();
 
     return res.status(200).json({ success: true, message: 'Coupon redeemed successfully! You now have full access.' });
-  } catch (error)_ {
+  } catch (error) {
     console.error('Coupon redemption error:', error);
     return res.status(500).json({ success: false, message: error.message || 'An internal server error occurred.' });
   }
