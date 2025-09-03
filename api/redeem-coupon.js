@@ -43,9 +43,10 @@ export default async function handler(req, res) {
       return res.status(401).json({ success: false, message: 'Authentication failed' });
     }
 
-    const { player_id, coupon_code } = req.body;
+    const { playerId } = req.query; // Correctly get from URL query
+    const { coupon_code } = req.body;
 
-    if (parseInt(user.playerId, 10) !== parseInt(player_id, 10)) {
+    if (parseInt(user.playerId, 10) !== parseInt(playerId, 10)) {
       return res.status(403).json({ success: false, message: 'Forbidden' });
     }
 
@@ -62,12 +63,12 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, message: 'Invalid or expired coupon code.' });
     }
 
-    await client.query("UPDATE players SET membership_tier = 'regular' WHERE player_id = $1", [player_id]);
+    await client.query("UPDATE players SET membership_tier = 'regular' WHERE player_id = $1", [playerId]);
     await client.query('UPDATE coupons SET times_redeemed = times_redeemed + 1 WHERE coupon_id = $1', [coupon.coupon_id]);
     client.release();
 
     return res.status(200).json({ success: true, message: 'Coupon redeemed successfully! You now have full access.' });
-  } catch (error) {
+  } catch (error)_ {
     console.error('Coupon redemption error:', error);
     return res.status(500).json({ success: false, message: error.message || 'An internal server error occurred.' });
   }
