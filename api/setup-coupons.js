@@ -46,16 +46,15 @@ export default async function handler(req, res) {
       console.log('Column membership_tier already exists or cannot be added:', e.message);
     }
 
-    // Insert the early access coupon codes
+    // Insert the early access coupon codes (without membership_tier if column doesn't exist)
     await client.query(`
-      INSERT INTO coupons (code, description, membership_tier, redemption_limit, times_redeemed, is_active) 
+      INSERT INTO coupons (code, description, redemption_limit, times_redeemed, is_active) 
       VALUES 
-          ('EARLY', 'Early Access 2025', 'regular', NULL, 0, TRUE),
-          ('BETA', 'Beta Access', 'regular', 100, 0, TRUE),
-          ('POP123', 'Pop Early Access Code', 'regular', NULL, 0, TRUE)
+          ('EARLY', 'Early Access 2025', NULL, 0, TRUE),
+          ('BETA', 'Beta Access', 100, 0, TRUE),
+          ('POP123', 'Pop Early Access Code', NULL, 0, TRUE)
       ON CONFLICT (code) DO UPDATE SET
           description = EXCLUDED.description,
-          membership_tier = EXCLUDED.membership_tier,
           redemption_limit = EXCLUDED.redemption_limit,
           is_active = EXCLUDED.is_active;
     `);
