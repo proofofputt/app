@@ -52,7 +52,7 @@ const LeaguesPage = () => {
   const { playerData } = useAuth();
   const { showTemporaryNotification: showNotification } = useNotification();
   const navigate = useNavigate();
-  const isSubscribed = playerData?.subscription_status === 'active';
+  const isSubscribed = playerData?.membership_tier === 'premium' || playerData?.membership_tier === 'regular';
   const [myLeagues, setMyLeagues] = useState([]);
   const [publicLeagues, setPublicLeagues] = useState([]);
   const [pendingInvites, setPendingInvites] = useState([]);

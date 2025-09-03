@@ -31,7 +31,7 @@ const UpgradePrompt = () => (
 const PlayerCareerPage = () => {
   const { playerId } = useParams();
   const { playerData } = useAuth(); // Get current user's data
-  const isSubscribed = playerData?.subscription_status === 'active';
+  const isSubscribed = playerData?.membership_tier === 'premium' || playerData?.membership_tier === 'regular';
   const [stats, setStats] = useState(null);
   const [duels, setDuels] = useState([]);
   const [leagues, setLeagues] = useState([]);

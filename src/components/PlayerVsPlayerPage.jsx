@@ -10,7 +10,7 @@ const PlayerVsPlayerPage = () => {
     const { playerData } = useAuth();
     const { showTemporaryNotification: showNotification } = useNotification();
     const navigate = useNavigate();
-    const isSubscribed = playerData?.subscription_status === 'active';
+    const isSubscribed = playerData?.membership_tier === 'premium' || playerData?.membership_tier === 'regular';
 
     const [leaderboard, setLeaderboard] = useState(null);
     const [duels, setDuels] = useState([]);

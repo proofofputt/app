@@ -196,53 +196,62 @@ const SettingsPage = () => {
 
       <div className="settings-section full-width-section">
         <h3>Manage Subscription</h3>
-        {playerData.subscription_status === 'active' ? (
-          <div className="subscription-status">
-            <p><strong>Status:</strong> <span className="status-badge status-active">Full Subscriber</span></p>
-            <button onClick={handleCancelSubscription} className="btn btn-danger">Cancel My Subscription</button>
-          </div>
-        ) : (
-          <div className="upgrade-section">
-            <p><strong>Status:</strong> <span className="status-badge status-free">Free Tier</span></p>
-            <p>Upgrade to a full subscription to unlock all features and take your game to the next level.</p>
-            <div className="features-grid">
-              <div className="feature-card free-tier">
-                <h3>Free Tier</h3>
-                <ul>
-                  <li>✓ Camera Calibration & Session Recording</li>
-                  <li>✓ View Your Most Recent Session</li>
-                  <li>✓ Participate in Duels</li>
-                  <li>✓ Join & Compete in Leagues</li>
-                </ul>
-              </div>
-              <div className="feature-card subscriber-tier">
-                <h3>Full Subscriber</h3>
-                <ul>
-                  <li>✓ All Free Features</li>
-                  <li>✓ Full Session History & Analysis</li>
-                  <li>✓ Access to In-depth Career Stats</li>
-                  <li>✓ AI-Powered Coach</li>
-                  <li>✓ Create Leagues & Duels</li>
-                  <li>✓ Create Fundraisers</li>
-                </ul>
-              </div>
-            </div>
-            <div className="upgrade-action">
-              <form onSubmit={handleRedeemCoupon} className="coupon-form">
-                <label htmlFor="coupon-input">Have an Early Access Code?</label>
-                <input id="coupon-input" type="text" value={couponCode} onChange={(e) => setCouponCode(e.target.value)} placeholder="Enter Code" className="coupon-input" />
-                <button type="submit" className="btn">Redeem</button>
-              </form>
-              <div className="upgrade-options">
-                <span className="or-divider">OR</span>
-                {/* This link should come from your Zaprite product settings */}
-                <a href="https://zaprite.com/p/proofofputt/subscription-link" target="_blank" rel="noopener noreferrer" className="btn">
-                  Upgrade to Full Subscription ($2.10/mo)
-                </a>
-              </div>
-            </div>
-          </div>
-        )}
+        {(() => {
+          switch (playerData.membership_tier) {            
+            case 'premium':
+            case 'regular': // "Regular" tier now has full feature access
+              return (
+                <div className="subscription-status">
+                  <p><strong>Status:</strong> <span className="status-badge status-active">Full Subscriber</span></p>
+                  <p>Your current plan gives you access to all features.</p>
+                  <button onClick={handleCancelSubscription} className="btn btn-danger">Cancel My Subscription</button>
+                </div>
+              );
+            case 'free':
+            default: // "Free" tier
+              return (
+                <div className="upgrade-section">
+                  <p><strong>Status:</strong> <span className="status-badge status-free">Free Tier</span></p>
+                  <p>Upgrade to a full subscription to unlock all features and take your game to the next level.</p>
+                  <div className="features-grid">
+                    <div className="feature-card free-tier">
+                      <h3>Free Tier</h3>
+                      <ul>
+                        <li>✓ Camera Calibration & Session Recording</li>
+                        <li>✓ View Your Most Recent Session</li>
+                        <li>✓ Participate in Duels</li>
+                        <li>✓ Join & Compete in Leagues</li>
+                      </ul>
+                    </div>
+                    <div className="feature-card subscriber-tier">
+                      <h3>Full Subscriber</h3>
+                      <ul>
+                        <li>✓ All Free Features</li>
+                        <li>✓ Full Session History & Analysis</li>
+                        <li>✓ Access to In-depth Career Stats</li>
+                        <li>✓ AI-Powered Coach</li>
+                        <li>✓ Create Leagues & Duels</li>
+                        <li>✓ Create Fundraisers</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div className="upgrade-action">
+                    <form onSubmit={handleRedeemCoupon} className="coupon-form">
+                      <label htmlFor="coupon-input">Have an Early Access Code?</label>
+                      <input id="coupon-input" type="text" value={couponCode} onChange={(e) => setCouponCode(e.target.value)} placeholder="Enter Code" className="coupon-input" />
+                      <button type="submit" className="btn">Redeem</button>
+                    </form>
+                    <div className="upgrade-options">
+                      <span className="or-divider">OR</span>
+                      <a href="https://zaprite.com/p/proofofputt/subscription-link" target="_blank" rel="noopener noreferrer" className="btn">
+                        Upgrade to Full Subscription ($2.10/mo)
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              );
+          }
+        })()}
       </div>
     </div>
   );

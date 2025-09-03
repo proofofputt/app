@@ -26,7 +26,7 @@ const SessionHistoryPage = () => {
   const [expandedSessionId, setExpandedSessionId] = useState(null);
 
   const isViewingOwnProfile = playerData && playerData.player_id === parseInt(playerId);
-  const isSubscribed = playerData?.subscription_status === 'active';
+  const isSubscribed = playerData?.membership_tier === 'premium' || playerData?.membership_tier === 'regular';
 
   const fetchSessionData = useCallback(async () => {
       if (!playerId) return;

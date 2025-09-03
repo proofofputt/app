@@ -56,6 +56,7 @@ const DuelsPage = () => {
     const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 9;
+    const isSubscribed = playerData?.membership_tier === 'premium' || playerData?.membership_tier === 'regular';
 
     const fetchDuels = async () => {
         if (!playerData?.player_id) return;
@@ -96,6 +97,14 @@ const DuelsPage = () => {
     const handleSubmitSession = (duel) => {
         setSelectedDuel(duel);
         setShowSessionModal(true);
+    };
+
+    const handleCreateDuelClick = () => {
+        if (isSubscribed) {
+            setShowCreateModal(true);
+        } else {
+            showNotification("Creating a duel requires a full subscription.", true);
+        }
     };
 
     const onDuelCreated = () => {
@@ -187,7 +196,7 @@ const DuelsPage = () => {
         <div className="duels-page">
             <div className="duels-header">
                 <h1>Duels</h1>
-                <button onClick={() => setShowCreateModal(true)} className="create-duel-btn">+ Create Duel</button>
+                <button onClick={handleCreateDuelClick} className="create-duel-btn">+ Create Duel</button>
             </div>
 
             {showCreateModal && <CreateDuelModal onClose={() => setShowCreateModal(false)} onDuelCreated={onDuelCreated} />}
