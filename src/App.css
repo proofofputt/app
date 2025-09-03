@@ -96,7 +96,7 @@ main {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  align-items: center; /* Horizontally center content like the dashboard grid */
+  /* align-items: center; /* Removed to allow full-width content. The padding on child elements will control the width. */ */
   justify-content: flex-start; /* Align content to the top */
 }
 
