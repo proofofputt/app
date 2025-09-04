@@ -114,10 +114,14 @@ const SettingsPage = () => {
       const response = await apiRedeemCoupon(playerData.player_id, couponCode.trim());
       showNotification(response.message);
       setCouponCode('');
-      // Add small delay to ensure database update completes before refresh
-      setTimeout(async () => {
-        await refreshData();
-      }, 500);
+
+      // Manually update the player data on the client-side
+      const updatedPlayerData = { ...playerData, membership_tier: 'regular' };
+      localStorage.setItem('playerData', JSON.stringify(updatedPlayerData));
+      
+      // No need to call refreshData(), we've already updated the data
+      window.location.reload(); // Force a reload to ensure all components re-render with the new data
+
     } catch (err) {
       showNotification(`Error: ${err.message}`, true);
     }
