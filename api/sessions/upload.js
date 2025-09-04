@@ -48,7 +48,7 @@ export default async function handler(req, res) {
     }
 
     const { rows } = await pool.query(
-      `INSERT INTO sessions (player_id, total_putts, total_makes, total_misses, session_duration_seconds, best_streak, makes_per_minute, fastest_21_makes_seconds, putts_by_distance, makes_by_distance, details_by_distance, most_makes_in_60_seconds)
+      `INSERT INTO sessions (player_id, total_putts, makes, misses, session_duration, best_streak, makes_per_minute, fastest_21_makes_seconds, putts_by_distance, makes_by_distance, details_by_distance, most_makes_in_60_seconds)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING session_id`,
       [user.playerId, sessionData.total_putts, sessionData.total_makes, sessionData.total_misses, sessionData.session_duration_seconds, sessionData.best_streak, sessionData.makes_per_minute, sessionData.fastest_21_makes_seconds, JSON.stringify(sessionData.putts_by_distance), JSON.stringify(sessionData.makes_by_distance), JSON.stringify(sessionData.details_by_distance), sessionData.most_makes_in_60_seconds]
