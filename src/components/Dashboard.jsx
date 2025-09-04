@@ -119,7 +119,7 @@ function Dashboard() {
 
   return (
     <>
-      <main className="dashboard-main container-fluid">
+      <main className="dashboard-main">
         <div className="dashboard-actions">
           <button 
             onClick={() => setIsContactsModalOpen(true)}
