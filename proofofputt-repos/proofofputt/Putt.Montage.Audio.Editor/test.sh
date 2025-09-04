@@ -38,28 +38,28 @@ clean_up
 
 # 1. Generate a dummy video file
 echo "Generating dummy video..."
-python "$CODE_DIR/create_dummy_video.py" --output_path "$TEST_VIDEO_PATH"
+python3 "$CODE_DIR/create_dummy_video.py" --output_path "$TEST_VIDEO_PATH"
 
 # 2. Run the main pipeline with dummy data
 echo "Running main pipeline steps..."
 
 # Step 1: Extract clips
 echo "Step 1/4: Extracting clips..."
-python "$PROJECT_ROOT/main_pipeline.py" --step extract_clips --input_dir "$RAW_VIDEO_DIR" --output_dir "$AV_CLIPS_DIR/raw_clips" --pre_sec 1 --post_sec 1 --threshold 0.01
+python3 "$PROJECT_ROOT/main_pipeline.py" --step extract_clips --input_dir "$RAW_VIDEO_DIR" --output_dir "$AV_CLIPS_DIR/raw_clips" --pre_sec 1 --post_sec 1 --threshold 0.01
 
 # Step 2: Categorize audio
 echo "Step 2/4: Categorizing audio..."
-python "$PROJECT_ROOT/main_pipeline.py" --step categorize_audio --clips_dir "$AV_CLIPS_DIR/raw_clips" --output_csv "$TEST_CATEGORIES_CSV" --num_clusters 2
+python3 "$PROJECT_ROOT/main_pipeline.py" --step categorize_audio --clips_dir "$AV_CLIPS_DIR/raw_clips" --output_csv "$TEST_CATEGORIES_CSV" --num_clusters 2
 
 # Step 3: Modulate notes (using raw_clips as base for simplicity in test)
 echo "Step 3/4: Modulating notes..."
-python "$PROJECT_ROOT/main_pipeline.py" --step modulate_notes --base_dir "$AV_CLIPS_DIR/raw_clips" --output_dir "$AV_CLIPS_DIR/note_library" --semitone_range -1 1
+python3 "$PROJECT_ROOT/main_pipeline.py" --step modulate_notes --base_dir "$AV_CLIPS_DIR/raw_clips" --output_dir "$AV_CLIPS_DIR/note_library" --semitone_range -1 1
 
 # Step 4: Generate video (requires a dummy song input)
 echo "Step 4/4: Generating video..."
 # Create a dummy song JSON for testing
 echo '[{"time": 0.0, "note": "C4", "duration": 0.5}, {"time": 1.0, "note": "E4", "duration": 0.5}, {"time": 2.0, "note": "G4", "duration": 0.5}]' > "$TEST_SONG_JSON"
-python "$PROJECT_ROOT/main_pipeline.py" --step generate_video --notes_list "$TEST_SONG_JSON" --library_dir "$AV_CLIPS_DIR/note_library" --output_file "$TEST_COMMERCIAL_MP4" --grid_size 1x1
+python3 "$PROJECT_ROOT/main_pipeline.py" --step generate_video --notes_list "$TEST_SONG_JSON" --library_dir "$AV_CLIPS_DIR/note_library" --output_file "$TEST_COMMERCIAL_MP4" --grid_size 1x1
 
 # Verify outputs
 echo "Verifying generated files..."
