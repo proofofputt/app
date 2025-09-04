@@ -45,14 +45,18 @@ export default async function handler(req, res) {
     const client = await pool.connect();
     
     try {
+      // Generate a unique session ID
+      const sessionId = `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
       // Insert session data
       const sessionInsertQuery = `
-        INSERT INTO sessions (player_id, total_putts, makes, misses, make_percentage, best_streak, session_duration, created_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+        INSERT INTO sessions (session_id, player_id, total_putts, makes, misses, make_percentage, best_streak, session_duration, created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
         RETURNING session_id
       `;
       
       const sessionValues = [
+        sessionId,
         parseInt(player_id),
         session_data.total_putts || 0,
         session_data.total_makes || 0,
