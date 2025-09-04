@@ -180,8 +180,13 @@ export const apiGetConversationHistory = (conversationId) =>
   fetch(`${API_BASE_URL}/coach/conversations/${conversationId}`, { headers: getHeaders() }).then(handleResponse);
 
 // --- Leaderboards ---
-export const apiGetLeaderboards = () => 
-  fetch(`${API_BASE_URL}/leaderboards`, { headers: getHeaders() }).then(handleResponse);
+export const apiGetLeaderboard = (params) => {
+  const query = new URLSearchParams(params).toString();
+  // Assuming the new endpoint is at /api/leaderboards-v2 as per the file name.
+  // Adjust if the deployed route is different (e.g., /api/v2/leaderboards).
+  return fetch(`${API_BASE_URL}/leaderboards-v2?${query}`, { headers: getHeaders() }).then(handleResponse);
+};
+
 
 // --- Desktop App ---
 export const apiCheckDesktopStatus = () => 

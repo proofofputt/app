@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { apiGetCareerStats, apiGetLatestSessions, apiGetLeaderboards } from '../api';
+import { apiGetCareerStats, apiGetLatestSessions, apiGetLeaderboard } from '../api';
 import ContactsModal from './ContactsModal';
 import SessionRow from './SessionRow';
 import LeaderboardCard from './LeaderboardCard';
@@ -69,10 +69,21 @@ function Dashboard() {
       const results = await Promise.allSettled([
         apiGetCareerStats(playerData.player_id),
         apiGetLatestSessions(playerData.player_id, 5),
-        apiGetLeaderboards(),
+        // Fetch leaderboards individually using the V2 endpoint
+        apiGetLeaderboard({ metric: 'total_makes' }),
+        apiGetLeaderboard({ metric: 'best_streak' }),
+        apiGetLeaderboard({ metric: 'makes_per_minute' }),
+        apiGetLeaderboard({ metric: 'fastest_21' }),
       ]);
 
-      const [statsResult, sessionsResult, leaderboardsResult] = results;
+      const [
+        statsResult, 
+        sessionsResult, 
+        topMakesResult,
+        topStreaksResult,
+        topMpmResult,
+        fastest21Result
+      ] = results;
 
       if (statsResult.status === 'fulfilled') {
         setCareerStats(statsResult.value);
@@ -97,11 +108,20 @@ function Dashboard() {
       }
       setIsLoadingSessions(false);
 
-      if (leaderboardsResult.status === 'fulfilled') {
-        setLeaderboardData(leaderboardsResult.value);
-      } else {
-        console.error('Error loading leaderboards:', leaderboardsResult.reason);
-        // Optionally set an error for leaderboards if needed
+      // Process leaderboard results
+      const newLeaderboardData = {
+        top_makes: topMakesResult.status === 'fulfilled' ? topMakesResult.value.leaderboard : [],
+        top_streaks: topStreaksResult.status === 'fulfilled' ? topStreaksResult.value.leaderboard : [],
+        top_makes_per_minute: topMpmResult.status === 'fulfilled' ? topMpmResult.value.leaderboard : [],
+        fastest_21: fastest21Result.status === 'fulfilled' ? fastest21Result.value.leaderboard : [],
+      };
+      setLeaderboardData(newLeaderboardData);
+
+      // Log any errors from leaderboard fetches
+      results.slice(2).forEach(result => {
+        if (result.status === 'rejected') {
+          console.error('Error loading a leaderboard:', result.reason);
+        }
       }
       setIsLoadingLeaderboards(false);
     };
