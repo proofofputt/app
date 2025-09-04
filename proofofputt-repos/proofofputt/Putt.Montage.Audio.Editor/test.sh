@@ -45,7 +45,7 @@ echo "Running main pipeline steps..."
 
 # Step 1: Extract clips
 echo "Step 1/4: Extracting clips..."
-python3 "$PROJECT_ROOT/main_pipeline.py" --step extract_clips --input_dir "$RAW_VIDEO_DIR" --output_dir "$AV_CLIPS_DIR/raw_clips" --pre_sec 1 --post_sec 1 --threshold 0.01
+python3 "$PROJECT_ROOT/main_pipeline.py" --step extract_clips --input_dir "$RAW_VIDEO_DIR" --output_dir "$AV_CLIPS_DIR/raw_clips" --pre_sec 1 --threshold 0.01
 
 # Step 2: Categorize audio
 echo "Step 2/4: Categorizing audio..."
