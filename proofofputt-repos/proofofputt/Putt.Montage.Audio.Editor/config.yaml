@@ -14,9 +14,13 @@ brainstorming_dir: "Brainstorming"
 
 # --- Clip Extraction Settings (clip_extractor.py) ---
 clip_pre_seconds: 3.0  # Seconds before hole entry to include in clip
-clip_post_seconds: 2.0 # Seconds after hole entry to include in clip
+clip_post_seconds: 2.0 # Seconds after hole entry to include in clip (default for single extraction)
 audio_peak_threshold: 0.1 # Threshold for detecting audio peaks (e.g., ball hitting cup)
 video_motion_threshold: 0.05 # Threshold for detecting significant video motion
+
+# --- Clip Extraction Preview Settings ---
+post_sec_preview_values: [0.1, 0.2, 0.3, 0.4, 0.5, 1.0] # List of post_sec values to generate preview clips for
+
 
 # --- Audio Categorization Settings (audio_categorizer.py) ---
 num_audio_categories: 5 # Number of clusters for K-Means categorization
