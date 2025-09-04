@@ -5,7 +5,7 @@
       "dest": "/api/$1"
     },
     {
-      "source": "/((?!api/|assets/|_next/|favicon.ico|logo.svg).*)",
+      "source": "/((?!api/|assets/|_next/|favicon.ico|logo.svg|logo.png|POP.Proof_Of_Putt.Log.576.png).*)",
       "destination": "/index.html"
     }
   ]
