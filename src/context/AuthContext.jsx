@@ -147,31 +147,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const changePassword = async (oldPassword, newPassword) => {
+    if (!playerData) throw new Error("You must be logged in to change your password.");
+    try {
+      const response = await apiChangePassword(playerData.player_id, oldPassword, newPassword);
+      return response;
+    } catch (error) {
+      console.error('Failed to change password:', error);
+      throw error;
+    }
+  };
+
   // Expose playerTimezone for convenience
   const playerTimezone = playerData?.timezone || 'UTC';
 
   const value = {
-    playerData,
-    playerTimezone,
-    isAuthenticated: !!playerData,
-    isLoading,
-    login,
-    register,
-    logout,
-    refreshData,
-    refreshSessionsOnly,
-  };
-
-  return (
-    <AuthContext.Provider value={value}>
-      {!isLoading && children}
-    </AuthContext.Provider>
-  );
-};
-
-export const useAuth = () => {
-  return useContext(AuthContext);
-};nst value = {
     playerData,
     playerTimezone,
     isAuthenticated: !!playerData,
