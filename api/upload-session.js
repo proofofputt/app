@@ -38,22 +38,31 @@ export default async function handler(req, res) {
   }
 
   try {
+    console.log('[upload-session] Request received at:', new Date().toISOString());
+    console.log('[upload-session] Authorization header present:', !!req.headers.authorization);
+    
     // Verify the JWT from the Authorization header
     const user = await verifyToken(req);
+    console.log('[upload-session] Token verification result:', user ? 'success' : 'failed');
     if (!user) {
       return res.status(401).json({ success: false, message: 'Authentication failed' });
     }
 
     const { player_id, session_data, session_id, csv_data } = req.body;
+    console.log('[upload-session] Request payload size:', JSON.stringify(req.body).length);
+    console.log('[upload-session] Player ID received:', player_id);
 
     if (!player_id || !session_data) {
+      console.log('[upload-session] Missing required fields');
       return res.status(400).json({ success: false, message: 'Player ID and session data are required.' });
     }
 
     if (parseInt(user.playerId, 10) !== parseInt(player_id, 10)) {
+      console.log('[upload-session] Player ID mismatch:', user.playerId, 'vs', player_id);
       return res.status(403).json({ success: false, message: 'Forbidden' });
     }
 
+    console.log('[upload-session] Connecting to database...');
     const client = await pool.connect();
     try {
       // Generate session ID if not provided
@@ -121,7 +130,11 @@ export default async function handler(req, res) {
       client.release();
     }
   } catch (error) {
-    console.error('Session upload error:', error);
-    return res.status(500).json({ success: false, message: error.message || 'An internal server error occurred.' });
+    console.error('[upload-session] Server error:', error.message);
+    console.error('[upload-session] Stack trace:', error.stack);
+    return res.status(500).json({ 
+      success: false, 
+      message: `Internal server error: ${error.message}` 
+    });
   }
 }
