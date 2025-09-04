@@ -122,7 +122,7 @@ function Dashboard() {
         if (result.status === 'rejected') {
           console.error('Error loading a leaderboard:', result.reason);
         }
-      }
+      });
       setIsLoadingLeaderboards(false);
     };
 
