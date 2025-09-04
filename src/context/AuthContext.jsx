@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { apiLogin, apiRegister, apiGetPlayerData, apiGetLatestSessions } from '../api.js';
+import { apiLogin, apiRegister, apiGetPlayerData, apiGetLatestSessions, apiChangePassword } from '../api.js';
 
 const AuthContext = createContext(null);
 
@@ -160,6 +160,28 @@ export const AuthProvider = ({ children }) => {
     logout,
     refreshData,
     refreshSessionsOnly,
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {!isLoading && children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  return useContext(AuthContext);
+};nst value = {
+    playerData,
+    playerTimezone,
+    isAuthenticated: !!playerData,
+    isLoading,
+    login,
+    register,
+    logout,
+    refreshData,
+    refreshSessionsOnly,
+    changePassword,
   };
 
   return (

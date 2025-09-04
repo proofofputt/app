@@ -19,60 +19,31 @@ app.use(express.json());
 // Dynamically load and register API routes
 async function loadAPIRoutes() {
   const apiDir = path.join(__dirname, 'api');
-  
-  try {
-    const files = await readdir(apiDir);
-    
+
+  const registerRoutes = async (dir, prefix = '') => {
+    const files = await readdir(dir, { withFileTypes: true });
+
     for (const file of files) {
-      if (file.endsWith('.js')) {
-        const routeName = file.replace('.js', '');
-        const routePath = path.join(apiDir, file);
-        
+      const routePath = path.join(dir, file.name);
+      if (file.isDirectory()) {
+        await registerRoutes(routePath, `${prefix}${file.name}/`);
+      } else if (file.name.endsWith('.js')) {
+        const routeName = `${prefix}${file.name.replace('.js', '')}`;
         try {
           const { default: handler } = await import(routePath);
-          
-          // Register the route
           app.all(`/api/${routeName}`, (req, res) => {
             handler(req, res);
           });
-          
           console.log(`✅ Registered API route: /api/${routeName}`);
         } catch (error) {
           console.error(`❌ Failed to load API route ${routeName}:`, error.message);
         }
       }
     }
-    
-    // Also load routes from subdirectories
-    const subdirs = await readdir(apiDir, { withFileTypes: true });
-    for (const dirent of subdirs) {
-      if (dirent.isDirectory()) {
-        try {
-          const subFiles = await readdir(path.join(apiDir, dirent.name));
-          for (const subFile of subFiles) {
-            if (subFile.endsWith('.js')) {
-              const routeName = `${dirent.name}/${subFile.replace('.js', '')}`;
-              const routePath = path.join(apiDir, dirent.name, subFile);
-              
-              try {
-                const { default: handler } = await import(routePath);
-                
-                app.all(`/api/${routeName}`, (req, res) => {
-                  handler(req, res);
-                });
-                
-                console.log(`✅ Registered API route: /api/${routeName}`);
-              } catch (error) {
-                console.error(`❌ Failed to load API route ${routeName}:`, error.message);
-              }
-            }
-          }
-        } catch (error) {
-          console.warn(`Could not read subdirectory ${dirent.name}:`, error.message);
-        }
-      }
-    }
-    
+  };
+
+  try {
+    await registerRoutes(apiDir);
   } catch (error) {
     console.error('Error loading API routes:', error);
   }
