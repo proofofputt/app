@@ -43,63 +43,35 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, message: 'Player ID and coupon code are required.' });
     }
 
-    // For early access coupons, allow redemption with relaxed authentication
-    const isEarlyAccessCoupon = ['EARLY', 'BETA', 'POP123'].includes(coupon_code.toUpperCase());
+    // Check if it's the early access coupon (case-insensitive)
+    const isEarlyAccessCoupon = coupon_code.toLowerCase() === 'early';
     
     if (!isEarlyAccessCoupon) {
-      // For non-early-access coupons, require strict JWT authentication
-      const user = await verifyToken(req);
-      if (!user) {
-        return res.status(401).json({ success: false, message: 'Authentication failed' });
-      }
-
-      if (parseInt(user.playerId, 10) !== parseInt(player_id, 10)) {
-        return res.status(403).json({ success: false, message: 'Forbidden' });
-      }
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid coupon code.' 
+      });
     }
 
     const client = await pool.connect();
     try {
-      // For early access coupons, verify the player exists in the database
-      if (isEarlyAccessCoupon) {
-        const playerCheck = await client.query('SELECT player_id FROM players WHERE player_id = $1', [player_id]);
-        if (playerCheck.rows.length === 0) {
-          return res.status(400).json({ success: false, message: 'Invalid player ID' });
-        }
+      // Verify the player exists in the database
+      const playerCheck = await client.query('SELECT player_id, membership_tier FROM players WHERE player_id = $1', [player_id]);
+      if (playerCheck.rows.length === 0) {
+        return res.status(400).json({ success: false, message: 'Invalid player ID' });
       }
 
-      console.log(`🎫 Attempting to redeem coupon: "${coupon_code}" for player ${player_id}`);
+      const currentPlayer = playerCheck.rows[0];
+      console.log(`🎫 Attempting to redeem coupon: "${coupon_code}" for player ${player_id}. Current tier: ${currentPlayer.membership_tier}`);
       
-      // Check if coupon exists and is valid
-      const couponResult = await client.query('SELECT * FROM coupons WHERE code = $1 AND is_active = TRUE', [coupon_code]);
-      const coupon = couponResult.rows[0];
-
-      console.log(`🎫 Coupon query result:`, coupon ? { 
-        code: coupon.code, 
-        times_redeemed: coupon.times_redeemed, 
-        redemption_limit: coupon.redemption_limit,
-        is_active: coupon.is_active 
-      } : 'No coupon found');
-
-      if (!coupon) {
-        // Check if coupons table exists and has any data
-        const allCouponsResult = await client.query('SELECT code FROM coupons LIMIT 5');
-        console.log(`🎫 Available coupon codes:`, allCouponsResult.rows.map(row => row.code));
-        return res.status(400).json({ 
-          success: false, 
-          message: `Coupon code "${coupon_code}" not found. Available codes: ${allCouponsResult.rows.map(row => row.code).join(', ') || 'None'}` 
-        });
+      // Check if user is already upgraded
+      if (currentPlayer.membership_tier === 'regular' || currentPlayer.membership_tier === 'premium') {
+        return res.status(400).json({ success: false, message: 'You already have full access.' });
       }
 
-      if (coupon.redemption_limit !== null && coupon.times_redeemed >= coupon.redemption_limit) {
-        return res.status(400).json({ success: false, message: 'Coupon has reached its redemption limit.' });
-      }
-
-      // Update player membership tier
+      // Update player membership tier to regular
       await client.query("UPDATE players SET membership_tier = 'regular' WHERE player_id = $1", [player_id]);
-      
-      // Increment coupon redemption count
-      await client.query('UPDATE coupons SET times_redeemed = times_redeemed + 1 WHERE coupon_id = $1', [coupon.coupon_id]);
+      console.log(`🎫 Successfully upgraded player ${player_id} to regular tier`);
 
       return res.status(200).json({ success: true, message: 'Coupon redeemed successfully! You now have full access.' });
     } finally {

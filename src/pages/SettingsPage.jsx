@@ -114,7 +114,10 @@ const SettingsPage = () => {
       const response = await apiRedeemCoupon(playerData.player_id, couponCode.trim());
       showNotification(response.message);
       setCouponCode('');
-      await refreshData(); // Refresh after clearing state
+      // Add small delay to ensure database update completes before refresh
+      setTimeout(async () => {
+        await refreshData();
+      }, 500);
     } catch (err) {
       showNotification(`Error: ${err.message}`, true);
     }
