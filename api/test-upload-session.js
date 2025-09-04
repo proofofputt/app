@@ -50,14 +50,21 @@ export default async function handler(req, res) {
       
       // Insert session data
       const sessionInsertQuery = `
-        INSERT INTO sessions (session_id, player_id, total_putts, makes, misses, make_percentage, best_streak, session_duration, created_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+        INSERT INTO sessions (session_id, player_id, data, stats_summary, total_putts, makes, misses, make_percentage, best_streak, session_duration, created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
         RETURNING session_id
       `;
       
       const sessionValues = [
         sessionId,
         parseInt(player_id),
+        JSON.stringify(session_data), // Full session data as JSON
+        JSON.stringify({              // Stats summary
+          total_putts: session_data.total_putts,
+          total_makes: session_data.total_makes,
+          make_percentage: session_data.make_percentage,
+          best_streak: session_data.best_streak
+        }),
         session_data.total_putts || 0,
         session_data.total_makes || 0,
         session_data.total_misses || 0,
