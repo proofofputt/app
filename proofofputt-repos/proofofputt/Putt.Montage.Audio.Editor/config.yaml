@@ -1,0 +1,47 @@
+# Global Configuration for Putt Montage Audio Editor
+
+# --- Paths ---
+# All paths are relative to the project root directory.
+raw_video_dir: "Raw.Video"
+av_clips_dir: "AV.Clips"
+raw_clips_subdir: "raw_clips"
+base_library_subdir: "base_library"
+note_library_subdir: "note_library"
+final_videos_subdir: "final_videos"
+handover_reports_dir: "Handover.Reports"
+code_dir: "Code"
+brainstorming_dir: "Brainstorming"
+
+# --- Clip Extraction Settings (clip_extractor.py) ---
+clip_pre_seconds: 3.0  # Seconds before hole entry to include in clip
+clip_post_seconds: 2.0 # Seconds after hole entry to include in clip
+audio_peak_threshold: 0.1 # Threshold for detecting audio peaks (e.g., ball hitting cup)
+video_motion_threshold: 0.05 # Threshold for detecting significant video motion
+
+# --- Audio Categorization Settings (audio_categorizer.py) ---
+num_audio_categories: 5 # Number of clusters for K-Means categorization
+audio_features: ["rms", "mfcc", "peak_frequency"] # Features to use for clustering
+categorization_output_csv: "audio_categories.csv" # Output CSV for categories
+
+# --- Note Modulation Settings (note_modulator.py) ---
+semitone_range_min: -12 # Minimum semitone shift (e.g., one octave down)
+semitone_range_max: 24  # Maximum semitone shift (e.g., two octaves up)
+
+# --- Video Generation Settings (video_generator.py) ---
+default_grid_size: "3x3" # Default grid layout for video (e.g., "3x3", "4x4")
+output_video_fps: 30 # Frames per second for the output video
+output_video_codec: "libx264" # Video codec for output
+output_video_bitrate: "5000k" # Video bitrate for output
+
+# --- Video Generation Enhancements ---
+pre_roll_duration_seconds: 1.0 # Duration of silence/previous putt sound before the main clip
+output_video_width_phone: 1080 # Width for full screen phone display (portrait mode)
+output_video_height_phone: 1920 # Height for full screen phone display (portrait mode)
+rotate_final_video_ccw_90: True # Rotate the final video 90 degrees counter-clockwise
+
+# --- Logging Settings ---
+log_level: "INFO" # DEBUG, INFO, WARNING, ERROR, CRITICAL
+log_file: "pipeline.log" # Log file name in Handover.Reports
+
+# --- GPU Usage ---
+use_gpu_if_available: True # Attempt to use GPU for Torch operations if CUDA is available
