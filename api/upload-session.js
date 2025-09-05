@@ -41,6 +41,8 @@ export default async function handler(req, res) {
     console.log('[upload-session] Request received at:', new Date().toISOString());
     console.log('[upload-session] Authorization header present:', !!req.headers.authorization);
     
+    const { player_id, session_data, session_id, csv_data } = req.body;
+
     // Check if this is a desktop upload (no auth required for desktop)
     const isDesktopUpload = req.headers['x-desktop-upload'] === 'true' || !req.headers.authorization;
     
@@ -51,8 +53,6 @@ export default async function handler(req, res) {
     if (!user && !isDesktopUpload) {
       return res.status(401).json({ success: false, message: 'Authentication failed' });
     }
-
-    const { player_id, session_data, session_id, csv_data } = req.body;
     console.log('[upload-session] Request payload size:', JSON.stringify(req.body).length);
     console.log('[upload-session] Player ID received:', player_id);
 
