@@ -75,7 +75,7 @@ export const apiGetPlayerData = (playerId) =>
   fetch(`${API_BASE_URL}/player/${playerId}/data`, { headers: getHeaders() }).then(handleResponse);
 
 export const apiGetCareerStats = (playerId) => 
-  fetch(`${API_BASE_URL}/player/${playerId}/stats`, { headers: getHeaders() }).then(handleResponse);
+  fetch(`${API_BASE_URL}/player-stats?player_id=${playerId}`, { headers: getHeaders() }).then(handleResponse);
 
 export const apiSearchPlayers = (term, excludePlayerId = null) => {
     let url = `${API_BASE_URL}/players/search?term=${encodeURIComponent(term)}`;
@@ -202,7 +202,7 @@ export const apiUpdatePlayerSocials = (playerId, data) =>
   fetch(`${API_BASE_URL}/player/${playerId}/socials`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(data) }).then(handleResponse);
 
 export const apiGetLatestSessions = (playerId, limit = 5) => 
-  fetch(`${API_BASE_URL}/player/${playerId}/sessions?limit=${limit}`, { headers: getHeaders() }).then(handleResponse);
+  fetch(`${API_BASE_URL}/player-sessions-latest?player_id=${playerId}&limit=${limit}`, { headers: getHeaders() }).then(handleResponse);
 
 // --- Notifications ---
 export const apiGetNotifications = (playerId) => 
@@ -227,3 +227,62 @@ export const apiRedeemCoupon = (playerId, couponCode) => {
     body: JSON.stringify({ player_id: playerId, coupon_code: couponCode })
   }).then(handleResponse);
 };
+
+// --- Friends & Social ---
+export const apiListFriends = (playerId) => 
+  fetch(`${API_BASE_URL}/player/${playerId}/friends`, { headers: getHeaders() }).then(handleResponse);
+
+// Add friend by private identifier (email, phone, or username)
+export const apiAddFriendByIdentifier = (playerId, identifier, identifierType = 'auto') => 
+  fetch(`${API_BASE_URL}/player/${playerId}/friends/add`, { 
+    method: 'POST', 
+    headers: getHeaders(), 
+    body: JSON.stringify({ identifier, identifier_type: identifierType })
+  }).then(handleResponse);
+
+// Legacy method - kept for backward compatibility
+export const apiAddFriend = (playerId, friendId) => 
+  fetch(`${API_BASE_URL}/player/${playerId}/friends/${friendId}`, { method: 'POST', headers: getHeaders() }).then(handleResponse);
+
+export const apiRemoveFriend = (playerId, friendId) => 
+  fetch(`${API_BASE_URL}/player/${playerId}/friends/${friendId}`, { method: 'DELETE', headers: getHeaders() }).then(handleResponse);
+
+export const apiFriendsSocialActivity = (playerId) => 
+  fetch(`${API_BASE_URL}/player/${playerId}/friends/activity`, { headers: getHeaders() }).then(handleResponse);
+
+// Search players by username only (public search)
+export const apiSearchPlayersByUsername = (playerId, usernameQuery) => 
+  fetch(`${API_BASE_URL}/players/search/username?q=${encodeURIComponent(usernameQuery)}&requester_id=${playerId}`, { headers: getHeaders() }).then(handleResponse);
+
+// Private search for adding friends (email, phone, username)
+export const apiSearchPlayersForFriends = (playerId, query, searchType = 'auto') => 
+  fetch(`${API_BASE_URL}/player/${playerId}/friends/search`, { 
+    method: 'POST', 
+    headers: getHeaders(), 
+    body: JSON.stringify({ query, search_type: searchType })
+  }).then(handleResponse);
+
+// Legacy method - kept for backward compatibility  
+export const apiSearchPlayersLegacy = (playerId, query) => 
+  fetch(`${API_BASE_URL}/players/search/username?q=${encodeURIComponent(query)}&requester_id=${playerId}`, { headers: getHeaders() }).then(handleResponse);
+
+export const apiFriendsLeaderboard = (playerId, sortBy = 'ranking_points', timeframe = 'all_time') => 
+  fetch(`${API_BASE_URL}/player/${playerId}/friends/leaderboard?sort_by=${sortBy}&timeframe=${timeframe}`, { headers: getHeaders() }).then(handleResponse);
+
+// Friend requests
+export const apiSendFriendRequest = (playerId, targetIdentifier, identifierType = 'auto') => 
+  fetch(`${API_BASE_URL}/player/${playerId}/friends/request`, { 
+    method: 'POST', 
+    headers: getHeaders(), 
+    body: JSON.stringify({ target_identifier: targetIdentifier, identifier_type: identifierType })
+  }).then(handleResponse);
+
+export const apiRespondToFriendRequest = (playerId, requestId, action) => 
+  fetch(`${API_BASE_URL}/player/${playerId}/friends/request/${requestId}`, { 
+    method: 'POST', 
+    headers: getHeaders(), 
+    body: JSON.stringify({ action })
+  }).then(handleResponse);
+
+export const apiGetFriendRequests = (playerId) => 
+  fetch(`${API_BASE_URL}/player/${playerId}/friends/requests`, { headers: getHeaders() }).then(handleResponse);

@@ -46,6 +46,13 @@ export default async function handler(req, res) {
     // Check if this is a desktop upload (no auth required for desktop)
     const isDesktopUpload = req.headers['x-desktop-upload'] === 'true' || !req.headers.authorization;
     
+    console.log('[upload-session] Headers:', {
+      'x-desktop-upload': req.headers['x-desktop-upload'],
+      'authorization': !!req.headers.authorization,
+      'content-type': req.headers['content-type'],
+      isDesktopUpload
+    });
+    
     // Verify the JWT from the Authorization header (skip for desktop)
     const user = isDesktopUpload ? { playerId: player_id } : await verifyToken(req);
     console.log('[upload-session] Auth mode:', isDesktopUpload ? 'desktop (no auth)' : 'web (JWT)');
@@ -85,16 +92,24 @@ export default async function handler(req, res) {
         }
       }
 
-      // Extract key metrics for stats summary
+      // Extract key metrics for stats summary - handle field name variations
       const statsSummary = {
         total_putts: statsData.total_putts || 0,
         total_makes: statsData.total_makes || 0,
         total_misses: statsData.total_misses || 0,
         make_percentage: statsData.make_percentage || 0,
         best_streak: statsData.best_streak || 0,
-        session_duration: statsData.session_duration || 0,
+        // Handle both session_duration and session_duration_seconds
+        session_duration: statsData.session_duration_seconds || statsData.session_duration || 0,
         date_recorded: statsData.date_recorded || new Date().toISOString()
       };
+
+      console.log('[upload-session] Stats summary extracted:', {
+        totalPutts: statsSummary.total_putts,
+        duration: statsSummary.session_duration,
+        bestStreak: statsSummary.best_streak,
+        originalFields: Object.keys(statsData).sort()
+      });
 
       // Insert session data into sessions table
       await client.query(
