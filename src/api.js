@@ -2,6 +2,11 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const handleResponse = async (response) => {
   const contentType = response.headers.get("content-type");
+  // Gracefully handle 404s by returning null, as this is often an expected state (e.g., new player with no stats).
+  if (response.status === 404) {
+    return null;
+  }
+
   if (!response.ok) {
     let errorData = { message: `HTTP error! status: ${response.status}` };
     if (contentType?.includes("application/json")) {

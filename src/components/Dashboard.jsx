@@ -22,9 +22,7 @@ function Dashboard() {
   const [leaderboardData, setLeaderboardData] = useState(null);
   const [careerStats, setCareerStats] = useState(null);
   const [recentSessions, setRecentSessions] = useState([]);
-  const [isLoadingStats, setIsLoadingStats] = useState(true);
-  const [isLoadingLeaderboards, setIsLoadingLeaderboards] = useState(true);
-  const [isLoadingSessions, setIsLoadingSessions] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const tableWrapperRef = useRef(null);
 
   // This effect manages the height of the session table container
@@ -55,25 +53,21 @@ function Dashboard() {
   useEffect(() => {
     const loadData = async () => {
       if (!playerData?.player_id) {
-        setIsLoadingStats(false);
-        setIsLoadingSessions(false);
-        setIsLoadingLeaderboards(false);
+        setIsLoading(false);
         return;
       }
 
-      setIsLoadingStats(true);
-      setIsLoadingSessions(true);
-      setIsLoadingLeaderboards(true);
+      setIsLoading(true);
       setActionError('');
 
       const results = await Promise.allSettled([
         apiGetCareerStats(playerData.player_id),
         apiGetLatestSessions(playerData.player_id, 5),
-        // Fetch leaderboards individually using the V2 endpoint
-        apiGetLeaderboard({ metric: 'total_makes' }),
+        // Fetch leaderboards individually using the V2 endpoint with corrected metric names
+        apiGetLeaderboard({ metric: 'makes' }), // Changed from 'total_makes'
         apiGetLeaderboard({ metric: 'best_streak' }),
         apiGetLeaderboard({ metric: 'makes_per_minute' }),
-        apiGetLeaderboard({ metric: 'fastest_21' }),
+        apiGetLeaderboard({ metric: 'fastest_21_makes_seconds' }), // Changed from 'fastest_21'
       ]);
 
       const [
@@ -88,7 +82,7 @@ function Dashboard() {
       if (statsResult.status === 'fulfilled') {
         setCareerStats(statsResult.value);
       } else {
-        const reason = statsResult.reason;
+        const reason = statsResult.reason; // This will be null now for 404s
         console.error('Error loading career stats:', reason);
         if (reason?.message?.includes('404')) {
           setCareerStats({}); // Player has no stats yet, show default 0s.
@@ -96,24 +90,22 @@ function Dashboard() {
           setActionError('Failed to load career stats');
         }
       }
-      setIsLoadingStats(false);
 
       if (sessionsResult.status === 'fulfilled') {
-        setRecentSessions(sessionsResult.value || []);
+        setRecentSessions(sessionsResult.value ?? []);
       } else {
         // A 404 from the sessions endpoint is expected if the user has no sessions.
         // This is not an error we should show to the user.
         console.warn('Could not load recent sessions:', sessionsResult.reason);
         setRecentSessions([]);
       }
-      setIsLoadingSessions(false);
 
       // Process leaderboard results
       const newLeaderboardData = {
-        top_makes: topMakesResult.status === 'fulfilled' ? topMakesResult.value.leaderboard : [],
-        top_streaks: topStreaksResult.status === 'fulfilled' ? topStreaksResult.value.leaderboard : [],
-        top_makes_per_minute: topMpmResult.status === 'fulfilled' ? topMpmResult.value.leaderboard : [],
-        fastest_21: fastest21Result.status === 'fulfilled' ? fastest21Result.value.leaderboard : [],
+        top_makes: topMakesResult.status === 'fulfilled' ? topMakesResult.value?.leaderboard ?? [] : [],
+        top_streaks: topStreaksResult.status === 'fulfilled' ? topStreaksResult.value?.leaderboard ?? [] : [],
+        top_makes_per_minute: topMpmResult.status === 'fulfilled' ? topMpmResult.value?.leaderboard ?? [] : [],
+        fastest_21: fastest21Result.status === 'fulfilled' ? fastest21Result.value?.leaderboard ?? [] : [],
       };
       setLeaderboardData(newLeaderboardData);
 
@@ -123,7 +115,7 @@ function Dashboard() {
           console.error('Error loading a leaderboard:', result.reason);
         }
       });
-      setIsLoadingLeaderboards(false);
+      setIsLoading(false);
     };
 
     loadData();
@@ -162,10 +154,10 @@ function Dashboard() {
           <h2>All-Time Stats</h2>
         </div>
         <div className="dashboard-grid">
-          <StatCard title="Makes" value={isLoadingStats ? '...' : (careerStats?.total_makes || 0)} />
-          <StatCard title="Misses" value={isLoadingStats ? '...' : (careerStats?.total_misses || 0)} />
-          <StatCard title="Accuracy" value={isLoadingStats ? '...' : makePercentage} />
-          <StatCard title="Fastest 21" value={isLoadingStats ? '...' : (careerStats?.fastest_21_makes_seconds ? `${careerStats.fastest_21_makes_seconds}s` : 'N/A')} />
+          <StatCard title="Makes" value={isLoading ? '...' : (careerStats?.total_makes || 0)} />
+          <StatCard title="Misses" value={isLoading ? '...' : (careerStats?.total_misses || 0)} />
+          <StatCard title="Accuracy" value={isLoading ? '...' : makePercentage} />
+          <StatCard title="Fastest 21" value={isLoading ? '...' : (careerStats?.fastest_21_makes_seconds ? `${careerStats.fastest_21_makes_seconds}s` : 'N/A')} />
         </div>
         
         <div className={`session-list-container ${expandedSessionId ? 'is-expanded' : ''}`}>
@@ -182,7 +174,7 @@ function Dashboard() {
                 <tr><th style={{ width: '120px' }}>Details</th><th>Session Date</th><th>Duration</th><th>Makes</th><th>Misses</th><th>Best Streak</th><th>Fastest 21</th><th>PPM</th><th>MPM</th><th>Most in 60s</th></tr>
               </thead>
               <tbody>
-                {isLoadingSessions ? (
+                {isLoading ? (
                   <tr className="table-placeholder-row">
                     <td colSpan="10">Loading sessions...</td>
                   </tr>

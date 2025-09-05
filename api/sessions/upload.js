@@ -43,15 +43,33 @@ export default async function handler(req, res) {
     const sessionData = req.body;
 
     // Basic validation
-    if (!sessionData || typeof sessionData.total_putts !== 'number') {
-        return res.status(400).json({ success: false, message: 'Invalid session data provided.' });
+    if (
+      !sessionData || 
+      typeof sessionData.total_putts !== 'number' ||
+      typeof (sessionData.total_makes ?? sessionData.makes) !== 'number' ||
+      typeof (sessionData.session_duration_seconds ?? sessionData.session_duration) !== 'number'
+    ) {
+        console.warn('Invalid session data received:', sessionData);
+        return res.status(400).json({ success: false, message: 'Invalid or incomplete session data provided.' });
     }
 
     const { rows } = await pool.query(
       `INSERT INTO sessions (player_id, total_putts, makes, misses, session_duration, best_streak, makes_per_minute, fastest_21_makes_seconds, putts_by_distance, makes_by_distance, details_by_distance, most_makes_in_60_seconds)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING session_id`,
-      [user.playerId, sessionData.total_putts, sessionData.total_makes, sessionData.total_misses, sessionData.session_duration_seconds, sessionData.best_streak, sessionData.makes_per_minute, sessionData.fastest_21_makes_seconds, JSON.stringify(sessionData.putts_by_distance), JSON.stringify(sessionData.makes_by_distance), JSON.stringify(sessionData.details_by_distance), sessionData.most_makes_in_60_seconds]
+      [
+        user.playerId, 
+        sessionData.total_putts, 
+        sessionData.total_makes ?? sessionData.makes, 
+        sessionData.total_misses ?? sessionData.misses, 
+        sessionData.session_duration_seconds ?? sessionData.session_duration, 
+        sessionData.best_streak, sessionData.makes_per_minute, 
+        sessionData.fastest_21_makes_seconds ?? sessionData.fastest_21_makes ?? null,
+        JSON.stringify(sessionData.putts_by_distance ?? null),
+        JSON.stringify(sessionData.makes_by_distance ?? null),
+        JSON.stringify(sessionData.details_by_distance ?? null),
+        sessionData.most_makes_in_60_seconds ?? null
+      ]
     );
 
     const newSessionId = rows[0].session_id;

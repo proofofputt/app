@@ -42,7 +42,7 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) {
+    if (isNaN(date)) {
         return 'N/A';
     }
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
@@ -61,6 +61,12 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
     }
   };
 
+  /*
+  const hasDetailedData = session.details_by_distance && 
+    (Object.keys(session.details_by_distance.makes_overview || {}).length > 0 || 
+     Object.keys(session.details_by_distance.misses_overview || {}).length > 0);
+  */
+
   return (
     <>
       <tr className={`session-row ${isExpanded ? 'is-expanded-parent' : ''} ${isLocked ? 'is-locked' : ''}`}>
@@ -75,49 +81,56 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
           </button>
         </td>
         <td>{formatDate(session.created_at)}</td>
-        <td>{formatDuration(session.duration)}</td>
-        <td>{session.total_makes || 0}</td>
-        <td>{session.total_misses || 0}</td>
+        <td>{formatDuration(session.session_duration ?? session.duration)}</td>
+        <td>{session.makes ?? session.total_makes ?? 0}</td>
+        <td>{session.misses ?? session.total_misses ?? 0}</td>
         <td>{session.best_streak || 0}</td>
-        <td>{session.fastest_21_makes ? `${session.fastest_21_makes.toFixed(1)}s` : 'N/A'}</td>
-        <td>{session.putts_per_minute ? session.putts_per_minute.toFixed(1) : 'N/A'}</td>
-        <td>{session.makes_per_minute ? session.makes_per_minute.toFixed(1) : 'N/A'}</td>
+        <td>{session.fastest_21_makes_seconds ? `${session.fastest_21_makes_seconds.toFixed(1)}s` : 'N/A'}</td>
+        <td>{session.putts_per_minute?.toFixed(1) ?? 'N/A'}</td>
+        <td>{session.makes_per_minute?.toFixed(1) ?? 'N/A'}</td>
         <td>{session.most_makes_in_60_seconds || 0}</td>
       </tr>
+      {/*
       {isExpanded && (
         <tr className="session-details-row">
           <td colSpan="10">
             <div className="session-details">
               <h3>Session Details</h3>
-              
-              <div className="details-grid">
-                <DetailCategory
-                  title="Makes"
-                  overview={session.makes_overview || {}}
-                  detailed={session.makes_by_category || {}}
-                />
-                <DetailCategory
-                  title="Misses"
-                  overview={session.misses_overview || {}}
-                  detailed={session.misses_by_category || {}}
-                />
-              </div>
+              {hasDetailedData ? (
+                <>
+                  <div className="details-grid">
+                    <DetailCategory
+                      title="Makes"
+                      overview={session.details_by_distance?.makes_overview || {}}
+                      detailed={session.details_by_distance?.makes_by_category || {}}
+                    />
+                    <DetailCategory
+                      title="Misses"
+                      overview={session.details_by_distance?.misses_overview || {}}
+                      detailed={session.details_by_distance?.misses_by_category || {}}
+                    />
+                  </div>
 
-              <div className="consecutive-stats">
-                <h4>Consecutive Makes</h4>
-                <div className="consecutive-grid">
-                  {Object.entries(session.consecutive_by_category || {}).map(([threshold, count]) => (
-                    <div key={threshold} className="consecutive-item">
-                      <span className="consecutive-label">{threshold}+ in a row:</span>
-                      <span className="consecutive-value">{count}</span>
+                  <div className="consecutive-stats">
+                    <h4>Consecutive Makes</h4>
+                    <div className="consecutive-grid">
+                      {Object.entries(session.details_by_distance?.consecutive_by_category || {}).map(([threshold, count]) => (
+                        <div key={threshold} className="consecutive-item">
+                          <span className="consecutive-label">{threshold}+ in a row:</span>
+                          <span className="consecutive-value">{count}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
+                  </div>
+                </>
+              ) : (
+                <p className="placeholder-text">Detailed distance-based analytics are not available for this session.</p>
+              )}
             </div>
           </td>
         </tr>
       )}
+      */}
     </>
   );
 };
