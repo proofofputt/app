@@ -41,10 +41,14 @@ export default async function handler(req, res) {
     console.log('[upload-session] Request received at:', new Date().toISOString());
     console.log('[upload-session] Authorization header present:', !!req.headers.authorization);
     
-    // Verify the JWT from the Authorization header
-    const user = await verifyToken(req);
+    // Check if this is a desktop upload (no auth required for desktop)
+    const isDesktopUpload = req.headers['x-desktop-upload'] === 'true' || !req.headers.authorization;
+    
+    // Verify the JWT from the Authorization header (skip for desktop)
+    const user = isDesktopUpload ? { playerId: player_id } : await verifyToken(req);
+    console.log('[upload-session] Auth mode:', isDesktopUpload ? 'desktop (no auth)' : 'web (JWT)');
     console.log('[upload-session] Token verification result:', user ? 'success' : 'failed');
-    if (!user) {
+    if (!user && !isDesktopUpload) {
       return res.status(401).json({ success: false, message: 'Authentication failed' });
     }
 
@@ -57,7 +61,8 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, message: 'Player ID and session data are required.' });
     }
 
-    if (parseInt(user.playerId, 10) !== parseInt(player_id, 10)) {
+    // Skip player ID validation for desktop uploads
+    if (!isDesktopUpload && parseInt(user.playerId, 10) !== parseInt(player_id, 10)) {
       console.log('[upload-session] Player ID mismatch:', user.playerId, 'vs', player_id);
       return res.status(403).json({ success: false, message: 'Forbidden' });
     }
