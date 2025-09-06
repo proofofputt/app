@@ -4,8 +4,8 @@ const DetailCategory = ({ title, overview, detailed, allDetailed }) => {
   // Filter out overview entries with 0 count
   const filteredOverview = Object.entries(overview).filter(([, count]) => count > 0);
   
-  // Use allDetailed if provided (for combined makes+misses), otherwise use detailed
-  const detailedData = allDetailed || detailed;
+  // Use only detailed data specific to this category (no mixed data)
+  const detailedData = detailed;
   
   // Sort detailed entries by count, descending, and filter out zeros
   const filteredAndSortedDetailed = Object.entries(detailedData)
