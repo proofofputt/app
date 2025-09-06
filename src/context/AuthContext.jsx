@@ -49,50 +49,78 @@ export const AuthProvider = ({ children }) => {
                 localStorage.setItem('playerData', JSON.stringify(freshData));
                 setPlayerData(freshData);
               } else {
-                console.warn('[AuthContext] Fresh data missing stats, ensuring cached data has stats structure');
-                // Ensure cached data has stats structure if missing
-                if (!parsedPlayerData.stats) {
-                  const playerDataWithStats = {
-                    ...parsedPlayerData,
-                    stats: {
-                      total_sessions: 0,
-                      total_makes: 0,
-                      total_misses: 0,
-                      best_streak: 0,
-                      fastest_21_makes_seconds: null,
-                      max_makes_per_minute: 0,
-                      max_putts_per_minute: 0,
-                      most_in_60_seconds: 0,
-                      max_session_duration: 0,
-                      make_percentage: 0,
-                      last_session_at: null
-                    },
-                    sessions: parsedPlayerData.sessions || []
-                  };
-                  localStorage.setItem('playerData', JSON.stringify(playerDataWithStats));
-                  setPlayerData(playerDataWithStats);
-                }
+                console.warn('[AuthContext] Player data API failed, loading sessions and stats separately');
+                
+                // Load sessions from working sessions API
+                const sessionsResponse = await fetch(`/api/player/${parsedPlayerData.player_id}/sessions?limit=5`);
+                const sessionsData = sessionsResponse.ok ? await sessionsResponse.json() : null;
+                const sessions = sessionsData?.sessions || [];
+                
+                // Load stats from working debug-stats API
+                const debugStatsResponse = await fetch('/api/debug-stats');
+                const debugStatsData = debugStatsResponse.ok ? await debugStatsResponse.json() : null;
+                const stats = debugStatsData?.dashboard_data?.stats || {
+                  total_sessions: 0,
+                  total_makes: 0,
+                  total_misses: 0,
+                  best_streak: 0,
+                  fastest_21_makes_seconds: null,
+                  max_makes_per_minute: 0,
+                  max_putts_per_minute: 0,
+                  most_in_60_seconds: 0,
+                  max_session_duration: 0,
+                  make_percentage: 0,
+                  last_session_at: null
+                };
+                
+                console.log('[AuthContext] Loaded from fallback APIs:', { 
+                  sessions_count: sessions.length, 
+                  stats_total_makes: stats.total_makes 
+                });
+                
+                const playerDataWithStats = {
+                  ...parsedPlayerData,
+                  stats,
+                  sessions
+                };
+                localStorage.setItem('playerData', JSON.stringify(playerDataWithStats));
+                setPlayerData(playerDataWithStats);
               }
             } catch (error) {
               console.error('[AuthContext] Failed to refresh player data on mount:', error);
-              // Ensure cached data has stats structure if missing
-              if (parsedPlayerData && !parsedPlayerData.stats) {
+              
+              // Try fallback APIs even on error
+              try {
+                console.log('[AuthContext] Trying fallback APIs after error');
+                const sessionsResponse = await fetch(`/api/player/${parsedPlayerData.player_id}/sessions?limit=5`);
+                const sessionsData = sessionsResponse.ok ? await sessionsResponse.json() : null;
+                const sessions = sessionsData?.sessions || [];
+                
+                const debugStatsResponse = await fetch('/api/debug-stats');
+                const debugStatsData = debugStatsResponse.ok ? await debugStatsResponse.json() : null;
+                const stats = debugStatsData?.dashboard_data?.stats || {
+                  total_sessions: 0, total_makes: 0, total_misses: 0, best_streak: 0,
+                  fastest_21_makes_seconds: null, max_makes_per_minute: 0, max_putts_per_minute: 0,
+                  most_in_60_seconds: 0, max_session_duration: 0, make_percentage: 0, last_session_at: null
+                };
+                
                 const playerDataWithStats = {
                   ...parsedPlayerData,
-                  stats: {
-                    total_sessions: 0,
-                    total_makes: 0,
-                    total_misses: 0,
-                    best_streak: 0,
-                    fastest_21_makes_seconds: null,
-                    max_makes_per_minute: 0,
-                    max_putts_per_minute: 0,
-                    most_in_60_seconds: 0,
-                    max_session_duration: 0,
-                    make_percentage: 0,
-                    last_session_at: null
-                  },
-                  sessions: parsedPlayerData.sessions || []
+                  stats,
+                  sessions
+                };
+                localStorage.setItem('playerData', JSON.stringify(playerDataWithStats));
+                setPlayerData(playerDataWithStats);
+                console.log('[AuthContext] Successfully loaded fallback data:', { sessions: sessions.length, makes: stats.total_makes });
+              } catch (fallbackError) {
+                console.error('[AuthContext] Fallback APIs also failed:', fallbackError);
+                // Final fallback to basic structure
+                const playerDataWithStats = {
+                  ...parsedPlayerData,
+                  stats: { total_sessions: 0, total_makes: 0, total_misses: 0, best_streak: 0,
+                    fastest_21_makes_seconds: null, max_makes_per_minute: 0, max_putts_per_minute: 0,
+                    most_in_60_seconds: 0, max_session_duration: 0, make_percentage: 0, last_session_at: null },
+                  sessions: []
                 };
                 localStorage.setItem('playerData', JSON.stringify(playerDataWithStats));
                 setPlayerData(playerDataWithStats);
