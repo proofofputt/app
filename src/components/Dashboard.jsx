@@ -131,7 +131,7 @@ function Dashboard() {
           <StatCard title="Makes" value={stats.total_makes} />
           <StatCard title="Misses" value={stats.total_misses} />
           <StatCard title="Accuracy" value={makePercentage} />
-          <StatCard title="Fastest 21" value={stats.fastest_21_makes_seconds ? `${stats.fastest_21_makes_seconds}s` : 'N/A'} />
+          <StatCard title="Fastest 21" value={stats.fastest_21_makes ? `${stats.fastest_21_makes.toFixed(2)}s` : 'N/A'} />
         </div>
         
         <div className={`session-list-container ${expandedSessionId ? 'is-expanded' : ''}`}>
