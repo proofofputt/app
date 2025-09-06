@@ -75,8 +75,8 @@ export default async function handler(req, res) {
           COALESCE(SUM(CAST(data->>'total_makes' AS INTEGER)), 0) as total_makes,
           COALESCE(SUM(CAST(data->>'total_misses' AS INTEGER)), 0) as total_misses,
           COALESCE(MAX(CAST(data->>'best_streak' AS INTEGER)), 0) as best_streak,
-          MIN(CASE WHEN CAST(data->>'fastest_21_makes_seconds' AS DECIMAL) > 0 
-              THEN CAST(data->>'fastest_21_makes_seconds' AS DECIMAL) END) as fastest_21_makes,
+          MIN(CASE WHEN CAST(data->>'fastest_21_makes' AS DECIMAL) > 0 
+              THEN CAST(data->>'fastest_21_makes' AS DECIMAL) END) as fastest_21_makes,
           COALESCE(MAX(CAST(data->>'makes_per_minute' AS DECIMAL)), 0) as max_makes_per_minute,
           COALESCE(MAX(CAST(data->>'putts_per_minute' AS DECIMAL)), 0) as max_putts_per_minute,
           COALESCE(MAX(CAST(data->>'most_makes_in_60_seconds' AS INTEGER)), 0) as most_in_60_seconds,
