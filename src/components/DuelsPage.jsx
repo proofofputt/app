@@ -5,15 +5,22 @@ import { useNotification } from '../context/NotificationContext';
 import { useNavigate, Link } from 'react-router-dom';
 import CreateDuelModal from './CreateDuelModal';
 import SessionSelectModal from './SessionSelectModal';
+import DuelResults from './DuelResults';
+import DuelHistoryStats from './DuelHistoryStats';
 import SortButton from './SortButton';
 import Pagination from './Pagination';
 import './DuelsPage.css';
 
-const DuelCard = ({ duel, onRespond, onSubmitSession, currentUserId }) => {
+const DuelCard = ({ duel, onRespond, onSubmitSession, currentUserId, showDetailedResults = false }) => {
     const isCreator = duel.creator_id === currentUserId;
     const opponentName = isCreator ? duel.invited_player_name : duel.creator_name;
     const opponentId = isCreator ? duel.invited_player_id : duel.creator_id;
     const isInvitee = duel.invited_player_id === currentUserId;
+
+    // If we're showing detailed results for completed duels, use DuelResults component
+    if (showDetailedResults && duel.status === 'completed') {
+        return <DuelResults duel={duel} currentUserId={currentUserId} />;
+    }
 
     return (
         <div className="duel-card">
@@ -160,6 +167,7 @@ const DuelsPage = () => {
                             onRespond={handleRespond}
                             onSubmitSession={handleSubmitSession}
                             currentUserId={playerData.player_id}
+                            showDetailedResults={categoryKey === 'completed'}
                         />
                     ))}
                 </div>
@@ -185,6 +193,12 @@ const DuelsPage = () => {
 
             {showCreateModal && <CreateDuelModal onClose={() => setShowCreateModal(false)} onDuelCreated={onDuelCreated} />}
             {showSessionModal && <SessionSelectModal duel={selectedDuel} onClose={() => setShowSessionModal(false)} onSessionSubmitted={onSessionSubmitted} />}
+
+            <DuelHistoryStats 
+                duels={duels} 
+                currentUserId={playerData.player_id} 
+                playerData={playerData} 
+            />
 
             {renderDuelCategory('Pending Invitations', categorizedDuels.pending, 'pending')}
             {renderDuelCategory('Active Duels', categorizedDuels.active, 'active')}

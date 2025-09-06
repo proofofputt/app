@@ -6,41 +6,46 @@ import { apiListLeagues, apiJoinLeague, apiRespondToLeagueInvite } from '../api.
 import CreateLeagueModal from '../components/CreateLeagueModal.jsx';
 import './Leagues.css';
  
-// League card component matching the prototype design
-const LeagueCard = ({ league, onJoin, isPublic }) => (
-  <div className="league-card card">
-    <div className="league-card-header">
-      <h3>{league.name}</h3>
+// New component for a row in the main leagues table
+const LeagueTableRow = ({ league }) => (
+  <tr>
+    <td>
+      <Link to={`/leagues/${league.league_id}`}>{league.name}</Link>
+    </td>
+    <td className="league-description-cell">{league.description || 'No description provided.'}</td>
+    <td style={{ textAlign: 'center' }}>{league.member_count}</td>
+    <td>
       <span className={`privacy-badge ${league.privacy_type}`}>{league.privacy_type}</span>
-    </div>
-    <p className="league-card-description">{league.description || 'No description provided.'}</p>
-    <div className="league-card-footer">
-      <span>{league.member_count} Members</span>
-      {isPublic ? (
-        <button onClick={() => onJoin(league.league_id)} className="btn btn-secondary">Join</button>
+    </td>
+    <td>
+      <span className={`status-badge status-${league.status}`}>{league.status}</span>
+    </td>
+    <td className="actions-cell">
+      {league.can_join ? (
+        <button onClick={() => league.onJoin(league.league_id)} className="btn btn-secondary btn-small">
+          Join
+        </button>
       ) : (
-        <Link to={`/leagues/${league.league_id}`} className="btn">View</Link>
+        <Link to={`/leagues/${league.league_id}`} className="btn btn-small">View</Link>
       )}
-    </div>
-  </div>
+    </td>
+  </tr>
 );
  
-// Invite card component matching the prototype design
-const InviteCard = ({ league, onRespond }) => (
-  <div className="league-card card">
-    <div className="league-card-header">
-      <h3>{league.name}</h3>
-      <span className="privacy-badge private">Invitation</span>
-    </div>
-    <p className="league-card-description">You've been invited by <strong>{league.inviter_name || 'the creator'}</strong>.</p>
-    <div className="league-card-footer">
-      <span>{league.member_count} Members</span>
+// New component for a row in the invites table
+const InviteTableRow = ({ league, onRespond }) => (
+  <tr>
+    <td>{league.name}</td>
+    {/* Assuming inviter_name is available on the league object for invites */}
+    <td>You've been invited by <strong>{league.inviter_name || 'the creator'}</strong>.</td>
+    <td style={{ textAlign: 'center' }}>{league.member_count}</td>
+    <td className="actions-cell">
       <div className="invite-actions">
         <button onClick={() => onRespond(league.league_id, 'decline')} className="btn btn-tertiary btn-small">Decline</button>
         <button onClick={() => onRespond(league.league_id, 'accept')} className="btn btn-secondary btn-small">Accept</button>
       </div>
-    </div>
-  </div>
+    </td>
+  </tr>
 );
 
 const LeaguesPage = () => {
@@ -131,35 +136,75 @@ const LeaguesPage = () => {
       {pendingInvites.length > 0 && (
         <div className="leagues-section">
           <h3>Pending Invitations</h3>
-          <div className="leagues-grid">
-            {pendingInvites.map(league => (
-              <InviteCard key={league.league_id} league={league} onRespond={handleInviteResponse} />
-            ))}
+          <div className="leagues-table-container">
+            <table className="leagues-table">
+              <thead>
+                <tr>
+                  <th>League Name</th>
+                  <th>Invitation From</th>
+                  <th>Members</th>
+                  <th className="actions-cell">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingInvites.map(league => <InviteTableRow key={league.league_id} league={league} onRespond={handleInviteResponse} />)}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
 
       <div className="leagues-section">
         <h3>My Leagues</h3>
-        <div className="leagues-grid">
-          {myLeagues.length > 0 ? (
-            myLeagues.map(league => <LeagueCard key={league.league_id} league={league} />)
-          ) : (
-            <p>You haven't joined any leagues yet.</p>
-          )}
+        <div className="leagues-table-container">
+          <table className="leagues-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Members</th>
+                <th>Privacy</th>
+                <th>Status</th>
+                <th className="actions-cell">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {myLeagues.length > 0 ? (
+                myLeagues.map(league => <LeagueTableRow key={league.league_id} league={league} />)
+              ) : (
+                <tr>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', fontStyle: 'italic' }}>You haven't joined any leagues yet.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
       <div className="leagues-section">
         <h3>Public Leagues</h3>
-        <div className="leagues-grid">
-          {publicLeagues.length > 0 ? (
-            publicLeagues.map(league => (
-              <LeagueCard key={league.league_id} league={league} onJoin={handleJoinLeague} isPublic />
-            ))
-          ) : (
-            <p>No public leagues available to join right now.</p>
-          )}
+        <div className="leagues-table-container">
+          <table className="leagues-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Members</th>
+                <th>Privacy</th>
+                <th>Status</th>
+                <th className="actions-cell">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {publicLeagues.length > 0 ? (
+                publicLeagues.map(league => <LeagueTableRow key={league.league_id} league={{...league, can_join: true, onJoin: handleJoinLeague}} />)
+              ) : (
+                <tr>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', fontStyle: 'italic' }}>No public leagues to join right now.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
