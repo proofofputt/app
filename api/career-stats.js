@@ -49,11 +49,8 @@ export default async function handler(req, res) {
 
     client.release();
 
-    if (sessionsResult.rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'No sessions found for player' });
-    }
-
     // Process sessions to aggregate category data
+    // Always return stats even if no sessions (with defaults)
     const stats = processSessionsForCareerStats(sessionsResult.rows, player.name);
     
     return res.status(200).json(stats);
@@ -85,12 +82,46 @@ function processSessionsForCareerStats(sessionRows, playerName) {
     high_duration: 0,
     sum_duration: 0,
     
-    // Category aggregations
-    consecutive: {},
-    makes_overview: {},
-    makes_detailed: {},
-    misses_overview: {},
-    misses_detailed: {}
+    // Category aggregations with defaults
+    consecutive: {
+      'CENTER': { high: 0, sum: 0 },
+      'LEFT': { high: 0, sum: 0 },
+      'RIGHT': { high: 0, sum: 0 },
+      'SHORT': { high: 0, sum: 0 },
+      'LONG': { high: 0, sum: 0 }
+    },
+    makes_overview: {
+      'CENTER': { high: 0, sum: 0 },
+      'LEFT': { high: 0, sum: 0 },
+      'RIGHT': { high: 0, sum: 0 }
+    },
+    makes_detailed: {
+      'CENTER_SHORT': { high: 0, sum: 0 },
+      'CENTER_LONG': { high: 0, sum: 0 },
+      'LEFT_SHORT': { high: 0, sum: 0 },
+      'LEFT_LONG': { high: 0, sum: 0 },
+      'RIGHT_SHORT': { high: 0, sum: 0 },
+      'RIGHT_LONG': { high: 0, sum: 0 }
+    },
+    misses_overview: {
+      'CATCH': { high: 0, sum: 0 },
+      'TIMEOUT': { high: 0, sum: 0 },
+      'RETURN': { high: 0, sum: 0 }
+    },
+    misses_detailed: {
+      'CATCH_LEFT': { high: 0, sum: 0 },
+      'CATCH_RIGHT': { high: 0, sum: 0 },
+      'CATCH_SHORT': { high: 0, sum: 0 },
+      'CATCH_LONG': { high: 0, sum: 0 },
+      'TIMEOUT_LEFT': { high: 0, sum: 0 },
+      'TIMEOUT_RIGHT': { high: 0, sum: 0 },
+      'TIMEOUT_SHORT': { high: 0, sum: 0 },
+      'TIMEOUT_LONG': { high: 0, sum: 0 },
+      'RETURN_LEFT': { high: 0, sum: 0 },
+      'RETURN_RIGHT': { high: 0, sum: 0 },
+      'RETURN_SHORT': { high: 0, sum: 0 },
+      'RETURN_LONG': { high: 0, sum: 0 }
+    }
   };
 
   let totalSessions = sessionRows.length;
