@@ -128,12 +128,16 @@ async function handleCreateDuel(req, res) {
     return res.status(401).json({ success: false, message: 'Authentication required' });
   }
 
-  const { challenger_id, challengee_id, rules } = req.body;
+  const { creator_id, invited_player_id, challenger_id, challengee_id, settings, rules } = req.body;
 
-  if (!challenger_id || !challengee_id) {
+  // Support both frontend formats: (creator_id, invited_player_id) or (challenger_id, challengee_id)
+  const challId = challenger_id || creator_id;
+  const challeeId = challengee_id || invited_player_id;
+
+  if (!challId || !challeeId) {
     return res.status(400).json({ 
       success: false, 
-      message: 'challenger_id and challengee_id are required' 
+      message: 'creator_id and invited_player_id (or challenger_id and challengee_id) are required' 
     });
   }
 
@@ -141,19 +145,22 @@ async function handleCreateDuel(req, res) {
   try {
     client = await pool.connect();
     
+    // Use settings or rules for the duel configuration
+    const duelRules = settings || rules || {};
+
     // Insert new duel
     const duelResult = await client.query(`
       INSERT INTO duels (challenger_id, challengee_id, status, rules, created_at)
       VALUES ($1, $2, 'pending', $3, NOW())
       RETURNING duel_id, challenger_id, challengee_id, status, rules, created_at
-    `, [challenger_id, challengee_id, rules || {}]);
+    `, [challId, challeeId, duelRules]);
 
     const duel = duelResult.rows[0];
 
     // Get challenger and challengee names
     const playersResult = await client.query(`
       SELECT player_id, name FROM players WHERE player_id IN ($1, $2)
-    `, [challenger_id, challengee_id]);
+    `, [challId, challeeId]);
 
     const players = {};
     playersResult.rows.forEach(p => {
@@ -164,8 +171,10 @@ async function handleCreateDuel(req, res) {
       success: true,
       duel: {
         ...duel,
-        challenger_name: players[challenger_id],
-        challengee_name: players[challengee_id]
+        challenger_name: players[challId],
+        challengee_name: players[challeeId],
+        creator_name: players[challId],    // For frontend compatibility
+        invited_player_name: players[challeeId]  // For frontend compatibility
       }
     });
 
