@@ -122,11 +122,92 @@ async function handleGetLeaderboard(req, res, client) {
 
   const metricInfo = metricResult.rows[0];
 
-  // Calculate leaderboard
-  const leaderboardResult = await client.query(
-    'SELECT * FROM calculate_leaderboard($1, $2) LIMIT $3',
-    [resolvedContextId, metricInfo.metric_id, limit]
-  );
+  // Calculate leaderboard - try stored procedure first, fallback to direct query
+  let leaderboardResult;
+  try {
+    leaderboardResult = await client.query(
+      'SELECT * FROM calculate_leaderboard($1, $2) LIMIT $3',
+      [resolvedContextId, metricInfo.metric_id, limit]
+    );
+  } catch (err) {
+    // Fallback to direct query if stored procedure doesn't exist
+    console.log('Stored procedure not found, using direct query');
+    
+    // Build the appropriate query based on metric
+    let query;
+    if (metric === 'total_makes') {
+      query = `
+        SELECT 
+          s.player_id,
+          p.name as player_name,
+          SUM(CAST(s.data->>'total_makes' AS INTEGER)) as metric_value,
+          COUNT(s.session_id) as sessions_count,
+          ROW_NUMBER() OVER (ORDER BY SUM(CAST(s.data->>'total_makes' AS INTEGER)) DESC) as player_rank
+        FROM sessions s
+        JOIN players p ON s.player_id = p.player_id
+        WHERE s.data->>'total_makes' IS NOT NULL
+        GROUP BY s.player_id, p.name
+        HAVING SUM(CAST(s.data->>'total_makes' AS INTEGER)) > 0
+        ORDER BY metric_value DESC
+        LIMIT $1
+      `;
+      leaderboardResult = await client.query(query, [limit]);
+    } else if (metric === 'best_streak') {
+      query = `
+        SELECT 
+          s.player_id,
+          p.name as player_name,
+          MAX(CAST(s.data->>'best_streak' AS INTEGER)) as metric_value,
+          COUNT(s.session_id) as sessions_count,
+          ROW_NUMBER() OVER (ORDER BY MAX(CAST(s.data->>'best_streak' AS INTEGER)) DESC) as player_rank
+        FROM sessions s
+        JOIN players p ON s.player_id = p.player_id
+        WHERE s.data->>'best_streak' IS NOT NULL
+        GROUP BY s.player_id, p.name
+        HAVING MAX(CAST(s.data->>'best_streak' AS INTEGER)) > 0
+        ORDER BY metric_value DESC
+        LIMIT $1
+      `;
+      leaderboardResult = await client.query(query, [limit]);
+    } else if (metric === 'makes_per_minute') {
+      query = `
+        SELECT 
+          s.player_id,
+          p.name as player_name,
+          MAX(CAST(s.data->>'makes_per_minute' AS DECIMAL)) as metric_value,
+          COUNT(s.session_id) as sessions_count,
+          ROW_NUMBER() OVER (ORDER BY MAX(CAST(s.data->>'makes_per_minute' AS DECIMAL)) DESC) as player_rank
+        FROM sessions s
+        JOIN players p ON s.player_id = p.player_id
+        WHERE s.data->>'makes_per_minute' IS NOT NULL
+        GROUP BY s.player_id, p.name
+        HAVING MAX(CAST(s.data->>'makes_per_minute' AS DECIMAL)) > 0
+        ORDER BY metric_value DESC
+        LIMIT $1
+      `;
+      leaderboardResult = await client.query(query, [limit]);
+    } else if (metric === 'fastest_21_makes_seconds' || metric === 'fastest_21') {
+      query = `
+        SELECT 
+          s.player_id,
+          p.name as player_name,
+          MIN(CAST(s.data->>'fastest_21_makes_seconds' AS DECIMAL)) as metric_value,
+          COUNT(s.session_id) as sessions_count,
+          ROW_NUMBER() OVER (ORDER BY MIN(CAST(s.data->>'fastest_21_makes_seconds' AS DECIMAL)) ASC) as player_rank
+        FROM sessions s
+        JOIN players p ON s.player_id = p.player_id
+        WHERE s.data->>'fastest_21_makes_seconds' IS NOT NULL 
+        AND CAST(s.data->>'fastest_21_makes_seconds' AS DECIMAL) > 0
+        GROUP BY s.player_id, p.name
+        ORDER BY metric_value ASC
+        LIMIT $1
+      `;
+      leaderboardResult = await client.query(query, [limit]);
+    } else {
+      // Default fallback for unknown metrics
+      leaderboardResult = { rows: [] };
+    }
+  }
 
   const leaderboard = leaderboardResult.rows.map(row => ({
     player_id: row.player_id,
