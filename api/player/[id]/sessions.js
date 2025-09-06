@@ -57,7 +57,7 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const { playerId, limit, sort, page } = req.query;
+  const { id: playerId, limit, sort, page } = req.query;
 
   if (req.method === 'GET') {
     try {
