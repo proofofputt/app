@@ -65,10 +65,12 @@ const LeaguesPage = () => {
     setIsLoading(true);
     setError('');
     try {
-      const { my_leagues, public_leagues, pending_invites } = await apiListLeagues(playerData.player_id);
-      setMyLeagues(my_leagues || []);
-      setPublicLeagues(public_leagues || []);
-      setPendingInvites(pending_invites || []);
+      const response = await apiListLeagues(playerData.player_id);
+      // Defensive programming - handle null/undefined responses
+      const { my_leagues = [], public_leagues = [], pending_invites = [] } = response || {};
+      setMyLeagues(my_leagues);
+      setPublicLeagues(public_leagues);
+      setPendingInvites(pending_invites);
     } catch (err) {
       // A 404 is not a "real" error in this context, it just means no leagues exist.
       if (err.message && (err.message.includes('404') || err.message.toLowerCase().includes('not found'))) {

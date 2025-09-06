@@ -32,8 +32,10 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
+  let client;
   try {
-    const client = await pool.connect();
+    client = await pool.connect();
+    console.log('Leagues API: Database connected successfully');
 
     if (req.method === 'GET') {
       const { player_id } = req.query;
@@ -105,7 +107,8 @@ export default async function handler(req, res) {
       return res.status(200).json({
         success: true,
         my_leagues: memberLeaguesResult.rows,
-        public_leagues: publicLeaguesResult.rows
+        public_leagues: publicLeaguesResult.rows,
+        pending_invites: [] // TODO: Implement league invites system
       });
 
     } else if (req.method === 'POST') {
@@ -170,6 +173,19 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Leagues API error:', error);
+    
+    // Always ensure we return the expected structure for GET requests
+    if (req.method === 'GET') {
+      return res.status(200).json({
+        success: false,
+        message: 'Failed to load leagues',
+        my_leagues: [],
+        public_leagues: [],
+        pending_invites: [],
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+    
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
