@@ -31,7 +31,7 @@ const ProgressBar = ({ raised, goal }) => {
 
 const FundraisingPage = () => {
   const { playerData } = useAuth();
-  const isSubscribed = playerData?.subscription_status === 'active';
+  const isSubscribed = playerData?.membership_tier === 'premium' || playerData?.membership_tier === 'regular';
   const [fundraisers, setFundraisers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

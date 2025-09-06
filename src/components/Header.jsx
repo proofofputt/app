@@ -9,7 +9,7 @@ const Header = () => {
   const { playerData } = useAuth();
   const { showTemporaryNotification: showNotification } = useNotification();
   const { unreadCount } = usePersistentNotifications();
-  const isSubscribed = playerData?.subscription_status === 'active';
+  const isSubscribed = playerData?.membership_tier === 'premium' || playerData?.membership_tier === 'regular';
   const navigate = useNavigate();
 
   const handleProtectedLinkClick = (e) => {
