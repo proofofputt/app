@@ -38,10 +38,36 @@ export default async function handler(req, res) {
         AND data IS NOT NULL
       `);
       
+      // Create dashboard-compatible response format
+      const totalMakes = parseInt(complexStats.rows[0].flat_makes) || 0;
+      const totalSessions = parseInt(complexStats.rows[0].total_sessions) || 0;
+      
+      // Mock additional stats for dashboard testing
+      const dashboardStats = {
+        player_id: 1,
+        name: "Debug User",
+        email: "debug@example.com",
+        stats: {
+          total_sessions: totalSessions,
+          total_makes: totalMakes,
+          total_misses: 0, // Would need separate query to calculate
+          best_streak: 0,
+          fastest_21_makes_seconds: null,
+          max_makes_per_minute: 0,
+          max_putts_per_minute: 0,
+          most_in_60_seconds: totalMakes > 0 ? totalMakes : 0, // Simple approximation
+          max_session_duration: 0,
+          make_percentage: 0,
+          last_session_at: null
+        },
+        sessions: [] // Would need separate query to get session list
+      };
+
       return res.status(200).json({
         success: true,
         simple_stats: simpleStats.rows[0],
-        complex_stats: complexStats.rows[0]
+        complex_stats: complexStats.rows[0],
+        dashboard_data: dashboardStats
       });
       
     } catch (complexError) {
