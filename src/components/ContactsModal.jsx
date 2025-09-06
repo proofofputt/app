@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import './ContactsModal.css';
 
 const ContactsModal = ({ isOpen, onClose }) => {
@@ -11,7 +12,12 @@ const ContactsModal = ({ isOpen, onClose }) => {
       <div className="modal-content" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <h2>Friends & Contacts</h2>
-          <button className="modal-close" onClick={onClose}>×</button>
+          <div className="modal-header-actions">
+            <Link to="/friends" className="btn btn-small" onClick={onClose}>
+              Open Full Friends Page
+            </Link>
+            <button className="modal-close" onClick={onClose}>×</button>
+          </div>
         </div>
         
         <div className="modal-tabs">
@@ -30,24 +36,36 @@ const ContactsModal = ({ isOpen, onClose }) => {
         </div>
 
         <div className="modal-body">
-          {activeTab === 'friends' && <FriendsTab />}
-          {activeTab === 'leaderboard' && <LeaderboardTab />}
+          {activeTab === 'friends' && <FriendsTab onClose={onClose} />}
+          {activeTab === 'leaderboard' && <LeaderboardTab onClose={onClose} />}
         </div>
       </div>
     </div>
   );
 };
 
-const FriendsTab = () => {
+const FriendsTab = ({ onClose }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   return (
     <div className="friends-tab">
+      <div className="modal-upgrade-notice">
+        <p>This is a preview of your friends list. For the full experience with private friend search, activity feeds, detailed leaderboards, and competition tracking:</p>
+        <Link to="/friends" className="btn btn-primary" onClick={onClose}>
+          Go to Full Friends Page
+        </Link>
+      </div>
+
+      <div className="privacy-info">
+        <h4>🔒 Privacy Notice</h4>
+        <p>Find friends by email, phone, or username. Only usernames are shown publicly in leaderboards and activity feeds.</p>
+      </div>
+
       <div className="friends-header">
         <div className="search-container">
           <input
             type="text"
-            placeholder="Search for players to add as friends..."
+            placeholder="Search by email, phone, or username..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
@@ -78,9 +96,16 @@ const FriendsTab = () => {
   );
 };
 
-const LeaderboardTab = () => {
+const LeaderboardTab = ({ onClose }) => {
   return (
     <div className="leaderboard-tab">
+      <div className="modal-upgrade-notice">
+        <p>Preview your friends leaderboard with basic rankings. For detailed stats, activity tracking, and competition analysis:</p>
+        <Link to="/friends" className="btn btn-primary" onClick={onClose}>
+          Go to Full Friends Page
+        </Link>
+      </div>
+
       <div className="leaderboard-header">
         <h3>Friends Leaderboard</h3>
         <div className="leaderboard-filters">

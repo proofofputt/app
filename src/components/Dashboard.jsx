@@ -92,7 +92,7 @@ function Dashboard() {
       }
 
       if (sessionsResult.status === 'fulfilled') {
-        setRecentSessions(sessionsResult.value ?? []);
+        setRecentSessions(sessionsResult.value?.sessions ?? sessionsResult.value ?? []);
       } else {
         // A 404 from the sessions endpoint is expected if the user has no sessions.
         // This is not an error we should show to the user.

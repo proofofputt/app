@@ -61,8 +61,9 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
 
   const formatDuration = (seconds) => {
     if (!seconds) return 'N/A';
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+    const totalSeconds = Math.round(seconds);
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
@@ -74,6 +75,16 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
 
   // Parse session data - try multiple sources for backwards compatibility
   const sessionData = parseJsonData(session.data) || {};
+  
+  // Debug logging to check what data we actually have
+  if (sessionData && Object.keys(sessionData).length > 0) {
+    console.log(`[SessionRow] Session ${session.session_id} data keys:`, Object.keys(sessionData));
+    console.log(`[SessionRow] Has makes_by_category:`, !!sessionData.makes_by_category);
+    console.log(`[SessionRow] Has misses_by_category:`, !!sessionData.misses_by_category);
+    console.log(`[SessionRow] Has consecutive_by_category:`, !!sessionData.consecutive_by_category);
+    console.log(`[SessionRow] makes_by_category content:`, sessionData.makes_by_category);
+    console.log(`[SessionRow] misses_by_category content:`, sessionData.misses_by_category);
+  }
   const makesByCategory = parseJsonData(session.makes_by_category) || parseJsonData(sessionData.makes_by_category);
   const missesByCategoryFromDB = parseJsonData(session.misses_by_category) || parseJsonData(sessionData.misses_by_category);
   const puttList = parseJsonData(session.putt_list) || parseJsonData(sessionData.putt_list);
@@ -110,7 +121,8 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
     (session.makes_overview && Object.values(session.makes_overview).some(v => v > 0)) ||
     (session.misses_overview && Object.values(session.misses_overview).some(v => v > 0)) ||
     (sessionData && (Object.keys(sessionData.makes_overview || {}).length > 0 || 
-     Object.keys(sessionData.misses_overview || {}).length > 0));
+     Object.keys(sessionData.misses_overview || {}).length > 0)) ||
+    (sessionData && (sessionData.makes_by_category || sessionData.misses_by_category || sessionData.consecutive_by_category));
 
   return (
     <>
@@ -130,7 +142,7 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
         <td>{session.makes ?? session.total_makes ?? 0}</td>
         <td>{session.misses ?? session.total_misses ?? 0}</td>
         <td>{session.best_streak || 0}</td>
-        <td>{session.fastest_21_makes_seconds ? `${session.fastest_21_makes_seconds.toFixed(1)}s` : 'N/A'}</td>
+        <td>{session.fastest_21_makes_seconds ? `${Math.round(session.fastest_21_makes_seconds)}s` : 'N/A'}</td>
         <td>{session.putts_per_minute?.toFixed(1) ?? 'N/A'}</td>
         <td>{session.makes_per_minute?.toFixed(1) ?? 'N/A'}</td>
         <td>{session.most_makes_in_60_seconds || 0}</td>

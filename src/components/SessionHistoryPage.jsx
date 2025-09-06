@@ -49,7 +49,7 @@ const SessionHistoryPage = () => {
       if (sessionsResult.status === 'fulfilled') {
         const sessionData = sessionsResult.value;
         setSessions(sessionData.sessions || []);
-        setTotalPages(sessionData.total_pages || 1);
+        setTotalPages(sessionData.pagination?.total_pages || sessionData.total_pages || 1);
       } else {
         console.warn('Could not load session history (this is expected for new players):', sessionsResult.reason);
         setSessions([]);

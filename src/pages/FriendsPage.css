@@ -1,0 +1,736 @@
+/* Friends Page Main Layout */
+.friends-page {
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 10.5%;
+  box-sizing: border-box;
+}
+
+.friends-page .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.friends-page .page-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+/* Tab Navigation */
+.friends-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tab-button {
+  padding: 1rem 1.5rem;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--text-color-secondary);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-button:hover {
+  color: var(--text-color);
+  background-color: var(--surface-color);
+}
+
+.tab-button.active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+  background-color: var(--surface-color);
+}
+
+.tab-button .request-badge {
+  display: inline-block;
+  background-color: var(--error-color);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 0.2rem 0.4rem;
+  border-radius: 50%;
+  margin-left: 0.5rem;
+  min-width: 1.2rem;
+  text-align: center;
+}
+
+/* Content Area */
+.friends-content {
+  margin-top: 1.5rem;
+}
+
+/* Loading and Error States */
+.loading-state,
+.error-state {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.loading-state p {
+  font-size: 1.1rem;
+  color: var(--text-color-secondary);
+}
+
+.error-state .error-message {
+  color: var(--error-color);
+  margin-bottom: 1rem;
+}
+
+/* Friends List Styles (extends existing FriendsList component) */
+.friends-list {
+  width: 100%;
+}
+
+.friends-list .list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.friends-list .friends-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.friends-list .friend-card {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.friends-list .friend-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.friends-list .friend-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.friends-list .friend-name h4 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-color);
+}
+
+.friends-list .activity-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+}
+
+.friends-list .friendship-source {
+  font-size: 1.2rem;
+}
+
+.friends-list .friend-stats {
+  margin: 1rem 0;
+}
+
+.friends-list .stat-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.friends-list .stat {
+  text-align: center;
+  flex: 1;
+}
+
+.friends-list .stat-value {
+  display: block;
+  font-weight: bold;
+  color: var(--primary-color);
+  font-size: 1.1rem;
+}
+
+.friends-list .stat-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-color-secondary);
+  margin-top: 0.25rem;
+}
+
+.friends-list .friend-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin: 1rem 0 0.5rem 0;
+}
+
+.friends-list .friend-actions .btn {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.friends-list .challenge-status {
+  text-align: center;
+  font-size: 0.8rem;
+  padding: 0.25rem;
+}
+
+.friends-list .status-available {
+  color: var(--success-color);
+}
+
+.friends-list .status-maybe {
+  color: var(--warning-color);
+}
+
+.friends-list .status-unavailable {
+  color: var(--text-color-secondary);
+}
+
+/* Mutual Friends Activity */
+.mutual-friends-activity {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.mutual-friends-activity h3 {
+  margin: 0 0 1.5rem 0;
+  color: var(--text-color);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.75rem;
+}
+
+.activity-feed {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.activity-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+.activity-icon {
+  font-size: 1.5rem;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--sand-color);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.activity-content {
+  flex: 1;
+}
+
+.activity-text {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-color);
+  line-height: 1.4;
+}
+
+.activity-meta {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.activity-time {
+  font-size: 0.8rem;
+  color: var(--text-color-secondary);
+}
+
+.activity-link {
+  font-size: 0.8rem;
+  color: var(--primary-color);
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.activity-link:hover {
+  background-color: var(--masters-green-light);
+  text-decoration: underline;
+}
+
+.activity-link.join-league {
+  background-color: var(--highlighter-yellow);
+  color: var(--masters-green-dark);
+  font-weight: bold;
+}
+
+.activity-link.join-league:hover {
+  background-color: var(--highlighter-yellow-hover);
+}
+
+/* Mutual Competitions */
+.mutual-competitions {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.mutual-competitions h3 {
+  margin: 0 0 1.5rem 0;
+  color: var(--text-color);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.75rem;
+}
+
+.competitions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.competition-card {
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  transition: transform 0.2s ease;
+}
+
+.competition-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.competition-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.competition-type {
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.competition-players {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.competition-players .player {
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.competition-players .vs {
+  color: var(--text-color-secondary);
+  font-size: 0.9rem;
+}
+
+.competition-result {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.competition-result .winner {
+  display: block;
+  color: var(--success-color);
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+
+.competition-result .score {
+  color: var(--text-color-secondary);
+  font-size: 0.9rem;
+}
+
+.competition-info h4 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-color);
+}
+
+.competition-info p {
+  margin: 0.25rem 0;
+  color: var(--text-color-secondary);
+  font-size: 0.9rem;
+}
+
+.current-leader {
+  color: var(--primary-color) !important;
+  font-weight: bold;
+}
+
+.competition-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.competition-actions .btn {
+  flex: 1;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+/* Friends Leaderboard Enhancements */
+.friends-leaderboard {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.friends-leaderboard .leaderboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
+}
+
+.friends-leaderboard .sort-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.friends-leaderboard .sort-controls label {
+  color: var(--text-color-secondary);
+  font-size: 0.9rem;
+}
+
+.friends-leaderboard .sort-select {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+.self-stats-card {
+  background-color: var(--sand-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.self-stats-card h4 {
+  margin: 0 0 1rem 0;
+  color: var(--masters-green-dark);
+  text-align: center;
+}
+
+.self-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.self-stat {
+  text-align: center;
+}
+
+.self-stat .stat-value {
+  display: block;
+  font-weight: bold;
+  color: var(--masters-green-dark);
+  font-size: 1.1rem;
+}
+
+.self-stat .stat-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--masters-green-dark);
+  opacity: 0.8;
+  margin-top: 0.25rem;
+}
+
+.leaderboard-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.2s;
+}
+
+.leaderboard-item:hover {
+  background-color: var(--masters-green-light);
+}
+
+.leaderboard-item:last-child {
+  border-bottom: none;
+}
+
+.rank-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 3rem;
+}
+
+.rank-number {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.player-info {
+  flex: 1;
+}
+
+.player-name {
+  margin: 0 0 0.25rem 0;
+  color: var(--text-color);
+}
+
+.highlight-stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.highlight-value {
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.highlight-label {
+  font-size: 0.8rem;
+  color: var(--text-color-secondary);
+}
+
+.quick-stats {
+  display: flex;
+  gap: 1rem;
+}
+
+.quick-stat {
+  text-align: center;
+  min-width: 4rem;
+}
+
+.quick-stat span {
+  display: block;
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.quick-stat small {
+  font-size: 0.7rem;
+  color: var(--text-color-secondary);
+}
+
+.leaderboard-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-view-profile-small,
+.btn-challenge-small {
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-view-profile-small:hover {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-challenge-small:hover:not(:disabled) {
+  background-color: var(--success-color);
+  border-color: var(--success-color);
+}
+
+.btn-challenge-small:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.leaderboard-footer {
+  text-align: center;
+  padding: 1rem 0 0 0;
+  border-top: 1px solid var(--border-color);
+  margin-top: 1rem;
+}
+
+.leaderboard-footer p {
+  margin: 0 0 1rem 0;
+  color: var(--text-color-secondary);
+  font-size: 0.9rem;
+}
+
+/* Empty States */
+.empty-state {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--text-color-secondary);
+}
+
+.empty-state h3 {
+  margin: 0 0 1rem 0;
+  color: var(--text-color);
+}
+
+.empty-state p {
+  margin: 0.5rem 0;
+  line-height: 1.5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .friends-page {
+    padding: 0 5%;
+  }
+  
+  .friends-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .friends-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .tab-button {
+    white-space: nowrap;
+    min-width: 120px;
+  }
+  
+  .friends-list .friends-grid,
+  .competitions-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .self-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .leaderboard-item {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .quick-stats {
+    width: 100%;
+    justify-content: space-around;
+    margin-top: 0.5rem;
+  }
+}
+
+/* Friend Requests Section */
+.friend-requests-section {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.friend-requests-section h3 {
+  margin: 0 0 1rem 0;
+  color: var(--text-color);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.friend-requests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.friend-request-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: var(--sand-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  transition: transform 0.2s;
+}
+
+.friend-request-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.request-info h4 {
+  margin: 0 0 0.25rem 0;
+  color: var(--masters-green-dark);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.request-info p {
+  margin: 0 0 0.25rem 0;
+  color: var(--masters-green-dark);
+  font-size: 0.9rem;
+}
+
+.request-info small {
+  color: var(--masters-green-dark);
+  opacity: 0.8;
+  font-size: 0.8rem;
+}
+
+.request-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.request-actions .btn-small {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  min-width: 80px;
+}
+
+/* Privacy highlight for username displays */
+.username-display {
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.username-display:before {
+  content: '@';
+  opacity: 0.7;
+}

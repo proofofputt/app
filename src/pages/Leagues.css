@@ -38,6 +38,56 @@
   margin-bottom: 0.4rem; /* 75% reduction from 1.5rem */
 }
 
+/* League Cards Grid Layout from Prototype */
+.leagues-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.league-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.5rem;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.league-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.league-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.league-card-header h3 {
+  margin: 0;
+  color: var(--primary-color);
+}
+
+.league-card-description {
+  flex-grow: 1;
+  margin: 0.5rem 0 1.5rem;
+  color: var(--text-color-secondary);
+  font-size: 0.9rem;
+}
+
+.league-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+}
+
 /* Styles for Round Details within LeagueDetailPage */
 .round-header {
   display: flex;
@@ -194,8 +244,8 @@
   border-collapse: collapse;
   width: 100%;
   margin-top: 1.5rem;
-  background-color: var(--sand-color); /* Main background is now dark green */
-  color: var(--text-color); /* Default text color for the dark background */
+  background-color: var(--sand-color); /* Main background matches prototype */
+  color: var(--masters-green-dark); /* Default text color matches prototype */
 }
 
 .league-pivot-table th,
@@ -207,14 +257,14 @@
 }
 
 .league-pivot-table tbody td {
-  /* Make the scores in the table body yellow and bold */
+  /* Make the scores in the table body yellow and bold to match prototype */
   color: var(--primary-color);
   font-weight: bold;
   background-color: var(--surface-color);
 }
 
 .league-pivot-table thead th {
-  border-top: 0;
+  border-bottom: 2px solid var(--primary-color); /* Match prototype border style */
 }
 
 .league-pivot-table .round-label-cell {
@@ -227,8 +277,8 @@
   vertical-align: middle;
   min-height: 38px; /* Ensures consistent row height for alignment */
   gap: 1rem;
-  background-color: var(--sand-color); /* Make this column sandy */
-  color: var(--masters-green-dark); /* Text color for sandy background */
+  background-color: var(--sand-color); /* Make this column sandy - matches prototype */
+  color: var(--masters-green-dark); /* Text color for sandy background - matches prototype */
   min-width: 200px; /* Give the column a minimum width to prevent wrapping */
 }
 
@@ -261,41 +311,41 @@
 
 .league-pivot-table .player-name-header {
   text-align: left;
-  vertical-align: center;
-  padding-bottom: 0rem;
-  background-color: var(--surface-color);
-  color: var(--primary-color);
+  vertical-align: bottom;
+  padding-bottom: 0.5rem;
+  background-color: var(--sand-color); /* Match prototype background */
+  color: var(--masters-green-dark); /* Match prototype text color */
 }
 
 .league-pivot-table .player-name {
-  padding-bottom: 110px; /* Use padding to create space for rotated text at the bottom */
+  padding-bottom: 140px; /* Use padding to create space for rotated text at the bottom - matches prototype */
   white-space: nowrap;
   vertical-align: bottom; /* Align content to the bottom of the cell */
   position: relative;
-  min-width: 30px; /* Increased width by 50% */
-  max-width: 30px; /* Increased width by 50% */
-  background-color: var(--sand-color); /* Make player name columns sandy */
+  min-width: 35px; /* Make the column itself thin - matches prototype */
+  max-width: 35px; /* Make the column itself thin - matches prototype */
+  background-color: var(--sand-color); /* Make player name columns sandy - matches prototype */
 }
 
 .league-pivot-table .player-name div {
-  transform: translateX(-50%) rotate(-90deg); /* Center the div */
-  transform-origin: bottom center; /* Rotate around the bottom-center point */
+  transform: translateX(-50%) rotate(-90deg); /* Center the div and rotate - matches prototype */
+  transform-origin: bottom center; /* Rotate around the bottom-center point - matches prototype */
   position: absolute;
-  bottom: 30px; /* Further increased to add more padding below rotated text */
+  bottom: 24px; /* Position from bottom - matches prototype exactly */
   left: 50%; /* Center horizontally */
-  width: 130px; /* Increased width to allow for longer names */
+  width: 130px; /* Width to allow for longer names - matches prototype */
   text-align: center; /* Center the text within the div */
 }
 
 .league-pivot-table .player-name div a {
-  color: var(--masters-green-dark);
+  color: var(--masters-green-dark); /* Match prototype link color */
   text-decoration: none;
   font-weight: bold;
 }
 
 .league-pivot-table .player-name div a:hover {
   text-decoration: underline;
-  color: var(--highlighter-yellow-hover);
+  color: var(--highlighter-yellow-hover); /* Match prototype hover color */
 }
 
 .league-pivot-table .sort-column {
@@ -325,16 +375,16 @@
 }
 
 .league-pivot-table tfoot td {
-  background-color: var(--surface-color); /* Dark green background for value cells */
+  background-color: var(--sand-color-hover); /* Match prototype summary background */
   font-weight: bold;
-  color: var(--primary-color);
+  color: var(--masters-green-dark); /* Match prototype summary text color */
   border-top: 2px solid var(--border-color); /* Add strong separator to the cells */
 }
 
-/* Style for the summary row labels (e.g., "Total Points", "Rank") */
+/* Style for the summary row labels (e.g., "Total Points", "Rank") - matches prototype */
 .league-pivot-table tfoot .summary-row .round-label-cell {
-  background-color: var(--sand-color); /* Keep the label cell sandy */
-  color: var(--masters-green-dark); /* Keep the label text dark green */
+  background-color: var(--sand-color); /* Keep the label cell sandy - matches prototype */
+  color: var(--masters-green-dark); /* Keep the label text dark green - matches prototype */
 }
 
 /* Remove border from the very last row */
