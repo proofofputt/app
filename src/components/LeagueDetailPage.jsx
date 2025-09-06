@@ -10,7 +10,7 @@ import '../pages/Leagues.css'; // Reusing the same CSS file
 
 const LeagueDetailPage = () => {
   const { leagueId } = useParams();
-  const { playerData, playerTimezone } = useAuth();
+  const { playerData, playerTimezone, isLoading: authLoading } = useAuth();
   const { showTemporaryNotification: showNotification } = useNotification();
   const [league, setLeague] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -20,18 +20,26 @@ const LeagueDetailPage = () => {
   const [error, setError] = useState('');
 
   const fetchLeagueDetails = useCallback(async () => {
+    if (!playerData?.player_id) {
+      console.log('[LeagueDetailPage] Waiting for playerData...');
+      return;
+    }
+    
     setIsLoading(true);
     setError('');
     try {
+      console.log('[LeagueDetailPage] Fetching league details for:', leagueId, 'player:', playerData.player_id);
       const data = await apiGetLeagueDetails(leagueId, playerData.player_id);
+      console.log('[LeagueDetailPage] League data received:', data ? 'success' : 'failed');
       setLeague(data);
     } catch (err) {
+      console.error('[LeagueDetailPage] Error fetching league details:', err);
       setError(err.message || 'Failed to load league details.');
       showNotification(err.message || 'Failed to load league details.', true);
     } finally {
       setIsLoading(false);
     }
-  }, [leagueId, playerData, showNotification]);
+  }, [leagueId, playerData?.player_id, showNotification]);
 
   useEffect(() => {
     fetchLeagueDetails();
@@ -230,6 +238,31 @@ const LeagueDetailPage = () => {
   const playerHasSubmittedForRound = (round) => {
     return round.submissions.some(s => s.player_id === playerData.player_id);
   };
+
+  // Show loading while auth is still loading
+  if (authLoading || !playerData) {
+    return <p>Loading...</p>;
+  }
+
+  // Show loading while league data is being fetched
+  if (isLoading) {
+    return <p>Loading league details...</p>;
+  }
+
+  // Show error if league failed to load
+  if (error) {
+    return (
+      <div>
+        <p>Error loading league: {error}</p>
+        <button onClick={() => fetchLeagueDetails()}>Retry</button>
+      </div>
+    );
+  }
+
+  // Show error if no league data received
+  if (!league) {
+    return <p>League not found.</p>;
+  }
 
   return (
     <div className="league-detail-page">

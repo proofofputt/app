@@ -49,11 +49,54 @@ export const AuthProvider = ({ children }) => {
                 localStorage.setItem('playerData', JSON.stringify(freshData));
                 setPlayerData(freshData);
               } else {
-                console.warn('[AuthContext] Fresh data missing stats, keeping cached data');
+                console.warn('[AuthContext] Fresh data missing stats, ensuring cached data has stats structure');
+                // Ensure cached data has stats structure if missing
+                if (!parsedPlayerData.stats) {
+                  const playerDataWithStats = {
+                    ...parsedPlayerData,
+                    stats: {
+                      total_sessions: 0,
+                      total_makes: 0,
+                      total_misses: 0,
+                      best_streak: 0,
+                      fastest_21_makes_seconds: null,
+                      max_makes_per_minute: 0,
+                      max_putts_per_minute: 0,
+                      most_in_60_seconds: 0,
+                      max_session_duration: 0,
+                      make_percentage: 0,
+                      last_session_at: null
+                    },
+                    sessions: parsedPlayerData.sessions || []
+                  };
+                  localStorage.setItem('playerData', JSON.stringify(playerDataWithStats));
+                  setPlayerData(playerDataWithStats);
+                }
               }
             } catch (error) {
               console.error('[AuthContext] Failed to refresh player data on mount:', error);
-              // Keep existing playerData if refresh fails
+              // Ensure cached data has stats structure if missing
+              if (parsedPlayerData && !parsedPlayerData.stats) {
+                const playerDataWithStats = {
+                  ...parsedPlayerData,
+                  stats: {
+                    total_sessions: 0,
+                    total_makes: 0,
+                    total_misses: 0,
+                    best_streak: 0,
+                    fastest_21_makes_seconds: null,
+                    max_makes_per_minute: 0,
+                    max_putts_per_minute: 0,
+                    most_in_60_seconds: 0,
+                    max_session_duration: 0,
+                    make_percentage: 0,
+                    last_session_at: null
+                  },
+                  sessions: parsedPlayerData.sessions || []
+                };
+                localStorage.setItem('playerData', JSON.stringify(playerDataWithStats));
+                setPlayerData(playerDataWithStats);
+              }
             }
           }
         } catch (error) {
@@ -95,10 +138,27 @@ export const AuthProvider = ({ children }) => {
           localStorage.setItem('playerData', JSON.stringify(comprehensiveData));
           setPlayerData(comprehensiveData);
         } catch (error) {
-          // Fallback to basic player data if comprehensive fetch fails
-          console.warn('Could not fetch comprehensive player data, using basic data:', error);
-          localStorage.setItem('playerData', JSON.stringify(data.player));
-          setPlayerData(data.player);
+          // Fallback to basic player data with empty stats if comprehensive fetch fails
+          console.warn('Could not fetch comprehensive player data, using basic data with default stats:', error);
+          const basicPlayerDataWithStats = {
+            ...data.player,
+            stats: {
+              total_sessions: 0,
+              total_makes: 0,
+              total_misses: 0,
+              best_streak: 0,
+              fastest_21_makes_seconds: null,
+              max_makes_per_minute: 0,
+              max_putts_per_minute: 0,
+              most_in_60_seconds: 0,
+              max_session_duration: 0,
+              make_percentage: 0,
+              last_session_at: null
+            },
+            sessions: []
+          };
+          localStorage.setItem('playerData', JSON.stringify(basicPlayerDataWithStats));
+          setPlayerData(basicPlayerDataWithStats);
         }
         
         const from = location.state?.from?.pathname || '/';
