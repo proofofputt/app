@@ -23,6 +23,44 @@ function verifyToken(req) {
   });
 }
 
+/**
+ * Score a completed duel between two sessions (matches duels-v2.js logic)
+ */
+function scoreDuelSessions(challengerSession, challengedSession, rules) {
+  const scoring = rules.scoring_method || 'total_makes';
+  
+  let challengerScore, challengedScore;
+  
+  switch(scoring) {
+    case 'total_makes':
+      challengerScore = challengerSession.total_makes || 0;
+      challengedScore = challengedSession.total_makes || 0;
+      break;
+    case 'make_percentage':
+      challengerScore = challengerSession.make_percentage || 0;
+      challengedScore = challengedSession.make_percentage || 0;
+      break;
+    case 'best_streak':
+      challengerScore = challengerSession.best_streak || 0;
+      challengedScore = challengedSession.best_streak || 0;
+      break;
+    case 'fastest_21':
+      challengerScore = challengerSession.fastest_21_makes || 999999;
+      challengedScore = challengedSession.fastest_21_makes || 999999;
+      // For time-based, lower is better
+      return challengerScore < challengedScore ? 'challenger' : 'challenged';
+    default:
+      challengerScore = challengerSession.total_makes || 0;
+      challengedScore = challengedSession.total_makes || 0;
+  }
+  
+  if (challengerScore === challengedScore) {
+    return 'tie';
+  }
+  
+  return challengerScore > challengedScore ? 'challenger' : 'challenged';
+}
+
 export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -162,13 +200,51 @@ export default async function handler(req, res) {
           
           const updatedDuel = updatedDuelResult.rows[0];
           if (updatedDuel.challenger_session_id && updatedDuel.challenged_session_id) {
-            console.log(`[upload-session] Both players have submitted sessions for duel ${duel_id}. Marking as ready for scoring.`);
+            console.log(`[upload-session] Both players have submitted sessions for duel ${duel_id}. Triggering automatic scoring.`);
             
-            // TODO: Trigger automatic duel scoring here
-            // This could call the duels-v2 scoring logic or trigger a background job
+            // Get both session data for scoring
+            const sessionsResult = await client.query(`
+              SELECT 
+                cs.data as challenger_session_data,
+                chs.data as challenged_session_data,
+                d.rules,
+                d.challenger_id,
+                d.challenged_id
+              FROM duels d
+              LEFT JOIN sessions cs ON d.challenger_session_id = cs.session_id
+              LEFT JOIN sessions chs ON d.challenged_session_id = chs.session_id
+              WHERE d.duel_id = $1
+            `, [duel_id]);
             
-            // For now, we'll leave the duel in 'active' status and let the duels-v2 API handle completion
-            console.log(`[upload-session] Duel ${duel_id} ready for completion via duels-v2 API`);
+            if (sessionsResult.rows.length > 0) {
+              const duelData = sessionsResult.rows[0];
+              
+              // Score the duel using the same logic as duels-v2
+              const winner = scoreDuelSessions(
+                duelData.challenger_session_data,
+                duelData.challenged_session_data,
+                duelData.rules || {}
+              );
+              
+              let winnerId = null;
+              if (winner === 'challenger') winnerId = duelData.challenger_id;
+              else if (winner === 'challenged') winnerId = duelData.challenged_id;
+              // winnerId remains null for ties
+              
+              // Update duel with results
+              await client.query(`
+                UPDATE duels SET 
+                  status = 'completed',
+                  winner_id = $1,
+                  completed_at = NOW(),
+                  updated_at = NOW()
+                WHERE duel_id = $2
+              `, [winnerId, duel_id]);
+              
+              console.log(`[upload-session] Duel ${duel_id} automatically scored and completed. Winner: ${winner} (player ${winnerId || 'tie'})`);
+            } else {
+              console.log(`[upload-session] Error: Could not retrieve session data for duel scoring`);
+            }
           }
           
           console.log(`[upload-session] Successfully linked session ${finalSessionId} to duel ${duel_id} as ${isChallenger ? 'challenger' : 'challenged'}`);
@@ -177,10 +253,83 @@ export default async function handler(req, res) {
         }
       }
 
-      // Handle league session association (placeholder for future implementation)
+      // Handle league session association
       if (league_round_id) {
-        console.log(`[upload-session] League session association for round ${league_round_id} - feature not yet implemented`);
-        // TODO: Implement league session association logic
+        console.log(`[upload-session] Associating session ${finalSessionId} with league round ${league_round_id}`);
+        
+        // Check if league round exists and player is a member of the league
+        const roundResult = await client.query(`
+          SELECT 
+            lr.round_id, 
+            lr.league_id, 
+            lr.status as round_status,
+            lr.start_time,
+            lr.end_time,
+            l.name as league_name,
+            lm.membership_id,
+            lm.is_active as member_active
+          FROM league_rounds lr
+          JOIN leagues l ON lr.league_id = l.league_id
+          LEFT JOIN league_memberships lm ON (l.league_id = lm.league_id AND lm.player_id = $2)
+          WHERE lr.round_id = $1
+        `, [league_round_id, player_id]);
+        
+        if (roundResult.rows.length > 0) {
+          const roundInfo = roundResult.rows[0];
+          
+          // Check if player is a member of the league
+          if (!roundInfo.membership_id || !roundInfo.member_active) {
+            console.log(`[upload-session] Warning: Player ${player_id} is not an active member of league for round ${league_round_id}`);
+          } else {
+            // Check if round is active (sessions can be submitted during active rounds)
+            if (roundInfo.round_status !== 'active') {
+              console.log(`[upload-session] Warning: League round ${league_round_id} is not active (status: ${roundInfo.round_status})`);
+            }
+            
+            // Check if player has already submitted a session for this round
+            const existingSessionResult = await client.query(
+              'SELECT session_id FROM league_round_sessions WHERE round_id = $1 AND player_id = $2',
+              [league_round_id, player_id]
+            );
+            
+            if (existingSessionResult.rows.length > 0) {
+              console.log(`[upload-session] Warning: Player ${player_id} already has session ${existingSessionResult.rows[0].session_id} for round ${league_round_id}. Replacing with ${finalSessionId}.`);
+              
+              // Remove old session association
+              await client.query(
+                'DELETE FROM league_round_sessions WHERE round_id = $1 AND player_id = $2',
+                [league_round_id, player_id]
+              );
+            }
+            
+            // Calculate round score based on league scoring rules (simplified: use total makes)
+            const roundScore = statsData.total_makes || 0;
+            
+            // Insert new league session association
+            await client.query(`
+              INSERT INTO league_round_sessions (
+                session_id, round_id, league_id, player_id, 
+                session_data, round_score, submitted_at
+              ) VALUES ($1, $2, $3, $4, $5, $6, NOW())
+              ON CONFLICT (session_id) DO UPDATE SET
+                round_score = $6,
+                session_data = $5,
+                submitted_at = NOW()
+            `, [finalSessionId, league_round_id, roundInfo.league_id, player_id, JSON.stringify(statsData), roundScore]);
+            
+            // Update league membership stats
+            await client.query(`
+              UPDATE league_memberships 
+              SET sessions_this_round = sessions_this_round + 1,
+                  last_activity = NOW()
+              WHERE league_id = $1 AND player_id = $2
+            `, [roundInfo.league_id, player_id]);
+            
+            console.log(`[upload-session] Successfully linked session ${finalSessionId} to league round ${league_round_id} (${roundInfo.league_name}) with score ${roundScore}`);
+          }
+        } else {
+          console.log(`[upload-session] Warning: League round ${league_round_id} not found`);
+        }
       }
 
       // Update player stats (aggregate statistics)

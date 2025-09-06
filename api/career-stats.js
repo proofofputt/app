@@ -158,11 +158,14 @@ function processSessionsForCareerStats(sessionRows, playerName) {
       stats.sum_duration += duration;
     }
 
-    // Process category arrays if they exist
+    // Process category data based on actual session data structure
+    processObjectCategoryData(data, 'makes_overview', stats.makes_overview);
+    processObjectCategoryData(data, 'misses_overview', stats.misses_overview);
+    processObjectCategoryData(data, 'consecutive_by_category', stats.consecutive);
+    
+    // Also process any array-based category data (for compatibility)
     processCategoryData(data, 'consecutive_makes', stats.consecutive);
-    processCategoryData(data, 'makes_overview', stats.makes_overview);
     processCategoryData(data, 'makes_detailed', stats.makes_detailed);
-    processCategoryData(data, 'misses_overview', stats.misses_overview);
     processCategoryData(data, 'misses_detailed', stats.misses_detailed);
   });
 
@@ -191,4 +194,59 @@ function processCategoryData(sessionData, categoryKey, categoryStats) {
       categoryStats[category].high = item.value;
     }
   });
+}
+
+function processObjectCategoryData(sessionData, categoryKey, categoryStats) {
+  if (!sessionData[categoryKey] || typeof sessionData[categoryKey] !== 'object') {
+    return;
+  }
+
+  const categoryData = sessionData[categoryKey];
+  
+  // For consecutive_by_category, map numeric keys to direction names
+  if (categoryKey === 'consecutive_by_category') {
+    // Map distance categories to direction names (simplified mapping)
+    const directionMap = {
+      '3': 'LOW',    // Short putts typically from low entry
+      '7': 'LEFT',   // Medium putts from left
+      '10': 'RIGHT', // Medium putts from right  
+      '15': 'TOP',   // Longer putts from top
+      '21': 'LOW',   // Add to existing LOW
+      '50': 'TOP',   // Add to existing TOP
+      '100': 'TOP'   // Add to existing TOP
+    };
+    
+    Object.entries(categoryData).forEach(([distanceKey, value]) => {
+      const numValue = parseInt(value) || 0;
+      if (numValue <= 0) return;
+      
+      const direction = directionMap[distanceKey] || 'LOW'; // Default to LOW
+      if (!categoryStats[direction]) {
+        categoryStats[direction] = { high: 0, sum: 0 };
+      }
+      
+      categoryStats[direction].sum += numValue;
+      if (numValue > categoryStats[direction].high) {
+        categoryStats[direction].high = numValue;
+      }
+    });
+  } else {
+    // For makes_overview and misses_overview, use direct mapping
+    Object.entries(categoryData).forEach(([category, value]) => {
+      const numValue = parseInt(value) || 0;
+      if (numValue <= 0) return;
+      
+      // Handle "QUICK PUTT" vs "QUICKPUTT" naming inconsistency
+      const normalizedCategory = category === 'QUICK PUTT' ? 'QUICKPUTT' : category;
+      
+      if (!categoryStats[normalizedCategory]) {
+        categoryStats[normalizedCategory] = { high: 0, sum: 0 };
+      }
+      
+      categoryStats[normalizedCategory].sum += numValue;
+      if (numValue > categoryStats[normalizedCategory].high) {
+        categoryStats[normalizedCategory].high = numValue;
+      }
+    });
+  }
 }

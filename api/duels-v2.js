@@ -339,6 +339,24 @@ export default async function handler(req, res) {
         }
       }
       
+      if (action === 'expire') {
+        // Mark duel as expired (can be called by automated system)
+        if (duel.status === 'completed' || duel.status === 'cancelled') {
+          return res.status(400).json({ success: false, message: 'Duel is already completed or cancelled' });
+        }
+        
+        await client.query(`
+          UPDATE duels SET status = $1, completed_at = NOW(), updated_at = NOW() 
+          WHERE duel_id = $2
+        `, ['expired', duelId]);
+        
+        return res.status(200).json({
+          success: true,
+          message: 'Duel marked as expired',
+          status: 'expired'
+        });
+      }
+      
       return res.status(400).json({ success: false, message: 'Invalid action' });
     }
 
