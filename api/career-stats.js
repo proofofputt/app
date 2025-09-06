@@ -84,11 +84,14 @@ function processSessionsForCareerStats(sessionRows, playerName) {
     
     // Category aggregations based on actual putt classifications
     consecutive: {
-      'LOW': { high: 0, sum: 0 },
-      'LEFT': { high: 0, sum: 0 },
-      'RIGHT': { high: 0, sum: 0 },
-      'TOP': { high: 0, sum: 0 }
-    },  // Consecutive makes by hole entry direction
+      '3': { high: 0, sum: 0 },
+      '7': { high: 0, sum: 0 },
+      '10': { high: 0, sum: 0 },
+      '15': { high: 0, sum: 0 },
+      '21': { high: 0, sum: 0 },
+      '50': { high: 0, sum: 0 },
+      '100': { high: 0, sum: 0 }
+    },  // Consecutive makes by distance category
     makes_overview: {
       'LOW': { high: 0, sum: 0 },
       'LEFT': { high: 0, sum: 0 },
@@ -203,31 +206,20 @@ function processObjectCategoryData(sessionData, categoryKey, categoryStats) {
 
   const categoryData = sessionData[categoryKey];
   
-  // For consecutive_by_category, map numeric keys to direction names
+  // For consecutive_by_category, use distance numbers directly
   if (categoryKey === 'consecutive_by_category') {
-    // Map distance categories to direction names (simplified mapping)
-    const directionMap = {
-      '3': 'LOW',    // Short putts typically from low entry
-      '7': 'LEFT',   // Medium putts from left
-      '10': 'RIGHT', // Medium putts from right  
-      '15': 'TOP',   // Longer putts from top
-      '21': 'LOW',   // Add to existing LOW
-      '50': 'TOP',   // Add to existing TOP
-      '100': 'TOP'   // Add to existing TOP
-    };
-    
     Object.entries(categoryData).forEach(([distanceKey, value]) => {
       const numValue = parseInt(value) || 0;
       if (numValue <= 0) return;
       
-      const direction = directionMap[distanceKey] || 'LOW'; // Default to LOW
-      if (!categoryStats[direction]) {
-        categoryStats[direction] = { high: 0, sum: 0 };
+      // Use distance key directly (3, 7, 10, 15, 21, 50, 100)
+      if (!categoryStats[distanceKey]) {
+        categoryStats[distanceKey] = { high: 0, sum: 0 };
       }
       
-      categoryStats[direction].sum += numValue;
-      if (numValue > categoryStats[direction].high) {
-        categoryStats[direction].high = numValue;
+      categoryStats[distanceKey].sum += numValue;
+      if (numValue > categoryStats[distanceKey].high) {
+        categoryStats[distanceKey].high = numValue;
       }
     });
   } else {

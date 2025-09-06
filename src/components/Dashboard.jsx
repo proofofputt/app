@@ -16,7 +16,7 @@ const StatCard = ({ title, value }) => (
 );
 
 function Dashboard() {
-  const { playerData, playerTimezone, refreshData } = useAuth();
+  const { playerData, playerTimezone, refreshData, isLoading } = useAuth();
   const { showTemporaryNotification: showNotification } = useNotification();
   const [isContactsModalOpen, setIsContactsModalOpen] = useState(false);
   const [actionError, setActionError] = useState('');
@@ -87,8 +87,31 @@ function Dashboard() {
     console.log('Syncing with desktop app...');
   };
 
-  if (!playerData || !playerData.stats) {
+  if (isLoading) {
     return <p>Loading player data...</p>;
+  }
+
+  if (!playerData) {
+    return (
+      <div>
+        <p>Unable to load player data. Please try refreshing the page.</p>
+        <button onClick={() => window.location.reload()}>Refresh Page</button>
+      </div>
+    );
+  }
+
+  if (!playerData.stats) {
+    console.error('Player data missing stats:', playerData);
+    return (
+      <div>
+        <p>Player data is incomplete (missing stats). This might be a temporary issue.</p>
+        <button onClick={() => refreshData(playerData.player_id)}>Retry Loading Data</button>
+        <details style={{marginTop: '10px', fontSize: '12px'}}>
+          <summary>Debug Info</summary>
+          <pre>{JSON.stringify(playerData, null, 2)}</pre>
+        </details>
+      </div>
+    );
   }
 
   const { stats, sessions } = playerData;

@@ -28,11 +28,13 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const loadAndRefreshData = async () => {
+      setIsLoading(true);
+      
       // Check for existing auth token and player data
       const token = localStorage.getItem('authToken');
       const storedPlayerData = localStorage.getItem('playerData');
       
-      if (token && storedPlayerData && !playerData) {
+      if (token && storedPlayerData) {
         try {
           const parsedPlayerData = JSON.parse(storedPlayerData);
           setPlayerData(parsedPlayerData);
@@ -40,11 +42,17 @@ export const AuthProvider = ({ children }) => {
           // Always refresh data to get comprehensive stats and sessions
           if (parsedPlayerData && parsedPlayerData.player_id) {
             try {
+              console.log('[AuthContext] Refreshing player data for:', parsedPlayerData.player_id);
               const freshData = await apiGetPlayerData(parsedPlayerData.player_id);
-              localStorage.setItem('playerData', JSON.stringify(freshData));
-              setPlayerData(freshData);
+              console.log('[AuthContext] Fresh data received:', freshData ? 'success' : 'failed');
+              if (freshData && freshData.stats) {
+                localStorage.setItem('playerData', JSON.stringify(freshData));
+                setPlayerData(freshData);
+              } else {
+                console.warn('[AuthContext] Fresh data missing stats, keeping cached data');
+              }
             } catch (error) {
-              console.error('Failed to refresh player data on mount:', error);
+              console.error('[AuthContext] Failed to refresh player data on mount:', error);
               // Keep existing playerData if refresh fails
             }
           }
@@ -52,8 +60,10 @@ export const AuthProvider = ({ children }) => {
           console.error('Failed to parse stored player data:', error);
           localStorage.removeItem('authToken');
           localStorage.removeItem('playerData');
+          setPlayerData(null);
         }
       }
+      
       setIsLoading(false);
     };
 
