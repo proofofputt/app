@@ -82,7 +82,16 @@ export const apiSearchPlayers = (term, excludePlayerId = null) => {
     if (excludePlayerId) {
         url += `&exclude_player_id=${excludePlayerId}`;
     }
-    return fetch(url, { headers: getHeaders() }).then(handleResponse);
+    return fetch(url, { headers: getHeaders() })
+        .then(handleResponse)
+        .then(response => {
+            // Handle both old format (array) and new format ({ success, players })
+            if (response && typeof response === 'object' && response.players) {
+                return response.players;
+            }
+            // Fallback to direct array response for backward compatibility
+            return Array.isArray(response) ? response : [];
+        });
 };
 
 export const apiUpdatePlayer = (playerId, data) => 

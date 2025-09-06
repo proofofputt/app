@@ -19,9 +19,12 @@ const CreateDuelModal = ({ onClose, onDuelCreated }) => {
     setError('');
     try {
       const results = await apiSearchPlayers(searchTerm, playerData.player_id);
-      setSearchResults(results);
+      // Ensure results is always an array to prevent crashes
+      setSearchResults(Array.isArray(results) ? results : []);
     } catch (err) {
+      console.error('Search error:', err);
       setError(err.message || 'Failed to search for players.');
+      setSearchResults([]); // Clear results on error
     } finally {
       setIsLoading(false);
     }
