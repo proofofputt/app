@@ -162,44 +162,7 @@ export default async function handler(req, res) {
         }
       }
       
-      // Fallback to mock data if no database or no sessions found
-      if (sessions.length === 0) {
-        sessions = [
-          {
-            id: 1,
-            date: "2025-08-30T09:00:00Z",
-            duration: 1800,
-            total_putts: 45,
-            makes: 33,
-            make_percentage: 73.3,
-            best_streak: 8,
-            avg_distance: 6.2,
-            session_type: "practice"
-          },
-          {
-            id: 2,
-            date: "2025-08-29T14:30:00Z", 
-            duration: 2400,
-            total_putts: 62,
-            makes: 44,
-            make_percentage: 71.0,
-            best_streak: 12,
-            avg_distance: 5.8,
-            session_type: "league"
-          },
-          {
-            id: 3,
-            date: "2025-08-28T11:15:00Z",
-            duration: 1200,
-            total_putts: 28,
-            makes: 21,
-            make_percentage: 75.0,
-            best_streak: 6,
-            avg_distance: 4.9,
-            session_type: "duel"
-          }
-        ];
-      }
+      // No fallback mock data - return empty sessions array for clean testing
 
       // Calculate pagination metadata
       const currentPage = page ? parseInt(page) : 1;
