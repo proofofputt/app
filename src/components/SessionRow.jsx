@@ -88,9 +88,9 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
     console.log(`[SessionRow] makes_by_category content:`, sessionData.makes_by_category);
     console.log(`[SessionRow] misses_by_category content:`, sessionData.misses_by_category);
   }
-  const makesByCategory = parseJsonData(session.makes_by_category) || parseJsonData(sessionData.makes_by_category);
-  const missesByCategoryFromDB = parseJsonData(session.misses_by_category) || parseJsonData(sessionData.misses_by_category);
-  const puttList = parseJsonData(session.putt_list) || parseJsonData(sessionData.putt_list);
+  const makesByCategory = session.makes_by_category || parseJsonData(session.makes_by_category) || parseJsonData(sessionData.makes_by_category);
+  const missesByCategoryFromDB = session.misses_by_category || parseJsonData(session.misses_by_category) || parseJsonData(sessionData.misses_by_category);
+  const puttList = session.putt_list || parseJsonData(session.putt_list) || parseJsonData(sessionData.putt_list);
 
   // --- Use Makes Categories from API (new structure) or calculate from detailed data (backwards compatibility) ---
   const makesOverview = session.makes_overview || { TOP: 0, RIGHT: 0, LOW: 0, LEFT: 0 };
@@ -125,7 +125,9 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
     (session.misses_overview && Object.values(session.misses_overview).some(v => v > 0)) ||
     (sessionData && (Object.keys(sessionData.makes_overview || {}).length > 0 || 
      Object.keys(sessionData.misses_overview || {}).length > 0)) ||
-    (sessionData && (sessionData.makes_by_category || sessionData.misses_by_category || sessionData.consecutive_by_category));
+    (sessionData && (sessionData.makes_by_category || sessionData.misses_by_category || sessionData.consecutive_by_category)) ||
+    // Check session object directly for the analytics fields
+    (session.makes_by_category || session.misses_by_category || session.consecutive_by_category);
 
   return (
     <>
