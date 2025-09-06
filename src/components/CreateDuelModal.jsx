@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { apiSearchPlayers, apiCreateDuel } from '../api';
 import { useAuth } from '../context/AuthContext';
+import './CreateDuelModal.css';
 
 const CreateDuelModal = ({ onClose, onDuelCreated }) => {
   const { playerData } = useAuth();
@@ -19,12 +20,9 @@ const CreateDuelModal = ({ onClose, onDuelCreated }) => {
     setError('');
     try {
       const results = await apiSearchPlayers(searchTerm, playerData.player_id);
-      // Ensure results is always an array to prevent crashes
-      setSearchResults(Array.isArray(results) ? results : []);
+      setSearchResults(results);
     } catch (err) {
-      console.error('Search error:', err);
       setError(err.message || 'Failed to search for players.');
-      setSearchResults([]); // Clear results on error
     } finally {
       setIsLoading(false);
     }
@@ -124,7 +122,7 @@ const CreateDuelModal = ({ onClose, onDuelCreated }) => {
         </div>
       </div>
     </div>
-  );;
+  );
 };
 
 export default CreateDuelModal;

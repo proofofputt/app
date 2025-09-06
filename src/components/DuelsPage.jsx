@@ -56,24 +56,16 @@ const DuelsPage = () => {
     const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 9;
-    const isSubscribed = playerData?.membership_tier === 'premium' || playerData?.membership_tier === 'regular';
 
     const fetchDuels = async () => {
         if (!playerData?.player_id) return;
         setIsLoading(true);
-        setError('');
         try {
             const data = await apiListDuels(playerData.player_id);
             setDuels(data || []);
         } catch (err) {
-            // A 404 is not a "real" error in this context, it just means no duels exist.
-            // We can check for a message that indicates this.
-            if (err.message && (err.message.includes('404') || err.message.toLowerCase().includes('not found'))) {
-                setDuels([]);
-            } else {
-                setError(err.message || 'Failed to load duels.');
-                showNotification(err.message || 'Failed to load duels.', true);
-            }
+            setError(err.message || 'Failed to load duels.');
+            showNotification(err.message || 'Failed to load duels.', true);
         } finally {
             setIsLoading(false);
         }
@@ -97,14 +89,6 @@ const DuelsPage = () => {
     const handleSubmitSession = (duel) => {
         setSelectedDuel(duel);
         setShowSessionModal(true);
-    };
-
-    const handleCreateDuelClick = () => {
-        if (isSubscribed) {
-            setShowCreateModal(true);
-        } else {
-            showNotification("Creating a duel requires a full subscription.", true);
-        }
     };
 
     const onDuelCreated = () => {
@@ -196,7 +180,7 @@ const DuelsPage = () => {
         <div className="duels-page">
             <div className="duels-header">
                 <h1>Duels</h1>
-                <button onClick={handleCreateDuelClick} className="create-duel-btn">+ Create Duel</button>
+                <button onClick={() => setShowCreateModal(true)} className="create-duel-btn">+ Create Duel</button>
             </div>
 
             {showCreateModal && <CreateDuelModal onClose={() => setShowCreateModal(false)} onDuelCreated={onDuelCreated} />}
