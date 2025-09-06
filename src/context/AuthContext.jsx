@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
           const parsedPlayerData = JSON.parse(storedPlayerData);
           setPlayerData(parsedPlayerData);
           
-          // Optionally refresh data if player_id exists
+          // Always refresh data to get comprehensive stats and sessions
           if (parsedPlayerData && parsedPlayerData.player_id) {
             try {
               const freshData = await apiGetPlayerData(parsedPlayerData.player_id);
@@ -78,8 +78,19 @@ export const AuthProvider = ({ children }) => {
       
       if (data.success && data.token && data.player) {
         localStorage.setItem('authToken', data.token);
-        localStorage.setItem('playerData', JSON.stringify(data.player));
-        setPlayerData(data.player);
+        
+        // Fetch comprehensive player data including stats and sessions
+        try {
+          const comprehensiveData = await apiGetPlayerData(data.player.player_id);
+          localStorage.setItem('playerData', JSON.stringify(comprehensiveData));
+          setPlayerData(comprehensiveData);
+        } catch (error) {
+          // Fallback to basic player data if comprehensive fetch fails
+          console.warn('Could not fetch comprehensive player data, using basic data:', error);
+          localStorage.setItem('playerData', JSON.stringify(data.player));
+          setPlayerData(data.player);
+        }
+        
         const from = location.state?.from?.pathname || '/';
         navigate(from, { replace: true });
         return { success: true };
@@ -117,15 +128,18 @@ export const AuthProvider = ({ children }) => {
     navigate('/login');
   };
 
-  const refreshData = async () => {
-    if (!playerData) return;
+  const refreshData = async (playerId = null) => {
+    const targetPlayerId = playerId || playerData?.player_id;
+    if (!targetPlayerId) return;
     try {
-      const freshData = await apiGetPlayerData(playerData.player_id);
+      const freshData = await apiGetPlayerData(targetPlayerId);
       localStorage.setItem('playerData', JSON.stringify(freshData));
       setPlayerData(freshData);
+      return freshData;
     } catch (error) {
       console.error('Could not refresh user data:', error);
       // Keep existing playerData if refresh fails, don't corrupt the state
+      throw error;
     }
   };
 

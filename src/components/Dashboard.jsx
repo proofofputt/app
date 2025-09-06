@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { apiGetCareerStats, apiGetLatestSessions, apiGetLeaderboard } from '../api';
+import { useNotification } from '../context/NotificationContext';
+import { apiGetLeaderboard } from '../api';
 import ContactsModal from './ContactsModal';
 import SessionRow from './SessionRow';
 import LeaderboardCard from './LeaderboardCard';
@@ -15,14 +16,12 @@ const StatCard = ({ title, value }) => (
 );
 
 function Dashboard() {
-  const { playerData, playerTimezone } = useAuth();
+  const { playerData, playerTimezone, refreshData } = useAuth();
+  const { showTemporaryNotification: showNotification } = useNotification();
   const [isContactsModalOpen, setIsContactsModalOpen] = useState(false);
   const [actionError, setActionError] = useState('');
   const [expandedSessionId, setExpandedSessionId] = useState(null);
   const [leaderboardData, setLeaderboardData] = useState(null);
-  const [careerStats, setCareerStats] = useState(null);
-  const [recentSessions, setRecentSessions] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const tableWrapperRef = useRef(null);
 
   // This effect manages the height of the session table container
@@ -49,85 +48,53 @@ function Dashboard() {
     setExpandedSessionId(prevId => (prevId === sessionId ? null : sessionId));
   };
 
-  // Load real player data
+  // Load leaderboard data
   useEffect(() => {
-    const loadData = async () => {
-      if (!playerData?.player_id) {
-        setIsLoading(false);
-        return;
+    const fetchLeaderboards = async () => {
+      try {
+        const results = await Promise.allSettled([
+          apiGetLeaderboard({ metric: 'total_makes' }),
+          apiGetLeaderboard({ metric: 'best_streak' }),
+          apiGetLeaderboard({ metric: 'makes_per_minute' }),
+          apiGetLeaderboard({ metric: 'fastest_21_makes_seconds' }),
+        ]);
+
+        const [topMakesResult, topStreaksResult, topMpmResult, fastest21Result] = results;
+
+        const newLeaderboardData = {
+          top_makes: topMakesResult.status === 'fulfilled' ? topMakesResult.value?.leaderboard ?? [] : [],
+          top_streaks: topStreaksResult.status === 'fulfilled' ? topStreaksResult.value?.leaderboard ?? [] : [],
+          top_makes_per_minute: topMpmResult.status === 'fulfilled' ? topMpmResult.value?.leaderboard ?? [] : [],
+          fastest_21: fastest21Result.status === 'fulfilled' ? fastest21Result.value?.leaderboard ?? [] : [],
+        };
+        setLeaderboardData(newLeaderboardData);
+      } catch (error) {
+        console.error("Could not fetch leaderboard data:", error);
       }
-
-      setIsLoading(true);
-      setActionError('');
-
-      const results = await Promise.allSettled([
-        apiGetCareerStats(playerData.player_id),
-        apiGetLatestSessions(playerData.player_id, 5),
-        // Fetch leaderboards individually using the V2 endpoint with corrected metric names
-        apiGetLeaderboard({ metric: 'makes' }), // Changed from 'total_makes'
-        apiGetLeaderboard({ metric: 'best_streak' }),
-        apiGetLeaderboard({ metric: 'makes_per_minute' }),
-        apiGetLeaderboard({ metric: 'fastest_21_makes_seconds' }), // Changed from 'fastest_21'
-      ]);
-
-      const [
-        statsResult, 
-        sessionsResult, 
-        topMakesResult,
-        topStreaksResult,
-        topMpmResult,
-        fastest21Result
-      ] = results;
-
-      if (statsResult.status === 'fulfilled') {
-        setCareerStats(statsResult.value);
-      } else {
-        const reason = statsResult.reason; // This will be null now for 404s
-        console.error('Error loading career stats:', reason);
-        if (reason?.message?.includes('404')) {
-          setCareerStats({}); // Player has no stats yet, show default 0s.
-        } else {
-          setActionError('Failed to load career stats');
-        }
-      }
-
-      if (sessionsResult.status === 'fulfilled') {
-        setRecentSessions(sessionsResult.value?.sessions ?? sessionsResult.value ?? []);
-      } else {
-        // A 404 from the sessions endpoint is expected if the user has no sessions.
-        // This is not an error we should show to the user.
-        console.warn('Could not load recent sessions:', sessionsResult.reason);
-        setRecentSessions([]);
-      }
-
-      // Process leaderboard results
-      const newLeaderboardData = {
-        top_makes: topMakesResult.status === 'fulfilled' ? topMakesResult.value?.leaderboard ?? [] : [],
-        top_streaks: topStreaksResult.status === 'fulfilled' ? topStreaksResult.value?.leaderboard ?? [] : [],
-        top_makes_per_minute: topMpmResult.status === 'fulfilled' ? topMpmResult.value?.leaderboard ?? [] : [],
-        fastest_21: fastest21Result.status === 'fulfilled' ? fastest21Result.value?.leaderboard ?? [] : [],
-      };
-      setLeaderboardData(newLeaderboardData);
-
-      // Log any errors from leaderboard fetches
-      results.slice(2).forEach(result => {
-        if (result.status === 'rejected') {
-          console.error('Error loading a leaderboard:', result.reason);
-        }
-      });
-      setIsLoading(false);
     };
 
-    loadData();
-  }, [playerData?.player_id]);
+    fetchLeaderboards();
+  }, []); // Run once on mount
 
-  const totalPutts = (careerStats?.total_putts || 0);
-  const makePercentage = careerStats?.career_make_percentage ? `${careerStats.career_make_percentage}%` : 'N/A';
+  const handleRefreshClick = () => {
+    setActionError('');
+    refreshData(playerData.player_id);
+    showNotification('Data refreshed!');
+  };
 
   const handleSyncDesktop = () => {
     // TODO: Implement desktop app sync functionality
     console.log('Syncing with desktop app...');
   };
+
+  if (!playerData || !playerData.stats) {
+    return <p>Loading player data...</p>;
+  }
+
+  const { stats, sessions } = playerData;
+  
+  const totalPutts = (stats.total_makes || 0) + (stats.total_misses || 0);
+  const makePercentage = totalPutts > 0 ? ((stats.total_makes / totalPutts) * 100).toFixed(1) + '%' : 'N/A';
 
   return (
     <>
@@ -139,6 +106,13 @@ function Dashboard() {
             title="View and manage friends & contacts"
           >
             CONTACTS
+          </button>
+          <button 
+            onClick={handleRefreshClick}
+            className="btn btn-tertiary"
+            title="Refresh data"
+          >
+            REFRESH
           </button>
           <button 
             onClick={handleSyncDesktop}
@@ -154,10 +128,10 @@ function Dashboard() {
           <h2>All-Time Stats</h2>
         </div>
         <div className="dashboard-grid">
-          <StatCard title="Makes" value={isLoading ? '...' : (careerStats?.total_makes || 0)} />
-          <StatCard title="Misses" value={isLoading ? '...' : (careerStats?.total_misses || 0)} />
-          <StatCard title="Accuracy" value={isLoading ? '...' : makePercentage} />
-          <StatCard title="Fastest 21" value={isLoading ? '...' : (careerStats?.fastest_21_makes_seconds ? `${careerStats.fastest_21_makes_seconds}s` : 'N/A')} />
+          <StatCard title="Makes" value={stats.total_makes} />
+          <StatCard title="Misses" value={stats.total_misses} />
+          <StatCard title="Accuracy" value={makePercentage} />
+          <StatCard title="Fastest 21" value={stats.fastest_21_makes_seconds ? `${stats.fastest_21_makes_seconds}s` : 'N/A'} />
         </div>
         
         <div className={`session-list-container ${expandedSessionId ? 'is-expanded' : ''}`}>
@@ -174,12 +148,8 @@ function Dashboard() {
                 <tr><th style={{ width: '120px' }}>Details</th><th>Session Date</th><th>Duration</th><th>Makes</th><th>Misses</th><th>Best Streak</th><th>Fastest 21</th><th>PPM</th><th>MPM</th><th>Most in 60s</th></tr>
               </thead>
               <tbody>
-                {isLoading ? (
-                  <tr className="table-placeholder-row">
-                    <td colSpan="10">Loading sessions...</td>
-                  </tr>
-                ) : recentSessions && recentSessions.length > 0 ? (
-                  recentSessions.map((session) => (
+                {sessions && sessions.length > 0 ? (
+                  sessions.map((session, index) => (
                     <SessionRow
                       key={session.session_id}
                       session={session}
