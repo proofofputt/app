@@ -9,6 +9,34 @@ if (process.env.DATABASE_URL) {
   console.warn('DATABASE_URL not configured - using mock data');
 }
 
+// Transform detailed makes categories into overview format
+function transformMakesOverview(detailedMakes) {
+  const overview = { TOP: 0, RIGHT: 0, LOW: 0, LEFT: 0 };
+  
+  Object.entries(detailedMakes).forEach(([key, value]) => {
+    if (key.includes('TOP')) overview.TOP += value;
+    if (key.includes('RIGHT')) overview.RIGHT += value;
+    if (key.includes('LOW')) overview.LOW += value;
+    if (key.includes('LEFT')) overview.LEFT += value;
+  });
+  
+  return overview;
+}
+
+// Transform detailed misses categories into overview format
+function transformMissesOverview(detailedMisses) {
+  const overview = { RETURN: 0, CATCH: 0, TIMEOUT: 0, 'QUICK PUTT': 0 };
+  
+  Object.entries(detailedMisses).forEach(([key, value]) => {
+    if (key.includes('RETURN')) overview.RETURN += value;
+    if (key.includes('CATCH')) overview.CATCH += value;
+    if (key.includes('TIMEOUT')) overview.TIMEOUT += value;
+    if (key.includes('QUICK')) overview['QUICK PUTT'] += value;
+  });
+  
+  return overview;
+}
+
 // Format duration from seconds to MM:SS format
 function formatDuration(seconds) {
   if (!seconds || seconds <= 0) return '00:00';
@@ -109,6 +137,24 @@ export default async function handler(req, res) {
               mpm: timeStats.makes_per_minute || data.makes_per_minute || 0,
               most_in_60s: timeStats.most_makes_in_60_seconds || data.most_makes_in_60_seconds || 0,
               fastest_21: timeStats.fastest_21_makes_seconds || data.fastest_21_makes || null,
+              
+              // Detailed category data for expanded view
+              makes_by_category: analyticStats.makes_by_category || {},
+              misses_by_category: analyticStats.misses_by_category || {},
+              
+              // Transform detailed data into overview format expected by SessionRow
+              makes_overview: transformMakesOverview(analyticStats.makes_by_category || {}),
+              misses_overview: transformMissesOverview(analyticStats.misses_by_category || {}),
+              
+              consecutive_by_category: {
+                "3": consecutiveStats.streaks_over_3 || 0,
+                "7": 0, // Not available in current format
+                "10": consecutiveStats.streaks_over_10 || 0,
+                "15": consecutiveStats.streaks_over_15 || 0,
+                "21": consecutiveStats.streaks_over_21 || 0,
+                "50": 0,
+                "100": 0
+              }
             };
           });
         } finally {
@@ -121,18 +167,38 @@ export default async function handler(req, res) {
         sessions = [
           {
             id: 1,
-            session_id: "mock-session-1",
-            date: "2025-09-05T09:00:00Z",
-            duration: formatDuration(1800),
+            date: "2025-08-30T09:00:00Z",
+            duration: 1800,
             total_putts: 45,
             makes: 33,
             make_percentage: 73.3,
             best_streak: 8,
             avg_distance: 6.2,
             session_type: "practice"
+          },
+          {
+            id: 2,
+            date: "2025-08-29T14:30:00Z", 
+            duration: 2400,
+            total_putts: 62,
+            makes: 44,
+            make_percentage: 71.0,
+            best_streak: 12,
+            avg_distance: 5.8,
+            session_type: "league"
+          },
+          {
+            id: 3,
+            date: "2025-08-28T11:15:00Z",
+            duration: 1200,
+            total_putts: 28,
+            makes: 21,
+            make_percentage: 75.0,
+            best_streak: 6,
+            avg_distance: 4.9,
+            session_type: "duel"
           }
         ];
-        totalSessions = 1;
       }
 
       // Calculate pagination metadata
