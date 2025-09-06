@@ -1,20 +1,22 @@
 import React, { useState } from 'react';
 
 const DetailCategory = ({ title, overview, detailed }) => {
-  // Show all overview entries, including those with 0 count
-  const allOverview = Object.entries(overview);
-  // Sort detailed entries by count, descending, but show all including 0s
-  const sortedDetailed = Object.entries(detailed).sort(([, countA], [, countB]) => countB - countA);
+  // Filter out overview entries with 0 count
+  const filteredOverview = Object.entries(overview).filter(([, count]) => count > 0);
+  // Sort detailed entries by count, descending, and filter out zeros
+  const filteredAndSortedDetailed = Object.entries(detailed)
+    .filter(([, count]) => count > 0)
+    .sort(([, countA], [, countB]) => countB - countA);
 
   return (
     <div className="details-section">
       <h4>{title}</h4>
 
       <h5>Overview</h5>
-      {allOverview.length > 0 ? (
+      {filteredOverview.length > 0 ? (
         <ul>
-          {allOverview.map(([key, value]) => (
-            <li key={key} style={{ opacity: value > 0 ? 1 : 0.6 }}>
+          {filteredOverview.map(([key, value]) => (
+            <li key={key}>
               <strong>{key}:</strong> {value}
             </li>
           ))}
@@ -24,10 +26,10 @@ const DetailCategory = ({ title, overview, detailed }) => {
       )}
 
       <h5 style={{ marginTop: '1rem' }}>Detailed Classification</h5>
-      {sortedDetailed.length > 0 ? (
+      {filteredAndSortedDetailed.length > 0 ? (
         <ul>
-          {sortedDetailed.map(([key, value]) => (
-            <li key={key} style={{ opacity: value > 0 ? 1 : 0.6 }}>
+          {filteredAndSortedDetailed.map(([key, value]) => (
+            <li key={key}>
               <strong>{key}:</strong> {value}
             </li>
           ))}
@@ -40,14 +42,17 @@ const DetailCategory = ({ title, overview, detailed }) => {
 };
 
 const ConsecutiveCategory = ({ consecutiveData }) => {
-  const consecutiveEntries = Object.entries(consecutiveData || {});
+  // Filter out entries with 0 count and sort by count descending
+  const filteredAndSortedEntries = Object.entries(consecutiveData || {})
+    .filter(([, count]) => count > 0)
+    .sort(([, countA], [, countB]) => countB - countA);
   
   return (
     <div className="details-section">
       <h4>Consecutive Makes</h4>
-      {consecutiveEntries.length > 0 ? (
+      {filteredAndSortedEntries.length > 0 ? (
         <ul>
-          {consecutiveEntries.map(([threshold, count]) => (
+          {filteredAndSortedEntries.map(([threshold, count]) => (
             <li key={threshold}>
               <strong>{threshold}+ in a row:</strong> {count}
             </li>
