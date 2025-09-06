@@ -39,6 +39,27 @@ const DetailCategory = ({ title, overview, detailed }) => {
   );
 };
 
+const ConsecutiveCategory = ({ consecutiveData }) => {
+  const consecutiveEntries = Object.entries(consecutiveData || {});
+  
+  return (
+    <div className="details-section">
+      <h4>Consecutive Makes</h4>
+      {consecutiveEntries.length > 0 ? (
+        <ul>
+          {consecutiveEntries.map(([threshold, count]) => (
+            <li key={threshold}>
+              <strong>{threshold}+ in a row:</strong> {count}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p style={{ fontStyle: 'italic', opacity: 0.7 }}>None</p>
+      )}
+    </div>
+  );
+};
+
 const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExpand }) => {
   // Safely parse JSON data from the session
   const parseJsonData = (jsonString) => {
@@ -154,34 +175,21 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
             <div className="session-details">
               <h3>Session Details</h3>
               {hasDetailedData ? (
-                <>
-                  <div className="details-grid">
-                    <DetailCategory
-                      title="Makes By Category"
-                      overview={makesOverview}
-                      detailed={makesDetailed}
-                    />
-                    <DetailCategory
-                      title="Misses By Category"
-                      overview={missesOverview}
-                      detailed={missesDetailed}
-                    />
-                  </div>
-
-                  {(session.consecutive_by_category || sessionData?.consecutive_by_category || parseJsonData(session.consecutive_by_category)) && (
-                    <div className="consecutive-stats">
-                      <h4>Consecutive Makes</h4>
-                      <div className="consecutive-grid">
-                        {Object.entries(session.consecutive_by_category || sessionData?.consecutive_by_category || parseJsonData(session.consecutive_by_category) || {}).map(([threshold, count]) => (
-                          <div key={threshold} className="consecutive-item">
-                            <span className="consecutive-label">{threshold}+ in a row:</span>
-                            <span className="consecutive-value">{count}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
+                <div className="details-grid">
+                  <DetailCategory
+                    title="Makes By Category"
+                    overview={makesOverview}
+                    detailed={makesDetailed}
+                  />
+                  <DetailCategory
+                    title="Misses By Category"
+                    overview={missesOverview}
+                    detailed={missesDetailed}
+                  />
+                  <ConsecutiveCategory
+                    consecutiveData={session.consecutive_by_category || sessionData?.consecutive_by_category || parseJsonData(session.consecutive_by_category)}
+                  />
+                </div>
               ) : (
                 <p className="placeholder-text">Detailed analytics are not available for this session. Upload new sessions from the desktop app to see make/miss breakdowns by location.</p>
               )}
