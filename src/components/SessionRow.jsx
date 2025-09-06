@@ -76,17 +76,13 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
   // Parse session data - try multiple sources for backwards compatibility
   const sessionData = parseJsonData(session.data) || {};
   
-  // Enhanced debug logging - always log for expanded sessions
-  if (isExpanded) {
-    console.log(`[SessionRow] EXPANDED Session ${session.session_id}:`);
-    console.log(`[SessionRow] Raw session object:`, session);
-    console.log(`[SessionRow] Session data:`, sessionData);
-    console.log(`[SessionRow] Session data keys:`, Object.keys(sessionData));
-    console.log(`[SessionRow] Has makes_by_category:`, !!sessionData.makes_by_category);
-    console.log(`[SessionRow] Has misses_by_category:`, !!sessionData.misses_by_category);
-    console.log(`[SessionRow] Has consecutive_by_category:`, !!sessionData.consecutive_by_category);
-    console.log(`[SessionRow] makes_by_category content:`, sessionData.makes_by_category);
-    console.log(`[SessionRow] misses_by_category content:`, sessionData.misses_by_category);
+  // Debug logging (can be removed in production)
+  if (isExpanded && process.env.NODE_ENV === 'development') {
+    console.log(`[SessionRow] Session ${session.session_id} expanded - analytics data:`, {
+      makes_by_category: session.makes_by_category,
+      misses_by_category: session.misses_by_category,
+      consecutive_by_category: session.consecutive_by_category
+    });
   }
   const makesByCategory = session.makes_by_category || parseJsonData(session.makes_by_category) || parseJsonData(sessionData.makes_by_category);
   const missesByCategoryFromDB = session.misses_by_category || parseJsonData(session.misses_by_category) || parseJsonData(sessionData.misses_by_category);
@@ -159,7 +155,6 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
               <h3>Session Details</h3>
               {hasDetailedData ? (
                 <>
-                  <div style={{color: 'green', fontWeight: 'bold'}}>DEBUG: Detailed data detected!</div>
                   <div className="details-grid">
                     <DetailCategory
                       title="Makes By Category"
@@ -188,10 +183,7 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
                   )}
                 </>
               ) : (
-                <>
-                  <div style={{color: 'red', fontWeight: 'bold'}}>DEBUG: No detailed data found. hasDetailedData = false</div>
-                  <p className="placeholder-text">Detailed analytics are not available for this session. Upload new sessions from the desktop app to see make/miss breakdowns by location.</p>
-                </>
+                <p className="placeholder-text">Detailed analytics are not available for this session. Upload new sessions from the desktop app to see make/miss breakdowns by location.</p>
               )}
             </div>
           </td>
