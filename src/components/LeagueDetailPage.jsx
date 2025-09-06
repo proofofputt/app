@@ -60,11 +60,31 @@ const LeagueDetailPage = () => {
     try {
       // The first argument is playerId, second is duelId (null), third is leagueRoundId
       const response = await apiStartSession(playerData.player_id, null, roundId);
-      showNotification(response.message);
+      
+      // If successful response includes deep link, try to open it
+      if (response.deep_link_url) {
+        try {
+          window.location.href = response.deep_link_url;
+        } catch (e) {
+          console.warn('Failed to open deep link directly:', e);
+          // Fallback: create a temporary link and click it
+          const link = document.createElement('a');
+          link.href = response.deep_link_url;
+          link.style.display = 'none';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+      }
+      
+      showNotification(response.message || 'League session started. Check desktop application.');
+      
+      // Refresh league details to update submission status
+      fetchLeagueDetails();
     } catch (err) {
       showNotification(`Failed to start league session: ${err.message}`, true);
     }
-  }, [playerData, showNotification]);
+  }, [playerData, showNotification, fetchLeagueDetails]);
 
   const handleInvitePlayer = useCallback(async (inviteeId) => {
     try {
@@ -311,7 +331,11 @@ const LeagueDetailPage = () => {
                       <div className="round-status-group">
                         {displayStatus === 'scheduled' && (
                           <>
-                            <span className="round-start-time-label">{formatDateTime(round.start_time)}</span>
+                            <CountdownTimer 
+                              startTime={round.start_time} 
+                              endTime={round.end_time}
+                              isStartCountdown={true}
+                            />
                             <span className={`status-badge status-${displayStatus}`}>{displayStatus}</span>
                           </>
                         )}

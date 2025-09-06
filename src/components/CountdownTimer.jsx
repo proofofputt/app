@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
-const CountdownTimer = ({ endTime }) => {
+const CountdownTimer = ({ endTime, startTime, isStartCountdown = false }) => {
   const calculateTimeLeft = () => {
-    const difference = +new Date(endTime) - +new Date();
+    const targetTime = isStartCountdown ? startTime : endTime;
+    const difference = +new Date(targetTime) - +new Date();
     let timeLeft = {};
 
     if (difference > 0) {
@@ -38,9 +39,12 @@ const CountdownTimer = ({ endTime }) => {
   return (
     <div className="countdown-timer">
       {Object.keys(timeLeft).length > 0 ? (
-        <span><strong>{formatTime()}</strong></span>
+        <span>
+          {isStartCountdown ? 'Starts in: ' : 'Ends in: '}
+          <strong>{formatTime()}</strong>
+        </span>
       ) : (
-        <span>Round has ended.</span>
+        <span>{isStartCountdown ? 'Round has started!' : 'Round has ended.'}</span>
       )}
     </div>
   );
