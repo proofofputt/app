@@ -42,25 +42,26 @@ const DetailCategory = ({ title, overview, detailed }) => {
 };
 
 const ConsecutiveCategory = ({ consecutiveData }) => {
-  // Filter out entries with 0 count and sort by count descending
-  const filteredAndSortedEntries = Object.entries(consecutiveData || {})
-    .filter(([, count]) => count > 0)
-    .sort(([, countA], [, countB]) => countB - countA);
+  // For consecutive makes, always show all standard thresholds, even if zero
+  const standardThresholds = ['3', '7', '10', '15', '21', '50', '100'];
+  const data = consecutiveData || {};
+  
+  // Create entries for all standard thresholds, using data or 0
+  const consecutiveEntries = standardThresholds.map(threshold => [
+    threshold, 
+    data[threshold] || 0
+  ]);
   
   return (
     <div className="details-section">
       <h4>Consecutive Makes</h4>
-      {filteredAndSortedEntries.length > 0 ? (
-        <ul>
-          {filteredAndSortedEntries.map(([threshold, count]) => (
-            <li key={threshold}>
-              <strong>{threshold}+ in a row:</strong> {count}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p style={{ fontStyle: 'italic', opacity: 0.7 }}>None</p>
-      )}
+      <ul>
+        {consecutiveEntries.map(([threshold, count]) => (
+          <li key={threshold}>
+            <strong>{threshold}+ in a row:</strong> {count}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };
