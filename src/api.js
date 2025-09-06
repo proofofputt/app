@@ -128,7 +128,16 @@ export const apiGetCalibrationStatus = (playerId) =>
 
 // --- Duels ---
 export const apiListDuels = (playerId) => 
-  fetch(`${API_BASE_URL}/duels?player_id=${playerId}`, { headers: getHeaders() }).then(handleResponse);
+  fetch(`${API_BASE_URL}/duels?player_id=${playerId}`, { headers: getHeaders() })
+    .then(handleResponse)
+    .then(response => {
+      // Handle the response structure from duels API
+      if (response && typeof response === 'object' && response.duels) {
+        return response.duels;
+      }
+      // Fallback to empty array if no duels
+      return [];
+    });
 
 export const apiGetPlayerVsPlayerDuels = (player1Id, player2Id) => 
   fetch(`${API_BASE_URL}/players/${player1Id}/vs/${player2Id}/duels`, { headers: getHeaders() }).then(handleResponse);

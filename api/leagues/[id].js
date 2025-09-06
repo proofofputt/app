@@ -98,6 +98,15 @@ export default async function handler(req, res) {
       ORDER BY round_number ASC
     `, [leagueId]);
 
+    // Parse rules JSON and rename to settings for frontend compatibility
+    const settings = league.rules || {
+      time_limit_minutes: 60,
+      num_rounds: 4,
+      round_duration_hours: 168,
+      allow_late_joiners: false,
+      allow_player_invites: false
+    };
+
     return res.status(200).json({
       success: true,
       league: {
@@ -108,11 +117,11 @@ export default async function handler(req, res) {
         created_at: league.created_at,
         created_by: league.created_by,
         creator_name: league.creator_name,
-        rules: league.rules,
+        settings: settings,  // Frontend expects 'settings' not 'rules'
         member_count: parseInt(league.member_count)
       },
-      members: membersResult.rows,
-      rounds: roundsResult.rows
+      members: membersResult.rows || [],
+      rounds: roundsResult.rows || []
     });
 
   } catch (error) {
