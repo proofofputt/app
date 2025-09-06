@@ -25,17 +25,24 @@ function verifyToken(req) {
 export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  if (req.method !== 'GET') {
+  if (req.method === 'GET') {
+    return handleGetDuels(req, res);
+  } else if (req.method === 'POST') {
+    return handleCreateDuel(req, res);
+  } else {
     return res.status(405).json({ success: false, message: 'Method Not Allowed' });
   }
 
+}
+
+async function handleGetDuels(req, res) {
   let client;
   try {
     client = await pool.connect();
@@ -107,6 +114,66 @@ export default async function handler(req, res) {
       success: false,
       message: 'Failed to load duels',
       duels: [],
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  } finally {
+    if (client) client.release();
+  }
+}
+
+async function handleCreateDuel(req, res) {
+  // Verify authentication
+  const user = await verifyToken(req);
+  if (!user) {
+    return res.status(401).json({ success: false, message: 'Authentication required' });
+  }
+
+  const { challenger_id, challengee_id, rules } = req.body;
+
+  if (!challenger_id || !challengee_id) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'challenger_id and challengee_id are required' 
+    });
+  }
+
+  let client;
+  try {
+    client = await pool.connect();
+    
+    // Insert new duel
+    const duelResult = await client.query(`
+      INSERT INTO duels (challenger_id, challengee_id, status, rules, created_at)
+      VALUES ($1, $2, 'pending', $3, NOW())
+      RETURNING duel_id, challenger_id, challengee_id, status, rules, created_at
+    `, [challenger_id, challengee_id, rules || {}]);
+
+    const duel = duelResult.rows[0];
+
+    // Get challenger and challengee names
+    const playersResult = await client.query(`
+      SELECT player_id, name FROM players WHERE player_id IN ($1, $2)
+    `, [challenger_id, challengee_id]);
+
+    const players = {};
+    playersResult.rows.forEach(p => {
+      players[p.player_id] = p.name;
+    });
+
+    return res.status(201).json({
+      success: true,
+      duel: {
+        ...duel,
+        challenger_name: players[challenger_id],
+        challengee_name: players[challengee_id]
+      }
+    });
+
+  } catch (error) {
+    console.error('Create duel error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to create duel',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   } finally {
