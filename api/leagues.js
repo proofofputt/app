@@ -53,8 +53,8 @@ export default async function handler(req, res) {
           l.description,
           l.status,
           l.created_at,
-          l.created_by_player_id,
-          l.settings,
+          l.created_by,
+          l.rules,
           creator.name as creator_name,
           lm.joined_at,
           (SELECT COUNT(*) FROM league_memberships WHERE league_id = l.league_id) as member_count,
@@ -67,7 +67,7 @@ export default async function handler(req, res) {
           ) as active_round_number
         FROM leagues l
         JOIN league_memberships lm ON l.league_id = lm.league_id
-        JOIN players creator ON l.created_by_player_id = creator.player_id
+        JOIN players creator ON l.created_by = creator.player_id
         WHERE lm.player_id = $1
         ORDER BY l.created_at DESC
       `, [player_id]);
@@ -80,8 +80,8 @@ export default async function handler(req, res) {
           l.description,
           l.status,
           l.created_at,
-          l.created_by_player_id,
-          l.settings,
+          l.created_by,
+          l.rules,
           creator.name as creator_name,
           (SELECT COUNT(*) FROM league_memberships WHERE league_id = l.league_id) as member_count,
           (
@@ -92,8 +92,8 @@ export default async function handler(req, res) {
             LIMIT 1
           ) as active_round_number
         FROM leagues l
-        JOIN players creator ON l.created_by_player_id = creator.player_id
-        WHERE l.settings->>'privacy' = 'public'
+        JOIN players creator ON l.created_by = creator.player_id
+        WHERE l.rules->>'privacy' = 'public'
         AND l.league_id NOT IN (
           SELECT league_id FROM league_memberships WHERE player_id = $1
         )
@@ -139,9 +139,9 @@ export default async function handler(req, res) {
       };
 
       const leagueResult = await client.query(`
-        INSERT INTO leagues (name, description, created_by_player_id, settings, status, created_at)
+        INSERT INTO leagues (name, description, created_by, rules, status, created_at)
         VALUES ($1, $2, $3, $4, 'setup', $5)
-        RETURNING league_id, name, description, settings
+        RETURNING league_id, name, description, rules
       `, [name, description, user.playerId, JSON.stringify(defaultSettings), new Date()]);
 
       const league = leagueResult.rows[0];
@@ -161,7 +161,7 @@ export default async function handler(req, res) {
           league_id: league.league_id,
           name: league.name,
           description: league.description,
-          settings: league.settings,
+          rules: league.rules,
           status: 'setup'
         }
       });
