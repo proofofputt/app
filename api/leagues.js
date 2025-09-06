@@ -57,7 +57,7 @@ export default async function handler(req, res) {
           l.settings,
           creator.name as creator_name,
           lm.joined_at,
-          (SELECT COUNT(*) FROM league_members WHERE league_id = l.league_id) as member_count,
+          (SELECT COUNT(*) FROM league_memberships WHERE league_id = l.league_id) as member_count,
           (
             SELECT lr.round_number 
             FROM league_rounds lr 
@@ -66,7 +66,7 @@ export default async function handler(req, res) {
             LIMIT 1
           ) as active_round_number
         FROM leagues l
-        JOIN league_members lm ON l.league_id = lm.league_id
+        JOIN league_memberships lm ON l.league_id = lm.league_id
         JOIN players creator ON l.created_by_player_id = creator.player_id
         WHERE lm.player_id = $1
         ORDER BY l.created_at DESC
@@ -83,7 +83,7 @@ export default async function handler(req, res) {
           l.created_by_player_id,
           l.settings,
           creator.name as creator_name,
-          (SELECT COUNT(*) FROM league_members WHERE league_id = l.league_id) as member_count,
+          (SELECT COUNT(*) FROM league_memberships WHERE league_id = l.league_id) as member_count,
           (
             SELECT lr.round_number 
             FROM league_rounds lr 
@@ -95,7 +95,7 @@ export default async function handler(req, res) {
         JOIN players creator ON l.created_by_player_id = creator.player_id
         WHERE l.settings->>'privacy' = 'public'
         AND l.league_id NOT IN (
-          SELECT league_id FROM league_members WHERE player_id = $1
+          SELECT league_id FROM league_memberships WHERE player_id = $1
         )
         AND l.status = 'active'
         ORDER BY l.created_at DESC
@@ -148,7 +148,7 @@ export default async function handler(req, res) {
 
       // Add creator as first member
       await client.query(`
-        INSERT INTO league_members (league_id, player_id, joined_at)
+        INSERT INTO league_memberships (league_id, player_id, joined_at)
         VALUES ($1, $2, $3)
       `, [league.league_id, user.playerId, new Date()]);
 
