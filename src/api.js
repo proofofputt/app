@@ -75,7 +75,7 @@ export const apiGetPlayerData = (playerId) =>
   fetch(`${API_BASE_URL}/player/${playerId}/data`, { headers: getHeaders() }).then(handleResponse);
 
 export const apiGetCareerStats = (playerId) => 
-  fetch(`${API_BASE_URL}/player-stats?player_id=${playerId}`, { headers: getHeaders() }).then(handleResponse);
+  fetch(`${API_BASE_URL}/career-stats?player_id=${playerId}`, { headers: getHeaders() }).then(handleResponse);
 
 export const apiSearchPlayers = (term, excludePlayerId = null) => {
     let url = `${API_BASE_URL}/players/search?term=${encodeURIComponent(term)}`;
