@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 
-const DetailCategory = ({ title, overview, detailed }) => {
+const DetailCategory = ({ title, overview, detailed, allDetailed }) => {
   // Filter out overview entries with 0 count
   const filteredOverview = Object.entries(overview).filter(([, count]) => count > 0);
+  
+  // Use allDetailed if provided (for combined makes+misses), otherwise use detailed
+  const detailedData = allDetailed || detailed;
+  
   // Sort detailed entries by count, descending, and filter out zeros
-  const filteredAndSortedDetailed = Object.entries(detailed)
+  const filteredAndSortedDetailed = Object.entries(detailedData)
     .filter(([, count]) => count > 0)
     .sort(([, countA], [, countB]) => countB - countA);
 
@@ -123,6 +127,9 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
   const missesOverview = session.misses_overview || { RETURN: 0, CATCH: 0, TIMEOUT: 0, "QUICK PUTT": 0 };
   const missesDetailed = missesByCategoryFromDB || {};
 
+  // --- Combine all detailed classifications (makes + misses) ---
+  const allDetailed = { ...makesDetailed, ...missesDetailed };
+
   const hasDetailedData = Object.keys(makesDetailed).length > 0 || Object.keys(missesDetailed).length > 0 || 
     (session.makes_overview && Object.values(session.makes_overview).some(v => v > 0)) ||
     (session.misses_overview && Object.values(session.misses_overview).some(v => v > 0)) ||
@@ -166,11 +173,13 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
                     title="Makes By Category"
                     overview={makesOverview}
                     detailed={makesDetailed}
+                    allDetailed={allDetailed}
                   />
                   <DetailCategory
                     title="Misses By Category"
                     overview={missesOverview}
                     detailed={missesDetailed}
+                    allDetailed={allDetailed}
                   />
                   <ConsecutiveCategory
                     consecutiveData={session.consecutive_by_category || sessionData?.consecutive_by_category || parseJsonData(session.consecutive_by_category)}
