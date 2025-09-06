@@ -102,10 +102,10 @@ export default async function handler(req, res) {
             const consecutiveStats = data.consecutive_stats || {};
             const timeStats = data.time_stats || {};
             
-            const totalPutts = analyticStats.total_putts || stats.total_putts || 0;
-            const totalMakes = analyticStats.total_makes || stats.total_makes || 0;
-            const totalMisses = analyticStats.total_misses || stats.total_misses || (totalPutts - totalMakes);
-            const sessionDurationSeconds = sessionInfo.session_duration_seconds || stats.session_duration || data.session_duration_seconds || 0;
+            const totalPutts = data.total_putts || analyticStats.total_putts || stats.total_putts || 0;
+            const totalMakes = data.total_makes || analyticStats.total_makes || stats.total_makes || 0;
+            const totalMisses = data.total_misses || analyticStats.total_misses || stats.total_misses || (totalPutts - totalMakes);
+            const sessionDurationSeconds = data.session_duration_seconds || sessionInfo.session_duration_seconds || stats.session_duration || 0;
             
             return {
               // Legacy format for compatibility
@@ -114,8 +114,8 @@ export default async function handler(req, res) {
               duration: formatDuration(sessionDurationSeconds), // Use formatted MM:SS duration
               total_putts: totalPutts,
               makes: totalMakes,
-              make_percentage: parseFloat((analyticStats.make_percentage || stats.make_percentage || 0).toFixed(1)),
-              best_streak: consecutiveStats.max_consecutive || stats.best_streak || 0,
+              make_percentage: parseFloat((data.make_percentage || analyticStats.make_percentage || stats.make_percentage || 0).toFixed(1)),
+              best_streak: data.best_streak || consecutiveStats.max_consecutive || stats.best_streak || 0,
               avg_distance: 0,
               session_type: "practice",
               
@@ -126,34 +126,34 @@ export default async function handler(req, res) {
               session_duration: sessionDurationSeconds,
               total_makes: totalMakes,
               total_misses: totalMisses,
-              fastest_21_makes: timeStats.fastest_21_makes_seconds || data.fastest_21_makes || null,
-              putts_per_minute: timeStats.putts_per_minute || data.putts_per_minute || null,
-              makes_per_minute: timeStats.makes_per_minute || data.makes_per_minute || null,
-              most_makes_in_60_seconds: timeStats.most_makes_in_60_seconds || data.most_makes_in_60_seconds || null,
+              fastest_21_makes: data.fastest_21_makes_seconds || data.fastest_21_makes || timeStats.fastest_21_makes_seconds || null,
+              putts_per_minute: data.putts_per_minute || timeStats.putts_per_minute || null,
+              makes_per_minute: data.makes_per_minute || timeStats.makes_per_minute || null,
+              most_makes_in_60_seconds: data.most_makes_in_60_seconds || timeStats.most_makes_in_60_seconds || null,
               
               // Additional fields for compatibility with player-sessions-latest format
               misses: totalMisses,
-              ppm: timeStats.putts_per_minute || data.putts_per_minute || 0,
-              mpm: timeStats.makes_per_minute || data.makes_per_minute || 0,
-              most_in_60s: timeStats.most_makes_in_60_seconds || data.most_makes_in_60_seconds || 0,
-              fastest_21: timeStats.fastest_21_makes_seconds || data.fastest_21_makes || null,
+              ppm: data.putts_per_minute || timeStats.putts_per_minute || 0,
+              mpm: data.makes_per_minute || timeStats.makes_per_minute || 0,
+              most_in_60s: data.most_makes_in_60_seconds || timeStats.most_makes_in_60_seconds || 0,
+              fastest_21: data.fastest_21_makes_seconds || data.fastest_21_makes || timeStats.fastest_21_makes_seconds || null,
               
               // Detailed category data for expanded view
-              makes_by_category: analyticStats.makes_by_category || {},
-              misses_by_category: analyticStats.misses_by_category || {},
+              makes_by_category: data.makes_by_category || analyticStats.makes_by_category || {},
+              misses_by_category: data.misses_by_category || analyticStats.misses_by_category || {},
               
               // Transform detailed data into overview format expected by SessionRow
-              makes_overview: transformMakesOverview(analyticStats.makes_by_category || {}),
-              misses_overview: transformMissesOverview(analyticStats.misses_by_category || {}),
+              makes_overview: transformMakesOverview(data.makes_by_category || analyticStats.makes_by_category || {}),
+              misses_overview: transformMissesOverview(data.misses_by_category || analyticStats.misses_by_category || {}),
               
               consecutive_by_category: {
-                "3": consecutiveStats.streaks_over_3 || 0,
-                "7": 0, // Not available in current format
-                "10": consecutiveStats.streaks_over_10 || 0,
-                "15": consecutiveStats.streaks_over_15 || 0,
-                "21": consecutiveStats.streaks_over_21 || 0,
-                "50": 0,
-                "100": 0
+                "3": data.streaks_over_3 || consecutiveStats.streaks_over_3 || 0,
+                "7": data.streaks_over_7 || 0, // Check flat data first
+                "10": data.streaks_over_10 || consecutiveStats.streaks_over_10 || 0,
+                "15": data.streaks_over_15 || consecutiveStats.streaks_over_15 || 0,
+                "21": data.streaks_over_21 || consecutiveStats.streaks_over_21 || 0,
+                "50": data.streaks_over_50 || 0,
+                "100": data.streaks_over_100 || 0
               }
             };
           });
