@@ -99,13 +99,25 @@ export default async function handler(req, res) {
     `, [leagueId]);
 
     // Parse rules JSON and rename to settings for frontend compatibility
-    const settings = league.rules || {
+    let settings = {
       time_limit_minutes: 60,
       num_rounds: 4,
       round_duration_hours: 168,
       allow_late_joiners: false,
       allow_player_invites: false
     };
+
+    // Merge with actual rules if they exist
+    if (league.rules && typeof league.rules === 'object') {
+      settings = { ...settings, ...league.rules };
+    } else if (league.rules && typeof league.rules === 'string') {
+      try {
+        const parsedRules = JSON.parse(league.rules);
+        settings = { ...settings, ...parsedRules };
+      } catch (e) {
+        console.log('Failed to parse league rules JSON:', league.rules);
+      }
+    }
 
     return res.status(200).json({
       success: true,
