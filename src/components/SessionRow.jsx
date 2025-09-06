@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 
 const DetailCategory = ({ title, overview, detailed }) => {
-  // Filter out overview entries with 0 count (from early prototype logic)
-  const filteredOverview = Object.entries(overview).filter(([, count]) => count > 0);
-  // Sort detailed entries by count, descending.
+  // Show all overview entries, including those with 0 count
+  const allOverview = Object.entries(overview);
+  // Sort detailed entries by count, descending, but show all including 0s
   const sortedDetailed = Object.entries(detailed).sort(([, countA], [, countB]) => countB - countA);
 
   return (
@@ -11,10 +11,10 @@ const DetailCategory = ({ title, overview, detailed }) => {
       <h4>{title}</h4>
 
       <h5>Overview</h5>
-      {filteredOverview.length > 0 ? (
+      {allOverview.length > 0 ? (
         <ul>
-          {filteredOverview.map(([key, value]) => (
-            <li key={key}>
+          {allOverview.map(([key, value]) => (
+            <li key={key} style={{ opacity: value > 0 ? 1 : 0.6 }}>
               <strong>{key}:</strong> {value}
             </li>
           ))}
@@ -27,7 +27,7 @@ const DetailCategory = ({ title, overview, detailed }) => {
       {sortedDetailed.length > 0 ? (
         <ul>
           {sortedDetailed.map(([key, value]) => (
-            <li key={key}>
+            <li key={key} style={{ opacity: value > 0 ? 1 : 0.6 }}>
               <strong>{key}:</strong> {value}
             </li>
           ))}
@@ -109,33 +109,13 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
   const missesByCategoryFromDB = session.misses_by_category || parseJsonData(session.misses_by_category) || parseJsonData(sessionData.misses_by_category);
   const puttList = session.putt_list || parseJsonData(session.putt_list) || parseJsonData(sessionData.putt_list);
 
-  // --- Use Makes Categories from API (new structure) or calculate from detailed data (backwards compatibility) ---
+  // --- Use Makes Categories from API (new structure) ---
   const makesOverview = session.makes_overview || { TOP: 0, RIGHT: 0, LOW: 0, LEFT: 0 };
-  const makesDetailed = {};
-  if (makesByCategory) {
-    for (const [classification, count] of Object.entries(makesByCategory)) {
-      makesDetailed[classification] = count;
-      // Update overview if not provided by API
-      if (!session.makes_overview) {
-        if (classification.includes('TOP')) makesOverview.TOP += count;
-        if (classification.includes('RIGHT')) makesOverview.RIGHT += count;
-        if (classification.includes('LOW')) makesOverview.LOW += count;
-        if (classification.includes('LEFT')) makesOverview.LEFT += count;
-      }
-    }
-  }
+  const makesDetailed = makesByCategory || {};
 
-  // --- Use Misses Categories from API (new structure) or calculate from detailed data (backwards compatibility) ---
-  const missesOverview = session.misses_overview || missesByCategoryFromDB || { RETURN: 0, CATCH: 0, TIMEOUT: 0 };
-  const missesDetailed = {};
-  if (puttList) {
-    const missPutts = puttList.filter(p => p['Putt Classification'] === 'MISS');
-    for (const putt of missPutts) {
-      // The detailed classification from the putt list includes "MISS - " which we can remove for cleaner display
-      const detail = putt['Putt Detailed Classification']?.replace('MISS - ', '') || 'Unknown';
-      missesDetailed[detail] = (missesDetailed[detail] || 0) + 1;
-    }
-  }
+  // --- Use Misses Categories from API (new structure) ---  
+  const missesOverview = session.misses_overview || { RETURN: 0, CATCH: 0, TIMEOUT: 0, "QUICK PUTT": 0 };
+  const missesDetailed = missesByCategoryFromDB || {};
 
   const hasDetailedData = Object.keys(makesDetailed).length > 0 || Object.keys(missesDetailed).length > 0 || 
     (session.makes_overview && Object.values(session.makes_overview).some(v => v > 0)) ||
