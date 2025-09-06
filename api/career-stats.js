@@ -82,46 +82,27 @@ function processSessionsForCareerStats(sessionRows, playerName) {
     high_duration: 0,
     sum_duration: 0,
     
-    // Category aggregations with defaults
+    // Category aggregations based on actual putt classifications
     consecutive: {
-      'CENTER': { high: 0, sum: 0 },
+      'LOW': { high: 0, sum: 0 },
       'LEFT': { high: 0, sum: 0 },
       'RIGHT': { high: 0, sum: 0 },
-      'SHORT': { high: 0, sum: 0 },
-      'LONG': { high: 0, sum: 0 }
-    },
+      'TOP': { high: 0, sum: 0 }
+    },  // Consecutive makes by hole entry direction
     makes_overview: {
-      'CENTER': { high: 0, sum: 0 },
+      'LOW': { high: 0, sum: 0 },
       'LEFT': { high: 0, sum: 0 },
-      'RIGHT': { high: 0, sum: 0 }
+      'RIGHT': { high: 0, sum: 0 },
+      'TOP': { high: 0, sum: 0 }
     },
-    makes_detailed: {
-      'CENTER_SHORT': { high: 0, sum: 0 },
-      'CENTER_LONG': { high: 0, sum: 0 },
-      'LEFT_SHORT': { high: 0, sum: 0 },
-      'LEFT_LONG': { high: 0, sum: 0 },
-      'RIGHT_SHORT': { high: 0, sum: 0 },
-      'RIGHT_LONG': { high: 0, sum: 0 }
-    },
+    makes_detailed: {},  // Only populated when positive values exist
     misses_overview: {
+      'RETURN': { high: 0, sum: 0 },
       'CATCH': { high: 0, sum: 0 },
       'TIMEOUT': { high: 0, sum: 0 },
-      'RETURN': { high: 0, sum: 0 }
+      'QUICKPUTT': { high: 0, sum: 0 }
     },
-    misses_detailed: {
-      'CATCH_LEFT': { high: 0, sum: 0 },
-      'CATCH_RIGHT': { high: 0, sum: 0 },
-      'CATCH_SHORT': { high: 0, sum: 0 },
-      'CATCH_LONG': { high: 0, sum: 0 },
-      'TIMEOUT_LEFT': { high: 0, sum: 0 },
-      'TIMEOUT_RIGHT': { high: 0, sum: 0 },
-      'TIMEOUT_SHORT': { high: 0, sum: 0 },
-      'TIMEOUT_LONG': { high: 0, sum: 0 },
-      'RETURN_LEFT': { high: 0, sum: 0 },
-      'RETURN_RIGHT': { high: 0, sum: 0 },
-      'RETURN_SHORT': { high: 0, sum: 0 },
-      'RETURN_LONG': { high: 0, sum: 0 }
-    }
+    misses_detailed: {}  // Only populated when positive values exist
   };
 
   let totalSessions = sessionRows.length;
@@ -198,7 +179,7 @@ function processCategoryData(sessionData, categoryKey, categoryStats) {
   }
 
   sessionData[categoryKey].forEach(item => {
-    if (!item.category || typeof item.value !== 'number') return;
+    if (!item.category || typeof item.value !== 'number' || item.value <= 0) return;
     
     const category = item.category;
     if (!categoryStats[category]) {
