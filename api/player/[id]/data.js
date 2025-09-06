@@ -66,18 +66,52 @@ export default async function handler(req, res) {
 
       const player = playerResult.rows[0];
 
-      // Get aggregated stats (replicating prototype's stats structure)
+      // Get aggregated stats handling both flat and nested JSON structures
       const statsResult = await client.query(`
         SELECT 
           COUNT(session_id) as total_sessions,
-          COALESCE(SUM(CAST(data->>'total_makes' AS INTEGER)), 0) as total_makes,
-          COALESCE(SUM(CAST(data->>'total_misses' AS INTEGER)), 0) as total_misses,
-          COALESCE(MAX(CAST(data->>'best_streak' AS INTEGER)), 0) as best_streak,
-          COALESCE(MIN(CAST(data->>'fastest_21_makes_seconds' AS DECIMAL)), NULL) as fastest_21_makes,
-          COALESCE(MAX(CAST(data->>'makes_per_minute' AS DECIMAL)), 0) as max_makes_per_minute,
-          COALESCE(MAX(CAST(data->>'putts_per_minute' AS DECIMAL)), 0) as max_putts_per_minute,
-          COALESCE(MAX(CAST(data->>'most_in_60_seconds' AS INTEGER)), 0) as most_in_60_seconds,
-          COALESCE(MAX(CAST(data->>'session_duration' AS INTEGER)), 0) as max_session_duration,
+          COALESCE(
+            SUM(CAST(data->>'total_makes' AS INTEGER)) + 
+            SUM(CAST(data->'analytic_stats'->>'total_makes' AS INTEGER)), 0
+          ) as total_makes,
+          COALESCE(
+            SUM(CAST(data->>'total_misses' AS INTEGER)) + 
+            SUM(CAST(data->'analytic_stats'->>'total_misses' AS INTEGER)), 0
+          ) as total_misses,
+          COALESCE(
+            GREATEST(
+              MAX(CAST(data->>'best_streak' AS INTEGER)),
+              MAX(CAST(data->'consecutive_stats'->>'max_consecutive' AS INTEGER))
+            ), 0
+          ) as best_streak,
+          COALESCE(
+            LEAST(
+              MIN(CAST(data->>'fastest_21_makes_seconds' AS DECIMAL)),
+              MIN(CAST(data->'time_stats'->>'fastest_21_makes_seconds' AS DECIMAL))
+            )
+          ) as fastest_21_makes,
+          COALESCE(
+            GREATEST(
+              MAX(CAST(data->>'makes_per_minute' AS DECIMAL)),
+              MAX(CAST(data->'time_stats'->>'makes_per_minute' AS DECIMAL))
+            ), 0
+          ) as max_makes_per_minute,
+          COALESCE(
+            GREATEST(
+              MAX(CAST(data->>'putts_per_minute' AS DECIMAL)),
+              MAX(CAST(data->'time_stats'->>'putts_per_minute' AS DECIMAL))
+            ), 0
+          ) as max_putts_per_minute,
+          COALESCE(
+            GREATEST(
+              MAX(CAST(data->>'most_in_60_seconds' AS INTEGER)),
+              MAX(CAST(data->'time_stats'->>'most_makes_in_60_seconds' AS INTEGER))
+            ), 0
+          ) as most_in_60_seconds,
+          COALESCE(
+            MAX(CAST(data->'session_info'->>'session_duration_seconds' AS INTEGER)),
+            MAX(CAST(data->>'session_duration' AS INTEGER)), 0
+          ) as max_session_duration,
           MAX(created_at) as last_session_at
         FROM sessions 
         WHERE player_id = $1 

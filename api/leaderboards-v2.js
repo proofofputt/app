@@ -140,14 +140,23 @@ async function handleGetLeaderboard(req, res, client) {
         SELECT 
           s.player_id,
           p.name as player_name,
-          SUM(CAST(s.data->>'total_makes' AS INTEGER)) as metric_value,
+          COALESCE(
+            SUM(CAST(s.data->>'total_makes' AS INTEGER)) + 
+            SUM(CAST(s.data->'analytic_stats'->>'total_makes' AS INTEGER)), 0
+          ) as metric_value,
           COUNT(s.session_id) as sessions_count,
-          ROW_NUMBER() OVER (ORDER BY SUM(CAST(s.data->>'total_makes' AS INTEGER)) DESC) as player_rank
+          ROW_NUMBER() OVER (ORDER BY COALESCE(
+            SUM(CAST(s.data->>'total_makes' AS INTEGER)) + 
+            SUM(CAST(s.data->'analytic_stats'->>'total_makes' AS INTEGER)), 0
+          ) DESC) as player_rank
         FROM sessions s
         JOIN players p ON s.player_id = p.player_id
-        WHERE s.data->>'total_makes' IS NOT NULL
+        WHERE (s.data->>'total_makes' IS NOT NULL OR s.data->'analytic_stats'->>'total_makes' IS NOT NULL)
         GROUP BY s.player_id, p.name
-        HAVING SUM(CAST(s.data->>'total_makes' AS INTEGER)) > 0
+        HAVING COALESCE(
+          SUM(CAST(s.data->>'total_makes' AS INTEGER)) + 
+          SUM(CAST(s.data->'analytic_stats'->>'total_makes' AS INTEGER)), 0
+        ) > 0
         ORDER BY metric_value DESC
         LIMIT $1
       `;
@@ -157,14 +166,29 @@ async function handleGetLeaderboard(req, res, client) {
         SELECT 
           s.player_id,
           p.name as player_name,
-          MAX(CAST(s.data->>'best_streak' AS INTEGER)) as metric_value,
+          COALESCE(
+            GREATEST(
+              MAX(CAST(s.data->>'best_streak' AS INTEGER)),
+              MAX(CAST(s.data->'consecutive_stats'->>'max_consecutive' AS INTEGER))
+            ), 0
+          ) as metric_value,
           COUNT(s.session_id) as sessions_count,
-          ROW_NUMBER() OVER (ORDER BY MAX(CAST(s.data->>'best_streak' AS INTEGER)) DESC) as player_rank
+          ROW_NUMBER() OVER (ORDER BY COALESCE(
+            GREATEST(
+              MAX(CAST(s.data->>'best_streak' AS INTEGER)),
+              MAX(CAST(s.data->'consecutive_stats'->>'max_consecutive' AS INTEGER))
+            ), 0
+          ) DESC) as player_rank
         FROM sessions s
         JOIN players p ON s.player_id = p.player_id
-        WHERE s.data->>'best_streak' IS NOT NULL
+        WHERE (s.data->>'best_streak' IS NOT NULL OR s.data->'consecutive_stats'->>'max_consecutive' IS NOT NULL)
         GROUP BY s.player_id, p.name
-        HAVING MAX(CAST(s.data->>'best_streak' AS INTEGER)) > 0
+        HAVING COALESCE(
+          GREATEST(
+            MAX(CAST(s.data->>'best_streak' AS INTEGER)),
+            MAX(CAST(s.data->'consecutive_stats'->>'max_consecutive' AS INTEGER))
+          ), 0
+        ) > 0
         ORDER BY metric_value DESC
         LIMIT $1
       `;
