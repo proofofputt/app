@@ -46,19 +46,25 @@ export default async function handler(req, res) {
   const { duelId } = req.query;
   const { player_id, response } = req.body;
 
+  // Convert to integers to ensure consistent database types
+  const duelIdInt = parseInt(duelId);
+  const playerIdInt = parseInt(player_id);
+
   console.log('[DuelRespond] Request data:', {
     duelId,
+    duelIdInt,
     player_id,
+    playerIdInt,
     response,
     query: req.query,
     body: req.body
   });
 
-  if (!duelId || !player_id || !response) {
+  if (!duelId || !player_id || !response || isNaN(duelIdInt) || isNaN(playerIdInt)) {
     return res.status(400).json({ 
       success: false, 
-      message: 'duelId, player_id, and response are required',
-      received: { duelId, player_id, response }
+      message: 'duelId, player_id, and response are required and must be valid numbers',
+      received: { duelId, player_id, response, duelIdInt, playerIdInt }
     });
   }
 
@@ -82,7 +88,7 @@ export default async function handler(req, res) {
         status
       FROM duels 
       WHERE duel_id = $1
-    `, [duelId]);
+    `, [duelIdInt]);
 
     if (duelResult.rows.length === 0) {
       return res.status(404).json({ 
@@ -94,7 +100,7 @@ export default async function handler(req, res) {
     const duel = duelResult.rows[0];
 
     // Verify the player is the invited player
-    if (parseInt(player_id) !== duel.duel_invited_player_id) {
+    if (playerIdInt !== duel.duel_invited_player_id) {
       return res.status(403).json({ 
         success: false, 
         message: 'Only the invited player can respond to this duel' 
@@ -119,7 +125,7 @@ export default async function handler(req, res) {
         updated_at = NOW()
       WHERE duel_id = $2
       RETURNING duel_id, status, accepted_at
-    `, [newStatus, duelId]);
+    `, [newStatus, duelIdInt]);
 
     const updatedDuel = updateResult.rows[0];
 
@@ -138,7 +144,9 @@ export default async function handler(req, res) {
       message: error.message,
       stack: error.stack,
       duelId,
+      duelIdInt,
       player_id,
+      playerIdInt,
       response
     });
     return res.status(500).json({
@@ -148,7 +156,9 @@ export default async function handler(req, res) {
       details: process.env.NODE_ENV === 'development' ? {
         stack: error.stack,
         duelId,
+        duelIdInt,
         player_id,
+        playerIdInt,
         response
       } : undefined
     });
