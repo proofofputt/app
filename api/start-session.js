@@ -26,6 +26,15 @@ function verifyToken(req) {
 export default async function handler(req, res) {
   console.log('[start-session] Handler called with method:', req.method);
   
+  // Try to respond immediately to test if handler is working
+  if (req.method === 'GET') {
+    return res.status(200).json({ 
+      success: true, 
+      message: 'Start-session handler is working',
+      timestamp: new Date().toISOString()
+    });
+  }
+  
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -58,7 +67,9 @@ export default async function handler(req, res) {
   }
 
   try {
+    console.log('[start-session] Attempting database connection...');
     const client = await pool.connect();
+    console.log('[start-session] Database connected successfully');
 
     try {
       let sessionType = 'practice';
