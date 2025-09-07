@@ -36,10 +36,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, message: 'Method Not Allowed' });
   }
 
-  const { id } = req.query;
-  const leagueId = parseInt(id);
+  const { leagueId } = req.query;
+  const leagueIdInt = parseInt(leagueId);
 
-  if (!leagueId) {
+  if (!leagueIdInt) {
     return res.status(400).json({ success: false, message: 'Valid league ID is required' });
   }
 
@@ -66,7 +66,7 @@ export default async function handler(req, res) {
       FROM leagues l
       JOIN players creator ON COALESCE(l.league_creator_id, l.created_by) = creator.player_id
       WHERE l.league_id = $1
-    `, [leagueId]);
+    `, [leagueIdInt]);
 
     if (leagueResult.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'League not found' });
@@ -86,7 +86,7 @@ export default async function handler(req, res) {
       JOIN players p ON lm.league_member_id = p.player_id
       WHERE lm.league_id = $1 AND lm.is_active = true
       ORDER BY lm.joined_at ASC
-    `, [leagueId]);
+    `, [leagueIdInt]);
 
     // Get league rounds if they exist
     const roundsResult = await client.query(`
@@ -100,7 +100,7 @@ export default async function handler(req, res) {
       FROM league_rounds
       WHERE league_id = $1
       ORDER BY round_number ASC
-    `, [leagueId]);
+    `, [leagueIdInt]);
 
     // Get round submissions for each round
     const rounds = [];
