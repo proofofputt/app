@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { apiRegister, apiForgotPassword } from '../api';
 import './LoginPage.css';
 
 const LoginPage = () => {
@@ -7,7 +8,7 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [username, setUsername] = useState('');
+  const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -40,24 +41,18 @@ const LoginPage = () => {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, username })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
+      const result = await apiRegister(name, email, password);
+      
+      if (result) {
         setSuccess('Registration successful! Please sign in.');
         setMode('login');
         setPassword('');
         setConfirmPassword('');
       } else {
-        setError(data.error || 'Registration failed. Please try again.');
+        setError('Registration failed. Please try again.');
       }
     } catch (err) {
-      setError('Network error. Please try again.');
+      setError(err.message || 'Network error. Please try again.');
     }
     
     setIsLoading(false);
@@ -70,22 +65,16 @@ const LoginPage = () => {
     setSuccess('');
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
+      const result = await apiForgotPassword(email);
+      
+      if (result) {
         setSuccess('Password reset instructions have been sent to your email.');
         setMode('login');
       } else {
-        setError(data.error || 'Failed to send reset email. Please try again.');
+        setError('Failed to send reset email. Please try again.');
       }
     } catch (err) {
-      setError('Network error. Please try again.');
+      setError(err.message || 'Network error. Please try again.');
     }
     
     setIsLoading(false);
@@ -168,15 +157,15 @@ const LoginPage = () => {
             {error && <div className="error-message">{error}</div>}
             
             <div className="form-group">
-              <label htmlFor="username">Username</label>
+              <label htmlFor="name">Name</label>
               <input
                 type="text"
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 required
                 disabled={isLoading}
-                autoComplete="username"
+                autoComplete="name"
               />
             </div>
 

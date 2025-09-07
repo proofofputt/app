@@ -12,10 +12,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { email, password, username } = req.body;
+  const { email, password, name } = req.body;
 
-  if (!email || !password || !username) {
-    return res.status(400).json({ error: 'Email, username, and password are required' });
+  if (!email || !password || !name) {
+    return res.status(400).json({ error: 'Email, name, and password are required' });
   }
 
   // Validate email format
@@ -29,10 +29,9 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Password must be at least 6 characters long' });
   }
 
-  // Validate username (alphanumeric and underscores only, 3-20 characters)
-  const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
-  if (!usernameRegex.test(username)) {
-    return res.status(400).json({ error: 'Username must be 3-20 characters and contain only letters, numbers, and underscores' });
+  // Validate name (reasonable length)
+  if (name.length < 2 || name.length > 50) {
+    return res.status(400).json({ error: 'Name must be between 2 and 50 characters' });
   }
 
   const client = await pool.connect();
@@ -49,33 +48,24 @@ export default async function handler(req, res) {
       return res.status(409).json({ error: 'Email already registered' });
     }
 
-    // Check if username already exists
-    const existingUsername = await client.query(
-      'SELECT player_id FROM players WHERE LOWER(username) = LOWER($1)',
-      [username]
-    );
-
-    if (existingUsername.rows.length > 0) {
-      return res.status(409).json({ error: 'Username already taken' });
-    }
-
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create the new player
+    // Create the new player matching the production schema
     const result = await client.query(
       `INSERT INTO players (
+        name,
         email, 
-        password, 
-        username, 
+        password_hash, 
+        membership_tier,
+        subscription_status,
+        timezone,
         created_at,
-        subscription_tier,
-        handicap,
-        role
+        updated_at
       )
-      VALUES ($1, $2, $3, NOW(), 'free', 0, 'user')
-      RETURNING player_id, email, username, subscription_tier, role`,
-      [email, hashedPassword, username]
+      VALUES ($1, $2, $3, 'basic', 'active', 'America/New_York', NOW(), NOW())
+      RETURNING player_id, name, email, membership_tier, subscription_status, timezone`,
+      [name, email, hashedPassword]
     );
 
     if (result.rows.length === 0) {
@@ -84,36 +74,36 @@ export default async function handler(req, res) {
 
     const player = result.rows[0];
 
-    // Initialize player stats
+    // Initialize player stats (using player_stats table like login.js expects)
     await client.query(
-      `INSERT INTO stats (
+      `INSERT INTO player_stats (
         player_id,
         total_sessions,
         total_putts,
         total_makes,
         total_misses,
-        best_streak,
         make_percentage,
-        most_makes_in_60s,
-        fastest_21_makes,
-        created_at
+        best_streak,
+        created_at,
+        updated_at
       )
-      VALUES ($1, 0, 0, 0, 0, 0, 0, 0, NULL, NOW())
+      VALUES ($1, 0, 0, 0, 0, 0.0, 0, NOW(), NOW())
       ON CONFLICT (player_id) DO NOTHING`,
       [player.player_id]
     );
 
-    // Generate JWT token
+    // Generate JWT token (matching login.js format)
     const token = jwt.sign(
       { 
         playerId: player.player_id,
-        email: player.email,
-        username: player.username,
-        role: player.role
+        email: player.email
       },
       process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '7d' }
+      { expiresIn: '1d' }
     );
+
+    // Generate username from email like login.js does
+    const username = player.email.split('@')[0];
 
     return res.status(201).json({
       success: true,
@@ -121,9 +111,11 @@ export default async function handler(req, res) {
       player: {
         player_id: player.player_id,
         email: player.email,
-        username: player.username,
-        subscription_tier: player.subscription_tier,
-        role: player.role
+        name: player.name,
+        username: username, // Derived from email
+        membership_tier: player.membership_tier,
+        subscription_status: player.subscription_status,
+        timezone: player.timezone
       }
     });
 
