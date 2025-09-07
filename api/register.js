@@ -51,9 +51,14 @@ export default async function handler(req, res) {
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create the new player matching the production schema
+    // Get the next player ID starting from 1000
+    const maxIdQuery = await client.query('SELECT COALESCE(MAX(player_id), 999) as max_id FROM players');
+    const nextPlayerId = Math.max(maxIdQuery.rows[0].max_id + 1, 1000);
+
+    // Create the new player with explicit player_id starting at 1000
     const result = await client.query(
       `INSERT INTO players (
+        player_id,
         name,
         email, 
         password_hash, 
@@ -63,9 +68,9 @@ export default async function handler(req, res) {
         created_at,
         updated_at
       )
-      VALUES ($1, $2, $3, 'basic', 'active', 'America/New_York', NOW(), NOW())
+      VALUES ($1, $2, $3, $4, 'basic', 'active', 'America/New_York', NOW(), NOW())
       RETURNING player_id, name, email, membership_tier, subscription_status, timezone`,
-      [name, email, hashedPassword]
+      [nextPlayerId, name, email, hashedPassword]
     );
 
     if (result.rows.length === 0) {
