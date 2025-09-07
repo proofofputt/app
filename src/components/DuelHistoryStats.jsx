@@ -3,6 +3,27 @@ import { Link } from 'react-router-dom';
 import './DuelHistoryStats.css';
 
 const DuelHistoryStats = ({ duels, currentUserId, playerData }) => {
+  // Helper function defined before useMemo to avoid hoisting issues
+  const calculateAverageStats = (sessionStats) => {
+    if (sessionStats.length === 0) return {};
+    
+    const totals = sessionStats.reduce((acc, session) => ({
+      total_putts: (acc.total_putts || 0) + (session.total_putts || 0),
+      total_makes: (acc.total_makes || 0) + (session.total_makes || 0),
+      best_streak: Math.max(acc.best_streak || 0, session.best_streak || 0),
+      session_duration: (acc.session_duration || 0) + (session.session_duration || 0)
+    }), {});
+
+    const count = sessionStats.length;
+    return {
+      avgPutts: (totals.total_putts / count).toFixed(1),
+      avgMakes: (totals.total_makes / count).toFixed(1),
+      avgMakePercentage: totals.total_putts > 0 ? ((totals.total_makes / totals.total_putts) * 100).toFixed(1) : '0.0',
+      bestStreak: totals.best_streak,
+      avgDuration: (totals.session_duration / count).toFixed(0)
+    };
+  };
+
   const duelStats = useMemo(() => {
     if (!duels || duels.length === 0) {
       return {
@@ -139,26 +160,6 @@ const DuelHistoryStats = ({ duels, currentUserId, playerData }) => {
       headToHeadRecords
     };
   }, [duels, currentUserId]);
-
-  const calculateAverageStats = (sessionStats) => {
-    if (sessionStats.length === 0) return {};
-    
-    const totals = sessionStats.reduce((acc, session) => ({
-      total_putts: (acc.total_putts || 0) + (session.total_putts || 0),
-      total_makes: (acc.total_makes || 0) + (session.total_makes || 0),
-      best_streak: Math.max(acc.best_streak || 0, session.best_streak || 0),
-      session_duration: (acc.session_duration || 0) + (session.session_duration || 0)
-    }), {});
-
-    const count = sessionStats.length;
-    return {
-      avgPutts: (totals.total_putts / count).toFixed(1),
-      avgMakes: (totals.total_makes / count).toFixed(1),
-      avgMakePercentage: totals.total_putts > 0 ? ((totals.total_makes / totals.total_putts) * 100).toFixed(1) : '0.0',
-      bestStreak: totals.best_streak,
-      avgDuration: (totals.session_duration / count).toFixed(0)
-    };
-  };
 
   const formatStreak = (streak, type) => {
     if (streak === 0) return 'No active streak';

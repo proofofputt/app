@@ -187,17 +187,26 @@ const LeagueDetailPage = () => {
     };
   }, [league]);
 
-  const pointsByPlayer = leagueData.pointsByPlayer;
-  const ranks = leagueData.ranks;
-
   const handleSort = useCallback((type, id = null) => {
     setSortOrder({ type, id });
   }, []);
 
   const resetSort = useCallback(() => setSortOrder({ type: 'default' }), []);
 
-  const sortedMembers = useMemo(() => {
-    if (!league || !league.members) return [];
+  // Combine all data processing to avoid circular dependencies
+  const processedLeagueData = useMemo(() => {
+    const data = leagueData;
+    const pointsByPlayer = data.pointsByPlayer;
+    const ranks = data.ranks;
+    
+    if (!league || !league.members) {
+      return {
+        pointsByPlayer: new Map(),
+        ranks: new Map(),
+        sortedMembers: []
+      };
+    }
+    
     let sorted = [...league.members];
 
     switch (sortOrder.type) {
@@ -225,8 +234,16 @@ const LeagueDetailPage = () => {
         break;
     }
 
-    return sorted;
-  }, [league, sortOrder, ranks, pointsByPlayer]);
+    return {
+      pointsByPlayer,
+      ranks,
+      sortedMembers: sorted
+    };
+  }, [leagueData, league, sortOrder]);
+
+  const pointsByPlayer = processedLeagueData.pointsByPlayer;
+  const ranks = processedLeagueData.ranks;
+  const sortedMembers = processedLeagueData.sortedMembers;
 
   const activeRound = useMemo(() => {
     if (!league || !league.rounds) return null;
