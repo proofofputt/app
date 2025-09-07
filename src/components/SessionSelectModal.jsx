@@ -14,9 +14,11 @@ const SessionSelectModal = ({ duel, onClose, onSessionSubmitted }) => {
     const fetchSessions = async () => {
       try {
         const sessionData = await apiGetSessions(playerData.player_id);
-        setSessions(sessionData);
+        setSessions(Array.isArray(sessionData) ? sessionData : []);
       } catch (err) {
+        console.error('[SessionSelectModal] Error fetching sessions:', err);
         setError(err.message || 'Failed to load sessions.');
+        setSessions([]); // Ensure sessions is always an array
       } finally {
         setIsLoading(false);
       }
@@ -47,16 +49,20 @@ const SessionSelectModal = ({ duel, onClose, onSessionSubmitted }) => {
         {isLoading && <p>Loading sessions...</p>}
         {error && <p className="error-message">{error}</p>}
         <div className="session-list">
-          {sessions.map(session => (
-            <div
-              key={session.session_id}
-              className={`session-item ${selectedSession?.session_id === session.session_id ? 'selected' : ''}`}
-              onClick={() => setSelectedSession(session)}
-            >
-              <p>Date: {new Date(session.start_time).toLocaleString()}</p>
-              <p>Makes: {session.total_makes} / {session.total_putts}</p>
-            </div>
-          ))}
+          {sessions && sessions.length > 0 ? (
+            sessions.map(session => (
+              <div
+                key={session.session_id}
+                className={`session-item ${selectedSession?.session_id === session.session_id ? 'selected' : ''}`}
+                onClick={() => setSelectedSession(session)}
+              >
+                <p>Date: {new Date(session.start_time).toLocaleString()}</p>
+                <p>Makes: {session.total_makes} / {session.total_putts}</p>
+              </div>
+            ))
+          ) : (
+            !isLoading && <p>No sessions available for submission.</p>
+          )}
         </div>
         <div className="modal-actions">
           <button type="button" onClick={onClose} disabled={isLoading}>Cancel</button>

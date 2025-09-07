@@ -353,3 +353,7 @@ export const apiRespondToFriendRequest = (playerId, requestId, action) =>
 
 export const apiGetFriendRequests = (playerId) => 
   fetch(`${API_BASE_URL}/player/${playerId}/friends/requests`, { headers: getHeaders() }).then(handleResponse);
+
+// --- Sessions ---
+export const apiGetSessions = (playerId, limit = 20) => 
+  fetch(`${API_BASE_URL}/sessions?player_id=${playerId}&limit=${limit}`, { headers: getHeaders() }).then(handleResponse);
