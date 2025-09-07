@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
 function verifyToken(req) {
@@ -45,10 +46,19 @@ export default async function handler(req, res) {
   const { duelId } = req.query;
   const { player_id, response } = req.body;
 
+  console.log('[DuelRespond] Request data:', {
+    duelId,
+    player_id,
+    response,
+    query: req.query,
+    body: req.body
+  });
+
   if (!duelId || !player_id || !response) {
     return res.status(400).json({ 
       success: false, 
-      message: 'duelId, player_id, and response are required' 
+      message: 'duelId, player_id, and response are required',
+      received: { duelId, player_id, response }
     });
   }
 
@@ -124,11 +134,23 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('Duel respond error:', error);
+    console.error('Duel respond error details:', {
+      message: error.message,
+      stack: error.stack,
+      duelId,
+      player_id,
+      response
+    });
     return res.status(500).json({
       success: false,
       message: 'Failed to respond to duel',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? {
+        stack: error.stack,
+        duelId,
+        player_id,
+        response
+      } : undefined
     });
   } finally {
     if (client) client.release();
