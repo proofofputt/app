@@ -110,6 +110,9 @@ const DuelRow = ({ duel, onRespond, onSubmitSession, currentUserId }) => {
                     </div>
                 ) : '—'}
             </td>
+            <td>
+                {duel.time_limit_minutes ? `${duel.time_limit_minutes} min` : '—'}
+            </td>
             <td className="actions-cell">
                 {renderActions()}
             </td>
@@ -258,6 +261,7 @@ const DuelsPage = () => {
                                     Date Created {sortConfig.key === 'created_at' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
                                 </th>
                                 <th>Expires</th>
+                                <th>Time Limit</th>
                                 <th className="actions-header">Actions</th>
                             </tr>
                         </thead>

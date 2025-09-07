@@ -41,6 +41,8 @@
   border: 1px solid var(--border-color, #333);
   border-radius: 12px;
   color: var(--warning-color, #fbbf24); /* Yellow text */
+  width: 100%; /* Ensure empty state uses full container width */
+  box-sizing: border-box; /* Include padding in width calculation */
 }
 
 .duels-page .empty-state p {
@@ -115,6 +117,7 @@
 
 .duel-category-section {
   margin-bottom: 2.5rem;
+  width: 100%; /* Ensure section uses full container width */
 }
 
 .duel-category-title {
@@ -133,6 +136,11 @@
   overflow-y: auto;
   border: 1px solid var(--border-color);
   border-radius: 12px;
+  width: 100%; /* Ensure table container uses full container width */
+}
+
+.duels-table {
+  width: 100%; /* Ensure table uses full container width */
 }
 
 .duels-table thead th {
@@ -168,6 +176,11 @@
   display: flex;
   justify-content: center;
   gap: 0.5rem;
+}
+
+/* Add margin to buttons in actions cell to prevent touching borders */
+.duels-table .actions-cell .btn {
+  margin: 0.25rem;
 }
 
 /* Reduce padding on the expiration cell to better fit the styled box */
