@@ -16,8 +16,6 @@
   border-radius: 12px;
   overflow: hidden;
   margin-top: 1.5rem;
-  margin-left: 21%;
-  margin-right: 21%;
   border-spacing: 0; /* Removes default spacing between cells */
   border-collapse: collapse; /* Ensure borders align perfectly */
 }
