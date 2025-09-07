@@ -53,6 +53,7 @@ export default async function handler(req, res) {
           l.description,
           l.status,
           l.created_at,
+          l.league_creator_id as creator_id,
           l.created_by,
           l.rules,
           creator.name as creator_name,
@@ -67,7 +68,7 @@ export default async function handler(req, res) {
           ) as active_round_number
         FROM leagues l
         JOIN league_memberships lm ON l.league_id = lm.league_id
-        JOIN players creator ON l.created_by = creator.player_id
+        JOIN players creator ON l.league_creator_id = creator.player_id
         WHERE lm.player_id = $1
         ORDER BY l.created_at DESC
       `, [player_id]);
@@ -80,6 +81,7 @@ export default async function handler(req, res) {
           l.description,
           l.status,
           l.created_at,
+          l.league_creator_id as creator_id,
           l.created_by,
           l.rules,
           creator.name as creator_name,
@@ -92,7 +94,7 @@ export default async function handler(req, res) {
             LIMIT 1
           ) as active_round_number
         FROM leagues l
-        JOIN players creator ON l.created_by = creator.player_id
+        JOIN players creator ON l.league_creator_id = creator.player_id
         WHERE l.rules->>'privacy' = 'public'
         AND l.league_id NOT IN (
           SELECT league_id FROM league_memberships WHERE player_id = $1
@@ -108,7 +110,7 @@ export default async function handler(req, res) {
         success: true,
         my_leagues: memberLeaguesResult.rows,
         public_leagues: publicLeaguesResult.rows,
-        pending_invites: [] // TODO: Implement league invites system
+        pending_invites: [] // Populated by separate endpoint /players/[id]/league-invitations
       });
 
     } else if (req.method === 'POST') {
@@ -139,17 +141,17 @@ export default async function handler(req, res) {
       };
 
       const leagueResult = await client.query(`
-        INSERT INTO leagues (name, description, created_by, rules, status, created_at)
-        VALUES ($1, $2, $3, $4, 'setup', $5)
-        RETURNING league_id, name, description, rules
+        INSERT INTO leagues (name, description, created_by, league_creator_id, rules, status, created_at)
+        VALUES ($1, $2, $3, $3, $4, 'setup', $5)
+        RETURNING league_id, name, description, rules, league_creator_id
       `, [name, description, user.playerId, JSON.stringify(defaultSettings), new Date()]);
 
       const league = leagueResult.rows[0];
 
       // Add creator as first member
       await client.query(`
-        INSERT INTO league_memberships (league_id, player_id, joined_at)
-        VALUES ($1, $2, $3)
+        INSERT INTO league_memberships (league_id, player_id, league_member_id, league_inviter_id, joined_at)
+        VALUES ($1, $2, $2, $2, $3)
       `, [league.league_id, user.playerId, new Date()]);
 
       client.release();
@@ -162,7 +164,8 @@ export default async function handler(req, res) {
           name: league.name,
           description: league.description,
           rules: league.rules,
-          status: 'setup'
+          status: 'setup',
+          creator_id: league.league_creator_id
         }
       });
 

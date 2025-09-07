@@ -54,51 +54,57 @@ async function handleGetDuels(req, res) {
       return res.status(400).json({ success: false, message: 'player_id is required' });
     }
 
-    // Get duels where player is involved (as challenger or challengee)
+    // Get duels where player is involved (as creator or invited player)
     const duelsResult = await client.query(`
       SELECT 
         d.duel_id,
-        d.challenger_id,
-        d.challengee_id,
+        d.duel_creator_id,
+        d.duel_invited_player_id,
         d.status,
         d.settings,
         d.created_at,
         d.expires_at,
-        challenger.name as challenger_name,
-        challengee.name as challengee_name,
-        cs.session_id as challenger_session_id,
-        ces.session_id as challengee_session_id,
-        cs.data as challenger_session_data,
-        ces.data as challengee_session_data
+        d.winner_id,
+        creator.name as creator_name,
+        invited_player.name as invited_player_name,
+        d.duel_creator_session_id,
+        d.duel_invited_player_session_id,
+        d.duel_creator_session_data,
+        d.duel_invited_player_session_data,
+        d.duel_creator_score,
+        d.duel_invited_player_score
       FROM duels d
-      JOIN players challenger ON d.challenger_id = challenger.player_id
-      JOIN players challengee ON d.challengee_id = challengee.player_id
-      LEFT JOIN sessions cs ON d.challenger_session_id = cs.session_id
-      LEFT JOIN sessions ces ON d.challengee_session_id = ces.session_id
-      WHERE d.challenger_id = $1 OR d.challengee_id = $1
+      JOIN players creator ON d.duel_creator_id = creator.player_id
+      JOIN players invited_player ON d.duel_invited_player_id = invited_player.player_id
+      WHERE d.duel_creator_id = $1 OR d.duel_invited_player_id = $1
       ORDER BY d.created_at DESC
     `, [player_id]);
 
     const duels = duelsResult.rows.map(duel => ({
       duel_id: duel.duel_id,
-      challenger_id: duel.challenger_id,
-      challengee_id: duel.challengee_id,
-      challenger_name: duel.challenger_name,
-      challengee_name: duel.challengee_name,
+      creator_id: duel.duel_creator_id,
+      invited_player_id: duel.duel_invited_player_id,
+      creator_name: duel.creator_name,
+      invited_player_name: duel.invited_player_name,
       status: duel.status,
       settings: duel.settings,
       created_at: duel.created_at,
       expires_at: duel.expires_at,
-      challenger_session: duel.challenger_session_id ? {
-        session_id: duel.challenger_session_id,
-        ...duel.challenger_session_data
+      winner_id: duel.winner_id,
+      creator_score: duel.duel_creator_score,
+      invited_player_score: duel.duel_invited_player_score,
+      creator_submitted_session_id: duel.duel_creator_session_id,
+      invited_player_submitted_session_id: duel.duel_invited_player_session_id,
+      creator_session: duel.duel_creator_session_id ? {
+        session_id: duel.duel_creator_session_id,
+        ...duel.duel_creator_session_data
       } : null,
-      challengee_session: duel.challengee_session_id ? {
-        session_id: duel.challengee_session_id,
-        ...duel.challengee_session_data
+      invited_player_session: duel.duel_invited_player_session_id ? {
+        session_id: duel.duel_invited_player_session_id,
+        ...duel.duel_invited_player_session_data
       } : null,
-      is_challenger: parseInt(player_id) === duel.challenger_id,
-      is_challengee: parseInt(player_id) === duel.challengee_id
+      is_creator: parseInt(player_id) === duel.duel_creator_id,
+      is_invited_player: parseInt(player_id) === duel.duel_invited_player_id
     }));
 
     return res.status(200).json({
@@ -128,16 +134,12 @@ async function handleCreateDuel(req, res) {
     return res.status(401).json({ success: false, message: 'Authentication required' });
   }
 
-  const { creator_id, invited_player_id, challenger_id, challengee_id, settings, rules } = req.body;
+  const { creator_id, invited_player_id, settings, rules } = req.body;
 
-  // Support both frontend formats: (creator_id, invited_player_id) or (challenger_id, challengee_id)
-  const challId = challenger_id || creator_id;
-  const challeeId = challengee_id || invited_player_id;
-
-  if (!challId || !challeeId) {
+  if (!creator_id || !invited_player_id) {
     return res.status(400).json({ 
       success: false, 
-      message: 'creator_id and invited_player_id (or challenger_id and challengee_id) are required' 
+      message: 'creator_id and invited_player_id are required' 
     });
   }
 
@@ -150,17 +152,17 @@ async function handleCreateDuel(req, res) {
 
     // Insert new duel
     const duelResult = await client.query(`
-      INSERT INTO duels (challenger_id, challengee_id, status, rules, created_at)
+      INSERT INTO duels (duel_creator_id, duel_invited_player_id, status, rules, created_at)
       VALUES ($1, $2, 'pending', $3, NOW())
-      RETURNING duel_id, challenger_id, challengee_id, status, rules, created_at
-    `, [challId, challeeId, duelRules]);
+      RETURNING duel_id, duel_creator_id, duel_invited_player_id, status, rules, created_at
+    `, [creator_id, invited_player_id, duelRules]);
 
     const duel = duelResult.rows[0];
 
-    // Get challenger and challengee names
+    // Get creator and invited player names
     const playersResult = await client.query(`
       SELECT player_id, name FROM players WHERE player_id IN ($1, $2)
-    `, [challId, challeeId]);
+    `, [creator_id, invited_player_id]);
 
     const players = {};
     playersResult.rows.forEach(p => {
@@ -171,10 +173,10 @@ async function handleCreateDuel(req, res) {
       success: true,
       duel: {
         ...duel,
-        challenger_name: players[challId],
-        challengee_name: players[challeeId],
-        creator_name: players[challId],    // For frontend compatibility
-        invited_player_name: players[challeeId]  // For frontend compatibility
+        creator_id: duel.duel_creator_id,
+        invited_player_id: duel.duel_invited_player_id,
+        creator_name: players[creator_id],
+        invited_player_name: players[invited_player_id]
       }
     });
 

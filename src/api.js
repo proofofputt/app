@@ -159,7 +159,32 @@ export const apiListLeagues = (playerId) =>
   fetch(`${API_BASE_URL}/leagues?player_id=${playerId}`, { headers: getHeaders() }).then(handleResponse);
 
 export const apiGetLeagueDetails = (leagueId, playerId) => 
-  fetch(`${API_BASE_URL}/leagues/${leagueId}?player_id=${playerId}`, { headers: getHeaders() }).then(handleResponse);
+  fetch(`${API_BASE_URL}/leagues/${leagueId}?player_id=${playerId}`, { headers: getHeaders() })
+    .then(handleResponse)
+    .then(response => {
+      // Handle both old structure (wrapped) and new structure (direct)
+      if (response && typeof response === 'object') {
+        // If response has success field, extract the league data
+        if (response.success !== undefined && response.league) {
+          const leagueData = {
+            ...response.league,
+            // Add missing fields that frontend expects
+            creator_id: response.league.creator_id || response.league.created_by,
+            privacy_type: response.league.privacy_type || response.league.privacy || 'public',
+            start_time: response.league.start_time || response.league.created_at,
+            members: response.members || [],
+            rounds: (response.rounds || []).map(round => ({
+              ...round,
+              submissions: round.submissions || []
+            }))
+          };
+          return leagueData;
+        }
+        // If response is direct league data, return as-is
+        return response;
+      }
+      return response;
+    });
 
 export const apiCreateLeague = (leagueData) => 
   fetch(`${API_BASE_URL}/leagues`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(leagueData) }).then(handleResponse);
@@ -167,17 +192,21 @@ export const apiCreateLeague = (leagueData) =>
 export const apiJoinLeague = (leagueId, playerId) => 
   fetch(`${API_BASE_URL}/leagues/${leagueId}/join`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ player_id: playerId }) }).then(handleResponse);
 
-export const apiInviteToLeague = (leagueId, inviterId, inviteeId) => 
-  fetch(`${API_BASE_URL}/leagues/${leagueId}/invite`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ inviter_id: inviterId, invitee_id: inviteeId }) }).then(handleResponse);
+export const apiInviteToLeague = (leagueId, inviteeId, inviterId = null) => 
+  fetch(`${API_BASE_URL}/leagues/${leagueId}/invite`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ league_invited_player_id: inviteeId, league_inviter_id: inviterId }) }).then(handleResponse);
 
-export const apiRespondToLeagueInvite = (leagueId, playerId, action) => 
-  fetch(`${API_BASE_URL}/leagues/invites/${leagueId}/respond`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ player_id: playerId, action }) }).then(handleResponse);
+export const apiRespondToLeagueInvite = (inviteId, playerId, action) => 
+  fetch(`${API_BASE_URL}/leagues/invites/${inviteId}/respond`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ player_id: playerId, action }) }).then(handleResponse);
 
 export const apiUpdateLeagueSettings = (leagueId, editorId, settings) => 
   fetch(`${API_BASE_URL}/leagues/${leagueId}/settings`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify({ editor_id: editorId, settings }) }).then(handleResponse);
 
 export const apiDeleteLeague = (leagueId, deleterId) => 
   fetch(`${API_BASE_URL}/leagues/${leagueId}`, { method: 'DELETE', headers: getHeaders(), body: JSON.stringify({ deleter_id: deleterId }) }).then(handleResponse);
+
+// Get league invitations for a player
+export const apiGetLeagueInvitations = (playerId) => 
+  fetch(`${API_BASE_URL}/players/${playerId}/league-invitations`, { headers: getHeaders() }).then(handleResponse);
 
 // --- Fundraising ---
 export const apiListFundraisers = () => 

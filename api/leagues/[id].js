@@ -55,13 +55,16 @@ export default async function handler(req, res) {
         l.name,
         l.description,
         l.status,
+        l.privacy_level,
         l.created_at,
         l.created_by,
+        l.league_creator_id,
         l.rules,
+        l.started_at,
         creator.name as creator_name,
-        (SELECT COUNT(*) FROM league_memberships WHERE league_id = l.league_id) as member_count
+        (SELECT COUNT(*) FROM league_memberships WHERE league_id = l.league_id AND is_active = true) as member_count
       FROM leagues l
-      JOIN players creator ON l.created_by = creator.player_id
+      JOIN players creator ON COALESCE(l.league_creator_id, l.created_by) = creator.player_id
       WHERE l.league_id = $1
     `, [leagueId]);
 
@@ -77,10 +80,11 @@ export default async function handler(req, res) {
         p.player_id,
         p.name,
         lm.joined_at,
-        lm.member_role
+        lm.member_role,
+        lm.is_active
       FROM league_memberships lm
-      JOIN players p ON lm.player_id = p.player_id
-      WHERE lm.league_id = $1
+      JOIN players p ON lm.league_member_id = p.player_id
+      WHERE lm.league_id = $1 AND lm.is_active = true
       ORDER BY lm.joined_at ASC
     `, [leagueId]);
 
@@ -97,6 +101,28 @@ export default async function handler(req, res) {
       WHERE league_id = $1
       ORDER BY round_number ASC
     `, [leagueId]);
+
+    // Get round submissions for each round
+    const rounds = [];
+    for (const round of roundsResult.rows) {
+      const submissionsResult = await client.query(`
+        SELECT 
+          lrs.session_id,
+          lrs.player_id as player_id,
+          lrs.submitted_at,
+          lrs.round_score as score,
+          lrs.round_score as points_awarded,
+          lrs.session_data
+        FROM league_round_sessions lrs
+        WHERE lrs.round_id = $1
+        ORDER BY lrs.submitted_at ASC
+      `, [round.round_id]);
+
+      rounds.push({
+        ...round,
+        submissions: submissionsResult.rows || []
+      });
+    }
 
     // Parse rules JSON and rename to settings for frontend compatibility
     let settings = {
@@ -119,22 +145,25 @@ export default async function handler(req, res) {
       }
     }
 
-    return res.status(200).json({
-      success: true,
-      league: {
-        league_id: league.league_id,
-        name: league.name,
-        description: league.description,
-        status: league.status,
-        created_at: league.created_at,
-        created_by: league.created_by,
-        creator_name: league.creator_name,
-        settings: settings,  // Frontend expects 'settings' not 'rules'
-        member_count: parseInt(league.member_count)
-      },
+    // Structure the response to match what the frontend expects
+    const responseData = {
+      league_id: league.league_id,
+      name: league.name,
+      description: league.description,
+      status: league.status,
+      privacy_type: league.privacy_level || 'public',
+      created_at: league.created_at,
+      created_by: league.created_by,
+      creator_id: league.league_creator_id || league.created_by,
+      creator_name: league.creator_name,
+      start_time: league.started_at,
+      settings: settings,
+      member_count: parseInt(league.member_count),
       members: membersResult.rows || [],
-      rounds: roundsResult.rows || []
-    });
+      rounds: rounds || []
+    };
+
+    return res.status(200).json(responseData);
 
   } catch (error) {
     console.error('League details API error:', error);

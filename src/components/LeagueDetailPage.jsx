@@ -30,7 +30,11 @@ const LeagueDetailPage = () => {
     try {
       console.log('[LeagueDetailPage] Fetching league details for:', leagueId, 'player:', playerData.player_id);
       const data = await apiGetLeagueDetails(leagueId, playerData.player_id);
-      console.log('[LeagueDetailPage] League data received:', data ? 'success' : 'failed');
+      console.log('[LeagueDetailPage] League data received:', data);
+      console.log('[LeagueDetailPage] Data type:', typeof data);
+      console.log('[LeagueDetailPage] Has members:', data?.members ? `Array(${data.members.length})` : 'undefined');
+      console.log('[LeagueDetailPage] Has rounds:', data?.rounds ? `Array(${data.rounds.length})` : 'undefined');
+      console.log('[LeagueDetailPage] Has settings:', !!data?.settings);
       setLeague(data);
     } catch (err) {
       console.error('[LeagueDetailPage] Error fetching league details:', err);
@@ -96,7 +100,7 @@ const LeagueDetailPage = () => {
 
   const handleInvitePlayer = useCallback(async (inviteeId) => {
     try {
-      const response = await apiInviteToLeague(leagueId, playerData.player_id, inviteeId);
+      const response = await apiInviteToLeague(leagueId, inviteeId, playerData.player_id);
       showNotification(response.message);
     } catch (err) {
       showNotification(err.message, true);
@@ -138,23 +142,25 @@ const LeagueDetailPage = () => {
 
   // --- Data Transformation for Pivot Table ---
   const pointsByPlayer = useMemo(() => {
-    if (!league) return new Map();
+    if (!league || !league.members) return new Map();
     const points = new Map(league.members.map(m => [m.player_id, 0]));
-    league.rounds.forEach(round => {
-      if (round.status === 'completed') {
-        round.submissions.forEach(sub => {
-          if (points.has(sub.player_id) && sub.points_awarded) {
-            const currentPoints = points.get(sub.player_id);
-            points.set(sub.player_id, currentPoints + sub.points_awarded);
-          }
-        });
-      }
-    });
+    if (league.rounds) {
+      league.rounds.forEach(round => {
+        if (round.status === 'completed' && round.submissions) {
+          round.submissions.forEach(sub => {
+            if (points.has(sub.player_id) && sub.points_awarded) {
+              const currentPoints = points.get(sub.player_id);
+              points.set(sub.player_id, currentPoints + sub.points_awarded);
+            }
+          });
+        }
+      });
+    }
     return points;
   }, [league]);
 
   const ranks = useMemo(() => {
-    if (!league) return new Map();
+    if (!league || !league.members) return new Map();
     const totals = league.members.map(({ player_id: id }) => ({
       player_id: id,
       total_points: pointsByPlayer.get(id) || 0
@@ -180,7 +186,7 @@ const LeagueDetailPage = () => {
   const resetSort = useCallback(() => setSortOrder({ type: 'default' }), []);
 
   const sortedMembers = useMemo(() => {
-    if (!league) return [];
+    if (!league || !league.members) return [];
     let sorted = [...league.members];
 
     switch (sortOrder.type) {
@@ -194,10 +200,12 @@ const LeagueDetailPage = () => {
         sorted.sort((a, b) => (pointsByPlayer.get(b.player_id) || 0) - (pointsByPlayer.get(a.player_id) || 0));
         break;
       case 'round':
-        const roundToSort = league.rounds.find(r => r.round_id === sortOrder.id);
-        if (roundToSort) {
-          const scores = new Map(roundToSort.submissions.map(s => [s.player_id, s.score]));
-          sorted.sort((a, b) => (scores.get(b.player_id) ?? -1) - (scores.get(a.player_id) ?? -1));
+        if (league.rounds) {
+          const roundToSort = league.rounds.find(r => r.round_id === sortOrder.id);
+          if (roundToSort && roundToSort.submissions) {
+            const scores = new Map(roundToSort.submissions.map(s => [s.player_id, s.score]));
+            sorted.sort((a, b) => (scores.get(b.player_id) ?? -1) - (scores.get(a.player_id) ?? -1));
+          }
         }
         break;
       case 'default':
@@ -210,7 +218,7 @@ const LeagueDetailPage = () => {
   }, [league, sortOrder, ranks, pointsByPlayer]);
 
   const activeRound = useMemo(() => {
-    if (!league) return null;
+    if (!league || !league.rounds) return null;
     return league.rounds.find(r => r.status === 'active');
   }, [league]);
 
@@ -219,13 +227,13 @@ const LeagueDetailPage = () => {
   if (error) return <div className="container"><p className="error-message">{error}</p></div>;
   if (!league) return <div className="container"><p>League not found.</p></div>;
 
-  const isMember = league.members.some(m => m.player_id === playerData.player_id);
+  const isMember = league.members && league.members.some(m => m.player_id === playerData.player_id);
   const canInvite = league.creator_id === playerData.player_id ||
     (isMember && league.privacy_type === 'public') ||
-    (isMember && league.settings.allow_player_invites); // Use the new setting
+    (isMember && league.settings && league.settings.allow_player_invites);
   const canJoin = !isMember &&
     league.privacy_type === 'public' &&
-    (league.status === 'registering' || (league.status === 'active' && league.settings.allow_late_joiners));
+    (league.status === 'registering' || (league.status === 'active' && league.settings && league.settings.allow_late_joiners));
 
   // Client-side check to handle display status if backend hasn't updated yet
   const isRoundOver = (round) => new Date(round.end_time) < new Date();
@@ -236,7 +244,7 @@ const LeagueDetailPage = () => {
   const canEdit = league.creator_id === playerData.player_id && league.status === 'registering';
 
   const playerHasSubmittedForRound = (round) => {
-    return round.submissions.some(s => s.player_id === playerData.player_id);
+    return round.submissions && round.submissions.some(s => s.player_id === playerData.player_id);
   };
 
   // Show loading while auth is still loading
@@ -310,23 +318,23 @@ const LeagueDetailPage = () => {
             <tbody>
               <tr>
                 <td>Time Limit</td>
-                <td>{formatStat(league.settings.time_limit_minutes)} mins</td>
+                <td>{formatStat(league.settings?.time_limit_minutes)} mins</td>
               </tr>
               <tr>
                 <td>Rounds</td>
-                <td>{league.settings.num_rounds}</td>
+                <td>{league.settings?.num_rounds || 'N/A'}</td>
               </tr>
               <tr>
                 <td>Round Schedule</td>
-                <td>{formatRoundDuration(league.settings.round_duration_hours)}</td>
+                <td>{formatRoundDuration(league.settings?.round_duration_hours)}</td>
               </tr>
               <tr>
                 <td>Late Join</td>
-                <td>{league.settings.allow_late_joiners ? 'Allowed' : 'Not Allowed'}</td>
+                <td>{league.settings?.allow_late_joiners ? 'Allowed' : 'Not Allowed'}</td>
               </tr>
               <tr>
                 <td>Player Invites</td>
-                <td>{league.settings.allow_player_invites ? 'Allowed' : 'Not Allowed'}</td>
+                <td>{league.settings?.allow_player_invites ? 'Allowed' : 'Not Allowed'}</td>
               </tr>
             </tbody>
           </table>
@@ -352,10 +360,10 @@ const LeagueDetailPage = () => {
               </tr>
             </thead>
             <tbody>
-              {league.rounds.map((round) => {
+              {(league.rounds || []).map((round) => {
                 const hasSubmitted = playerHasSubmittedForRound(round);
                 const displayStatus = round.status === 'active' && isRoundOver(round) ? 'completed' : round.status;
-                const roundSubmissions = new Map(round.submissions.map(s => [s.player_id, s]));
+                const roundSubmissions = new Map((round.submissions || []).map(s => [s.player_id, s]));
                 return (
                   <tr key={round.round_id}>
                     <td className="sort-column"><button className="sort-button" onClick={() => handleSort('round', round.round_id)}>sort</button></td>
@@ -415,7 +423,7 @@ const LeagueDetailPage = () => {
 
       <div className="card">
         <div className="section-header">
-          <h3>Members ({league.members.length})</h3>
+          <h3>Members ({league.members?.length || 0})</h3>
           <div className="member-actions">
             {canJoin && (
               <button
