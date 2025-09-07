@@ -135,28 +135,19 @@ async function handleGetLeaderboard(req, res, client) {
     
     // Build the appropriate query based on metric
     let query;
-    if (metric === 'total_makes') {
+    if (metric === 'total_makes' || metric === 'makes') {
       query = `
         SELECT 
           s.player_id,
           p.name as player_name,
-          COALESCE(
-            SUM(CAST(s.data->>'total_makes' AS INTEGER)) + 
-            SUM(CAST(s.data->'analytic_stats'->>'total_makes' AS INTEGER)), 0
-          ) as metric_value,
+          MAX(CAST(s.data->>'total_makes' AS INTEGER)) as metric_value,
           COUNT(s.session_id) as sessions_count,
-          ROW_NUMBER() OVER (ORDER BY COALESCE(
-            SUM(CAST(s.data->>'total_makes' AS INTEGER)) + 
-            SUM(CAST(s.data->'analytic_stats'->>'total_makes' AS INTEGER)), 0
-          ) DESC) as player_rank
+          ROW_NUMBER() OVER (ORDER BY MAX(CAST(s.data->>'total_makes' AS INTEGER)) DESC) as player_rank
         FROM sessions s
         JOIN players p ON s.player_id = p.player_id
-        WHERE (s.data->>'total_makes' IS NOT NULL OR s.data->'analytic_stats'->>'total_makes' IS NOT NULL)
+        WHERE s.data->>'total_makes' IS NOT NULL
         GROUP BY s.player_id, p.name
-        HAVING COALESCE(
-          SUM(CAST(s.data->>'total_makes' AS INTEGER)) + 
-          SUM(CAST(s.data->'analytic_stats'->>'total_makes' AS INTEGER)), 0
-        ) > 0
+        HAVING MAX(CAST(s.data->>'total_makes' AS INTEGER)) > 0
         ORDER BY metric_value DESC
         LIMIT $1
       `;
