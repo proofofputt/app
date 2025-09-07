@@ -80,32 +80,41 @@ async function handleGetDuels(req, res) {
       ORDER BY d.created_at DESC
     `, [player_id]);
 
-    const duels = duelsResult.rows.map(duel => ({
-      duel_id: duel.duel_id,
-      creator_id: duel.duel_creator_id,
-      invited_player_id: duel.duel_invited_player_id,
-      creator_name: duel.creator_name,
-      invited_player_name: duel.invited_player_name,
-      status: duel.status,
-      settings: duel.settings,
-      created_at: duel.created_at,
-      expires_at: duel.expires_at,
-      winner_id: duel.winner_id,
-      creator_score: duel.duel_creator_score,
-      invited_player_score: duel.duel_invited_player_score,
-      creator_submitted_session_id: duel.duel_creator_session_id,
-      invited_player_submitted_session_id: duel.duel_invited_player_session_id,
-      creator_session: duel.duel_creator_session_id ? {
-        session_id: duel.duel_creator_session_id,
-        ...duel.duel_creator_session_data
-      } : null,
-      invited_player_session: duel.duel_invited_player_session_id ? {
-        session_id: duel.duel_invited_player_session_id,
-        ...duel.duel_invited_player_session_data
-      } : null,
-      is_creator: parseInt(player_id) === duel.duel_creator_id,
-      is_invited_player: parseInt(player_id) === duel.duel_invited_player_id
-    }));
+    const duels = duelsResult.rows.map(duel => {
+      // Parse settings and rules to extract time limit
+      const settings = duel.settings || {};
+      const rules = duel.rules || {};
+      const timeLimit = settings.time_limit_minutes || rules.time_limit_minutes || settings.time_limit || rules.time_limit || null;
+      
+      return {
+        duel_id: duel.duel_id,
+        creator_id: duel.duel_creator_id,
+        invited_player_id: duel.duel_invited_player_id,
+        creator_name: duel.creator_name,
+        invited_player_name: duel.invited_player_name,
+        status: duel.status,
+        settings: duel.settings,
+        rules: duel.rules,
+        created_at: duel.created_at,
+        expires_at: duel.expires_at,
+        winner_id: duel.winner_id,
+        time_limit_minutes: timeLimit, // Extract time limit for frontend
+        creator_score: duel.duel_creator_score,
+        invited_player_score: duel.duel_invited_player_score,
+        creator_submitted_session_id: duel.duel_creator_session_id,
+        invited_player_submitted_session_id: duel.duel_invited_player_session_id,
+        creator_session: duel.duel_creator_session_id ? {
+          session_id: duel.duel_creator_session_id,
+          ...duel.duel_creator_session_data
+        } : null,
+        invited_player_session: duel.duel_invited_player_session_id ? {
+          session_id: duel.duel_invited_player_session_id,
+          ...duel.duel_invited_player_session_data
+        } : null,
+        is_creator: parseInt(player_id) === duel.duel_creator_id,
+        is_invited_player: parseInt(player_id) === duel.duel_invited_player_id
+      };
+    });
 
     return res.status(200).json({
       success: true,

@@ -107,8 +107,8 @@ export const apiCancelSubscription = (playerId) =>
   fetch(`${API_BASE_URL}/player/${playerId}/subscription/cancel`, { method: 'POST', headers: getHeaders() }).then(handleResponse);
 
 // --- Sessions & Calibration ---
-export const apiGetSessions = (playerId) => 
-  fetch(`${API_BASE_URL}/sessions?player_id=${playerId}`, { headers: getHeaders() }).then(handleResponse);
+export const apiGetSessions = (playerId, limit = 20) => 
+  fetch(`${API_BASE_URL}/sessions?player_id=${playerId}&limit=${limit}`, { headers: getHeaders() }).then(handleResponse);
 
 export const apiGetPlayerSessions = (playerId, page = 1, limit = 21) => 
   fetch(`${API_BASE_URL}/player/${playerId}/sessions?page=${page}&limit=${limit}`, { headers: getHeaders() }).then(handleResponse);
@@ -353,7 +353,3 @@ export const apiRespondToFriendRequest = (playerId, requestId, action) =>
 
 export const apiGetFriendRequests = (playerId) => 
   fetch(`${API_BASE_URL}/player/${playerId}/friends/requests`, { headers: getHeaders() }).then(handleResponse);
-
-// --- Sessions ---
-export const apiGetSessions = (playerId, limit = 20) => 
-  fetch(`${API_BASE_URL}/sessions?player_id=${playerId}&limit=${limit}`, { headers: getHeaders() }).then(handleResponse);
