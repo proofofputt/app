@@ -143,6 +143,17 @@ const DuelsPage = () => {
             // Handle the API response structure - it returns { duels: [...] }
             const duelsData = response?.duels || response || [];
             console.log('[DuelsPage] Processed duels data:', duelsData);
+            
+            // Debug: Check if time limits are present in the data
+            if (Array.isArray(duelsData) && duelsData.length > 0) {
+                console.log('[DuelsPage] Sample duel data for time limit debugging:', {
+                    settings: duelsData[0].settings,
+                    rules: duelsData[0].rules,
+                    time_limit_minutes: duelsData[0].time_limit_minutes,
+                    duel_id: duelsData[0].duel_id
+                });
+            }
+            
             setDuels(Array.isArray(duelsData) ? duelsData : []);
         } catch (err) {
             console.error('[DuelsPage] Error fetching duels:', err);

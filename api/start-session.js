@@ -131,10 +131,20 @@ export default async function handler(req, res) {
       }
 
       // Create session record
+      console.log('[start-session] Creating session with:', {
+        player_id,
+        status: 'active',
+        metadata: sessionMetadata,
+        sessionType,
+        timeLimit
+      });
+      
       const sessionResult = await client.query(
         'INSERT INTO sessions (player_id, status, metadata, created_at) VALUES ($1, $2, $3, $4) RETURNING session_id',
         [player_id, 'active', JSON.stringify(sessionMetadata), new Date()]
       );
+      
+      console.log('[start-session] Session created successfully:', sessionResult.rows[0]);
 
       const sessionId = sessionResult.rows[0].session_id;
 
@@ -173,11 +183,20 @@ export default async function handler(req, res) {
     }
 
   } catch (error) {
-    console.error('Error starting session:', error);
+    console.error('[start-session] Error starting session:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      detail: error.detail
+    });
     return res.status(500).json({
       success: false,
       message: 'Failed to start session',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      details: process.env.NODE_ENV === 'development' ? {
+        code: error.code,
+        detail: error.detail
+      } : undefined
     });
   }
 }

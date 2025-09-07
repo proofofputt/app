@@ -86,6 +86,17 @@ async function handleGetDuels(req, res) {
       const rules = duel.rules || {};
       const timeLimit = settings.time_limit_minutes || rules.time_limit_minutes || settings.time_limit || rules.time_limit || null;
       
+      // Debug time limit extraction
+      if (duel.duel_id) {
+        console.log(`[duels] Duel ${duel.duel_id} time limit extraction:`, {
+          settings,
+          rules,
+          extractedTimeLimit: timeLimit,
+          settingsType: typeof settings,
+          rulesType: typeof rules
+        });
+      }
+      
       return {
         duel_id: duel.duel_id,
         creator_id: duel.duel_creator_id,
