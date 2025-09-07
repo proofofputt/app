@@ -146,15 +146,32 @@ export default async function handler(req, res) {
               makes_overview: transformMakesOverview(data.makes_by_category || analyticStats.makes_by_category || {}),
               misses_overview: transformMissesOverview(data.misses_by_category || analyticStats.misses_by_category || {}),
               
-              consecutive_by_category: {
-                "3": data.streaks_over_3 || consecutiveStats.streaks_over_3 || 0,
-                "7": data.streaks_over_7 || 0, // Check flat data first
-                "10": data.streaks_over_10 || consecutiveStats.streaks_over_10 || 0,
-                "15": data.streaks_over_15 || consecutiveStats.streaks_over_15 || 0,
-                "21": data.streaks_over_21 || consecutiveStats.streaks_over_21 || 0,
-                "50": data.streaks_over_50 || 0,
-                "100": data.streaks_over_100 || 0
-              }
+              consecutive_by_category: (() => {
+                // First try to get the new consecutive_by_category format from SessionReporter
+                const newFormat = data.consecutive_by_category || {};
+                const consecutiveStats = data.consecutive_stats || {};
+                
+                // If we have the new format, use it; otherwise fall back to individual fields
+                if (newFormat && Object.keys(newFormat).length > 0 && Object.values(newFormat).some(v => v > 0)) {
+                  // Convert numeric keys to strings for consistency
+                  const result = {};
+                  [3, 7, 10, 15, 21, 50, 100].forEach(threshold => {
+                    result[threshold.toString()] = newFormat[threshold] || newFormat[threshold.toString()] || 0;
+                  });
+                  return result;
+                } else {
+                  // Legacy format fallback
+                  return {
+                    "3": data.streaks_over_3 || consecutiveStats.streaks_over_3 || 0,
+                    "7": data.streaks_over_7 || 0,
+                    "10": data.streaks_over_10 || consecutiveStats.streaks_over_10 || 0,
+                    "15": data.streaks_over_15 || consecutiveStats.streaks_over_15 || 0,
+                    "21": data.streaks_over_21 || consecutiveStats.streaks_over_21 || 0,
+                    "50": data.streaks_over_50 || 0,
+                    "100": data.streaks_over_100 || 0
+                  };
+                }
+              })()
             };
           });
         } finally {
