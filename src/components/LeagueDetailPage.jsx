@@ -141,8 +141,15 @@ const LeagueDetailPage = () => {
   }, [playerTimezone]);
 
   // --- Data Transformation for Pivot Table ---
-  const pointsByPlayer = useMemo(() => {
-    if (!league || !league.members) return new Map();
+  const leagueData = useMemo(() => {
+    if (!league || !league.members) {
+      return {
+        pointsByPlayer: new Map(),
+        ranks: new Map()
+      };
+    }
+    
+    // Calculate points
     const points = new Map(league.members.map(m => [m.player_id, 0]));
     if (league.rounds) {
       league.rounds.forEach(round => {
@@ -156,14 +163,11 @@ const LeagueDetailPage = () => {
         }
       });
     }
-    return points;
-  }, [league]);
-
-  const ranks = useMemo(() => {
-    if (!league || !league.members) return new Map();
+    
+    // Calculate ranks
     const totals = league.members.map(({ player_id: id }) => ({
       player_id: id,
-      total_points: pointsByPlayer.get(id) || 0
+      total_points: points.get(id) || 0
     })).sort((a, b) => b.total_points - a.total_points);
 
     const ranksMap = new Map();
@@ -176,8 +180,15 @@ const LeagueDetailPage = () => {
       }
       ranksMap.set(playerTotal.player_id, currentRank);
     });
-    return ranksMap;
-  }, [league, pointsByPlayer]);
+    
+    return {
+      pointsByPlayer: points,
+      ranks: ranksMap
+    };
+  }, [league]);
+
+  const pointsByPlayer = leagueData.pointsByPlayer;
+  const ranks = leagueData.ranks;
 
   const handleSort = useCallback((type, id = null) => {
     setSortOrder({ type, id });
