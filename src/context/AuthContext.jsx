@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
       const storedData = localStorage.getItem('playerData');
       return storedData ? JSON.parse(storedData) : null;
     } catch (error) {
-      console.error("Failed to parse player data from localStorage", error);
+      console.error("Failed to parse player data from localStorage:", error);
       return null;
     }
   });
