@@ -138,25 +138,8 @@ const DuelsPage = () => {
         setError('');
         try {
             const response = await apiListDuels(playerData.player_id);
-            console.log('[DuelsPage] Raw API response:', response);
-            
             // Handle the API response structure - it returns { duels: [...] }
             const duelsData = response?.duels || response || [];
-            console.log('[DuelsPage] Processed duels data:', duelsData);
-            
-            // Debug: Check if time limits are present in the data
-            if (Array.isArray(duelsData) && duelsData.length > 0) {
-                console.log('[DuelsPage] Sample duel data for time limit debugging:', {
-                    settings: duelsData[0].settings,
-                    settingsKeys: duelsData[0].settings ? Object.keys(duelsData[0].settings) : null,
-                    settingsStringified: JSON.stringify(duelsData[0].settings),
-                    rules: duelsData[0].rules,
-                    rulesKeys: duelsData[0].rules ? Object.keys(duelsData[0].rules) : null,
-                    time_limit_minutes: duelsData[0].time_limit_minutes,
-                    duel_id: duelsData[0].duel_id
-                });
-            }
-            
             setDuels(Array.isArray(duelsData) ? duelsData : []);
         } catch (err) {
             console.error('[DuelsPage] Error fetching duels:', err);

@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import jwt from 'jsonwebtoken';
+import { v4 as uuidv4 } from 'uuid';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -158,6 +159,9 @@ export default async function handler(req, res) {
         sessionMetadata.league_id = round.league_id;
       }
 
+      // Generate UUID for session_id
+      const sessionId = uuidv4();
+      
       // Create session record - using the correct sessions table schema
       const sessionData = {
         session_type: sessionType,
@@ -169,6 +173,7 @@ export default async function handler(req, res) {
       };
       
       console.log('[start-session] Creating session with:', {
+        session_id: sessionId,
         player_id,
         sessionData,
         sessionType,
@@ -176,13 +181,11 @@ export default async function handler(req, res) {
       });
       
       const sessionResult = await client.query(
-        'INSERT INTO sessions (player_id, data, created_at, updated_at) VALUES ($1, $2, $3, $4) RETURNING session_id',
-        [player_id, JSON.stringify(sessionData), new Date(), new Date()]
+        'INSERT INTO sessions (session_id, player_id, data, created_at, updated_at) VALUES ($1, $2, $3, $4, $5) RETURNING session_id',
+        [sessionId, player_id, JSON.stringify(sessionData), new Date(), new Date()]
       );
       
       console.log('[start-session] Session created successfully:', sessionResult.rows[0]);
-
-      const sessionId = sessionResult.rows[0].session_id;
 
       // Generate deep link URL with appropriate parameters
       let deepLinkUrl = `proofofputt://start-session?type=${sessionType}&id=${sessionId}&player_id=${player_id}`;

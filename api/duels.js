@@ -91,16 +91,6 @@ async function handleGetDuels(req, res) {
                        rules.time_limit || 
                        null;
       
-      // Debug time limit extraction
-      if (duel.duel_id) {
-        console.log(`[duels] Duel ${duel.duel_id} time limit extraction:`, {
-          settings,
-          rules,
-          extractedTimeLimit: timeLimit,
-          settingsType: typeof settings,
-          rulesType: typeof rules
-        });
-      }
       
       return {
         duel_id: duel.duel_id,
