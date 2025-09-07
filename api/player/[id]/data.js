@@ -75,10 +75,11 @@ export default async function handler(req, res) {
           COALESCE(SUM(CAST(data->>'total_makes' AS INTEGER)), 0) as total_makes,
           COALESCE(SUM(CAST(data->>'total_misses' AS INTEGER)), 0) as total_misses,
           COALESCE(MAX(CAST(data->>'best_streak' AS INTEGER)), 0) as best_streak,
-          COALESCE(MIN(NULLIF(CAST(data->>'fastest_21_makes' AS DECIMAL), 0)), NULL) as fastest_21_makes,
+          COALESCE(MIN(NULLIF(CAST(data->>'fastest_21_makes_seconds' AS DECIMAL), 0)), NULL) as fastest_21_makes,
           COALESCE(MAX(CAST(data->>'makes_per_minute' AS DECIMAL)), 0) as max_makes_per_minute,
           COALESCE(MAX(CAST(data->>'putts_per_minute' AS DECIMAL)), 0) as max_putts_per_minute,
           COALESCE(MAX(CAST(data->>'most_makes_in_60_seconds' AS INTEGER)), 0) as most_in_60_seconds,
+          COALESCE(MAX(CAST(data->>'session_duration' AS DECIMAL)), 0) as max_session_duration,
           MAX(created_at) as last_session_at
         FROM sessions 
         WHERE player_id = $1 
@@ -118,8 +119,6 @@ export default async function handler(req, res) {
 
       const calibration_data = calibrationResult.rows.length > 0 ? 
         calibrationResult.rows[0].calibration_config : null;
-
-      client.release();
 
       // Build response matching prototype structure
       const responseData = {
