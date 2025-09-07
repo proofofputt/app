@@ -6,8 +6,8 @@
 
 /* Add 10.5% margins to the entire career stats page content */
 .career-stats-page {
-  margin-left: 10.5%;
-  margin-right: 10.5%;
+  margin-left: 21%;
+  margin-right: 21%;
 }
 
 .career-stats-page .career-stats-table {
@@ -29,7 +29,7 @@
 /* General cell padding */
 .career-stats-page .career-stats-table th,
 .career-stats-page .career-stats-table td {
-  padding: 0.6rem 0.8rem; /* Reduced padding for a tighter look */
+  padding: 1.6rem 1.8rem; /* Reduced padding for a tighter look */
 }
 
 /* Style for the main table headers to give them a distinct look */
