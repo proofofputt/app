@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { apiListDuels, apiRespondToDuel, apiSubmitSessionToDuel } from '../api';
+import { apiListDuels, apiRespondToDuel, apiSubmitSessionToDuel, apiStartSession } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { useNavigate, Link } from 'react-router-dom';
 import CreateDuelModal from './CreateDuelModal';
-import SessionSelectModal from './SessionSelectModal';
 import DuelResults from './DuelResults';
 import DuelHistoryStats from './DuelHistoryStats';
 import SortButton from './SortButton';
@@ -129,8 +128,6 @@ const DuelsPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [showCreateModal, setShowCreateModal] = useState(false);
-    const [showSessionModal, setShowSessionModal] = useState(false);
-    const [selectedDuel, setSelectedDuel] = useState(null);
     const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 9;
@@ -172,9 +169,25 @@ const DuelsPage = () => {
         }
     };
 
-    const handleSubmitSession = (duel) => {
-        setSelectedDuel(duel);
-        setShowSessionModal(true);
+    const handleSubmitSession = async (duel) => {
+        try {
+            const response = await apiStartSession(playerData.player_id, duel.duel_id);
+            
+            if (response.success && response.deep_link_url) {
+                // Open the deep link to launch the desktop app with duel session
+                window.location.href = response.deep_link_url;
+                
+                showNotification(
+                    `Starting duel session with ${duel.time_limit_minutes ? duel.time_limit_minutes + ' minute' : 'no'} time limit. Desktop app should launch automatically.`,
+                    false
+                );
+            } else {
+                throw new Error(response.message || 'Failed to start duel session');
+            }
+        } catch (err) {
+            console.error('[DuelsPage] Failed to start duel session:', err);
+            showNotification(err.message || 'Failed to start duel session. Make sure the desktop app is installed.', true);
+        }
     };
 
     const onDuelCreated = () => {
@@ -182,10 +195,6 @@ const DuelsPage = () => {
         fetchDuels();
     };
 
-    const onSessionSubmitted = () => {
-        setShowSessionModal(false);
-        fetchDuels();
-    };
 
     // Process duels data without circular dependencies
     const categorizedDuels = useMemo(() => {
@@ -194,10 +203,22 @@ const DuelsPage = () => {
         // Apply sorting
         if (sortConfig.key) {
             sortableItems.sort((a, b) => {
-                if (a[sortConfig.key] < b[sortConfig.key]) {
+                let aValue, bValue;
+                
+                // Handle special sorting cases
+                if (sortConfig.key === 'opponent_name') {
+                    // Sort by opponent name based on current user perspective
+                    aValue = a.creator_id === currentPlayerId ? a.invited_player_name : a.creator_name;
+                    bValue = b.creator_id === currentPlayerId ? b.invited_player_name : b.creator_name;
+                } else {
+                    aValue = a[sortConfig.key];
+                    bValue = b[sortConfig.key];
+                }
+
+                if (aValue < bValue) {
                     return sortConfig.direction === 'asc' ? -1 : 1;
                 }
-                if (a[sortConfig.key] > b[sortConfig.key]) {
+                if (aValue > bValue) {
                     return sortConfig.direction === 'asc' ? 1 : -1;
                 }
                 return 0;
@@ -252,8 +273,18 @@ const DuelsPage = () => {
                     <table className="table duels-table">
                         <thead>
                             <tr>
-                                <th>Opponent</th>
-                                <th>Status</th>
+                                <th 
+                                    style={{ cursor: 'pointer' }}
+                                    onClick={() => handleSort('opponent_name')}
+                                >
+                                    Opponent {sortConfig.key === 'opponent_name' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
+                                </th>
+                                <th 
+                                    style={{ cursor: 'pointer' }}
+                                    onClick={() => handleSort('status')}
+                                >
+                                    Status {sortConfig.key === 'status' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
+                                </th>
                                 <th 
                                     style={{ cursor: 'pointer' }}
                                     onClick={() => handleSort('created_at')}
@@ -331,13 +362,6 @@ const DuelsPage = () => {
                 />
             )}
             
-            {showSessionModal && (
-                <SessionSelectModal 
-                    duel={selectedDuel} 
-                    onClose={() => setShowSessionModal(false)} 
-                    onSessionSubmitted={onSessionSubmitted} 
-                />
-            )}
 
             <DuelHistoryStats 
                 duels={duels} 

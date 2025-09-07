@@ -151,6 +151,16 @@
   z-index: 2; /* Ensure header is above scrolling content */
 }
 
+/* Sortable column headers */
+.duels-table thead th[style*="cursor: pointer"] {
+  transition: background-color 0.2s ease;
+  user-select: none;
+}
+
+.duels-table thead th[style*="cursor: pointer"]:hover {
+  background-color: rgba(251, 191, 36, 0.1);
+}
+
 /* Add vertical borders to all table cells except the last one in a row */
 .duels-table th:not(:last-child),
 .duels-table td:not(:last-child) {
@@ -181,6 +191,30 @@
 /* Add margin to buttons in actions cell to prevent touching borders */
 .duels-table .actions-cell .btn {
   margin: 0.25rem;
+}
+
+/* Yellow styling for Submit Session button */
+.duels-table .actions-cell .btn-primary {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #f97316 100%);
+  border: none;
+  color: #1a1a1a;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+  text-shadow: none;
+  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
+  cursor: pointer;
+}
+
+.duels-table .actions-cell .btn-primary:hover {
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 50%, #ea580c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(251, 191, 36, 0.4);
+}
+
+.duels-table .actions-cell .btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
 }
 
 /* Reduce padding on the expiration cell to better fit the styled box */
