@@ -1,5 +1,10 @@
-import { neon } from '@neondatabase/serverless';
+import { Pool } from 'pg';
 import crypto from 'crypto';
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -12,15 +17,17 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Email is required' });
   }
 
+  const client = await pool.connect();
+  
   try {
-    const sql = neon(process.env.DATABASE_URL);
 
     // Check if user exists
-    const users = await sql`
-      SELECT player_id, username FROM players WHERE LOWER(email) = LOWER(${email})
-    `;
+    const users = await client.query(
+      'SELECT player_id, username FROM players WHERE LOWER(email) = LOWER($1)',
+      [email]
+    );
 
-    if (users.length === 0) {
+    if (users.rows.length === 0) {
       // Don't reveal if email exists or not for security
       return res.status(200).json({ 
         success: true,
@@ -28,20 +35,19 @@ export default async function handler(req, res) {
       });
     }
 
-    const user = users[0];
+    const user = users.rows[0];
 
     // Generate reset token
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
 
     // Store reset token in database
-    await sql`
-      UPDATE players 
-      SET 
-        reset_token = ${resetToken},
-        reset_token_expiry = ${resetTokenExpiry}
-      WHERE player_id = ${user.player_id}
-    `;
+    await client.query(
+      `UPDATE players 
+       SET reset_token = $1, reset_token_expiry = $2, updated_at = NOW()
+       WHERE player_id = $3`,
+      [resetToken, resetTokenExpiry, user.player_id]
+    );
 
     // TODO: Send email with reset link
     // For now, we'll just log the reset link
@@ -75,5 +81,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ 
       error: 'Failed to process password reset request. Please try again later.' 
     });
+  } finally {
+    client.release();
   }
 }

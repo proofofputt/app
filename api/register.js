@@ -1,6 +1,11 @@
-import { neon } from '@neondatabase/serverless';
+import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -30,24 +35,27 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Username must be 3-20 characters and contain only letters, numbers, and underscores' });
   }
 
+  const client = await pool.connect();
+  
   try {
-    const sql = neon(process.env.DATABASE_URL);
 
     // Check if email already exists
-    const existingEmail = await sql`
-      SELECT player_id FROM players WHERE LOWER(email) = LOWER(${email})
-    `;
+    const existingEmail = await client.query(
+      'SELECT player_id FROM players WHERE LOWER(email) = LOWER($1)',
+      [email]
+    );
 
-    if (existingEmail.length > 0) {
+    if (existingEmail.rows.length > 0) {
       return res.status(409).json({ error: 'Email already registered' });
     }
 
     // Check if username already exists
-    const existingUsername = await sql`
-      SELECT player_id FROM players WHERE LOWER(username) = LOWER(${username})
-    `;
+    const existingUsername = await client.query(
+      'SELECT player_id FROM players WHERE LOWER(username) = LOWER($1)',
+      [username]
+    );
 
-    if (existingUsername.length > 0) {
+    if (existingUsername.rows.length > 0) {
       return res.status(409).json({ error: 'Username already taken' });
     }
 
@@ -55,8 +63,8 @@ export default async function handler(req, res) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create the new player
-    const result = await sql`
-      INSERT INTO players (
+    const result = await client.query(
+      `INSERT INTO players (
         email, 
         password, 
         username, 
@@ -65,27 +73,20 @@ export default async function handler(req, res) {
         handicap,
         role
       )
-      VALUES (
-        ${email}, 
-        ${hashedPassword}, 
-        ${username}, 
-        NOW(),
-        'free',
-        0,
-        'user'
-      )
-      RETURNING player_id, email, username, subscription_tier, role
-    `;
+      VALUES ($1, $2, $3, NOW(), 'free', 0, 'user')
+      RETURNING player_id, email, username, subscription_tier, role`,
+      [email, hashedPassword, username]
+    );
 
-    if (result.length === 0) {
+    if (result.rows.length === 0) {
       throw new Error('Failed to create user');
     }
 
-    const player = result[0];
+    const player = result.rows[0];
 
     // Initialize player stats
-    await sql`
-      INSERT INTO stats (
+    await client.query(
+      `INSERT INTO stats (
         player_id,
         total_sessions,
         total_putts,
@@ -97,20 +98,10 @@ export default async function handler(req, res) {
         fastest_21_makes,
         created_at
       )
-      VALUES (
-        ${player.player_id},
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        NULL,
-        NOW()
-      )
-      ON CONFLICT (player_id) DO NOTHING
-    `;
+      VALUES ($1, 0, 0, 0, 0, 0, 0, 0, NULL, NOW())
+      ON CONFLICT (player_id) DO NOTHING`,
+      [player.player_id]
+    );
 
     // Generate JWT token
     const token = jwt.sign(
@@ -141,5 +132,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ 
       error: 'Failed to register. Please try again later.' 
     });
+  } finally {
+    client.release();
   }
 }
