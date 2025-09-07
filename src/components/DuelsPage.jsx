@@ -11,41 +11,99 @@ import SortButton from './SortButton';
 import Pagination from './Pagination';
 import './DuelsPage.css';
 
-const DuelCard = ({ duel, onRespond, onSubmitSession, currentUserId, showDetailedResults = false }) => {
+const DuelRow = ({ duel, onRespond, onSubmitSession, currentUserId }) => {
     const isCreator = duel.creator_id === currentUserId;
     const opponentName = isCreator ? duel.invited_player_name : duel.creator_name;
     const opponentId = isCreator ? duel.invited_player_id : duel.creator_id;
     const isInvitee = duel.invited_player_id === currentUserId;
+    
+    const formatDate = (dateStr) => {
+        return new Date(dateStr).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: '2-digit'
+        });
+    };
 
-    // If we're showing detailed results for completed duels, use DuelResults component
-    if (showDetailedResults && duel.status === 'completed') {
-        return <DuelResults duel={duel} currentUserId={currentUserId} />;
-    }
+    const getStatusColor = (status) => {
+        switch(status) {
+            case 'pending': return '#f59e0b';
+            case 'active': return '#10b981';
+            case 'completed': return '#6b7280';
+            case 'declined': return '#ef4444';
+            case 'expired': return '#9ca3af';
+            default: return '#6b7280';
+        }
+    };
+
+    const renderActions = () => {
+        if (duel.status === 'pending' && isInvitee) {
+            return (
+                <div className="duel-actions">
+                    <button 
+                        onClick={() => onRespond(duel.duel_id, 'accepted')} 
+                        className="btn btn-sm btn-success"
+                    >
+                        Accept
+                    </button>
+                    <button 
+                        onClick={() => onRespond(duel.duel_id, 'declined')} 
+                        className="btn btn-sm btn-secondary"
+                    >
+                        Decline
+                    </button>
+                </div>
+            );
+        }
+        
+        if (duel.status === 'active') {
+            return (
+                <button 
+                    onClick={() => onSubmitSession(duel)} 
+                    className="btn btn-sm btn-primary"
+                >
+                    Submit Session
+                </button>
+            );
+        }
+        
+        if (duel.status === 'completed') {
+            const winner = duel.winner_id === currentUserId ? 'You Won!' : 
+                          duel.winner_id === duel.creator_id ? duel.creator_name :
+                          duel.winner_id === duel.invited_player_id ? duel.invited_player_name : 'Draw';
+            return <span className="winner-text">{winner}</span>;
+        }
+        
+        return <span className="text-muted">—</span>;
+    };
 
     return (
-        <div className="duel-card">
-            <div className="duel-card-header">
-                <h4>vs <Link to={`/players/${currentUserId}/vs/${opponentId}`}>{opponentName}</Link></h4>
-                <span className={`status-badge status-${duel.status}`}>{duel.status}</span>
-            </div>
-            <div className="duel-card-body">
-                <p><strong>Created:</strong> {new Date(duel.created_at).toLocaleDateString()}</p>
-                {duel.status === 'completed' && (
-                    <p><strong>Winner:</strong> {duel.winner_id === currentUserId ? 'You' : (duel.winner_id ? (duel.winner_id === duel.creator_id ? duel.creator_name : duel.invited_player_name) : 'N/A')}</p>
-                )}
-            </div>
-            <div className="duel-card-actions">
-                {duel.status === 'pending' && isInvitee && (
-                    <>
-                        <button onClick={() => onRespond(duel.duel_id, 'accepted')} className="btn-accept">Accept</button>
-                        <button onClick={() => onRespond(duel.duel_id, 'declined')} className="btn-decline">Decline</button>
-                    </>
-                )}
-                {duel.status === 'active' && (
-                     <button onClick={() => onSubmitSession(duel)} className="btn-submit">Submit Session</button>
-                )}
-            </div>
-        </div>
+        <tr>
+            <td>
+                <Link to={`/players/${currentUserId}/vs/${opponentId}`} className="opponent-link">
+                    {opponentName}
+                </Link>
+            </td>
+            <td>
+                <span 
+                    className="status-badge" 
+                    style={{backgroundColor: getStatusColor(duel.status)}}
+                >
+                    {duel.status.charAt(0).toUpperCase() + duel.status.slice(1)}
+                </span>
+            </td>
+            <td>{formatDate(duel.created_at)}</td>
+            <td>
+                {duel.expires_at && duel.status === 'pending' ? (
+                    <div className="expiration-box">
+                        {formatDate(duel.expires_at)}
+                    </div>
+                ) : '—'}
+            </td>
+            <td className="actions-cell">
+                {renderActions()}
+            </td>
+        </tr>
     );
 };
 
@@ -67,12 +125,20 @@ const DuelsPage = () => {
     const fetchDuels = async () => {
         if (!playerData?.player_id) return;
         setIsLoading(true);
+        setError('');
         try {
-            const data = await apiListDuels(playerData.player_id);
-            setDuels(data || []);
+            const response = await apiListDuels(playerData.player_id);
+            console.log('[DuelsPage] Raw API response:', response);
+            
+            // Handle the API response structure - it returns { duels: [...] }
+            const duelsData = response?.duels || response || [];
+            console.log('[DuelsPage] Processed duels data:', duelsData);
+            setDuels(Array.isArray(duelsData) ? duelsData : []);
         } catch (err) {
+            console.error('[DuelsPage] Error fetching duels:', err);
             setError(err.message || 'Failed to load duels.');
             showNotification(err.message || 'Failed to load duels.', true);
+            setDuels([]); // Ensure duels is always an array
         } finally {
             setIsLoading(false);
         }
@@ -138,61 +204,105 @@ const DuelsPage = () => {
         setSortConfig({ key, direction });
     };
 
-    const renderDuelCategory = (title, duelList, categoryKey) => {
-        const paginatedDuels = duelList.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
+    const renderDuelCategory = (title, duelList) => {
         if (duelList.length === 0) {
             return (
-                <div className="duels-section">
-                    <h3>{title}</h3>
-                    <p className="no-duels-message">No duels in this category.</p>
+                <div className="duel-category-section">
+                    <h3 className="duel-category-title">{title}</h3>
+                    <div className="empty-state">
+                        <p>No duels in this category.</p>
+                    </div>
                 </div>
             );
         }
 
         return (
-            <div className="duels-section">
-                <div className="duels-section-header">
-                    <h3>{title}</h3>
-                    <div className="sort-options">
-                        <SortButton label="Date" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} />
-                        <SortButton label="Status" sortKey="status" sortConfig={sortConfig} onSort={handleSort} />
-                    </div>
+            <div className="duel-category-section">
+                <h3 className="duel-category-title">{title}</h3>
+                <div className="duels-table-container">
+                    <table className="table duels-table">
+                        <thead>
+                            <tr>
+                                <th>Opponent</th>
+                                <th>Status</th>
+                                <th 
+                                    style={{ cursor: 'pointer' }}
+                                    onClick={() => handleSort('created_at')}
+                                >
+                                    Date Created {sortConfig.key === 'created_at' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
+                                </th>
+                                <th>Expires</th>
+                                <th className="actions-header">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {duelList.map(duel => (
+                                <DuelRow
+                                    key={duel.duel_id}
+                                    duel={duel}
+                                    onRespond={handleRespond}
+                                    onSubmitSession={handleSubmitSession}
+                                    currentUserId={playerData.player_id}
+                                />
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
-                <div className="duels-grid">
-                    {paginatedDuels.map(duel => (
-                        <DuelCard
-                            key={duel.duel_id}
-                            duel={duel}
-                            onRespond={handleRespond}
-                            onSubmitSession={handleSubmitSession}
-                            currentUserId={playerData.player_id}
-                            showDetailedResults={categoryKey === 'completed'}
-                        />
-                    ))}
-                </div>
-                <Pagination
-                    currentPage={currentPage}
-                    totalItems={duelList.length}
-                    itemsPerPage={itemsPerPage}
-                    onPageChange={setCurrentPage}
-                />
             </div>
         );
     };
 
-    if (isLoading) return <p style={{ textAlign: 'center', padding: '2rem' }}>Loading duels...</p>;
-    if (error) return <p className="error-message" style={{ textAlign: 'center', padding: '2rem' }}>{error}</p>;
+    if (isLoading) {
+        return (
+            <div className="container">
+                <div className="loading-state">
+                    <h2>Loading Duels...</h2>
+                    <div className="loading-spinner"></div>
+                </div>
+            </div>
+        );
+    }
+    
+    if (error) {
+        return (
+            <div className="container">
+                <div className="error-state">
+                    <h2>Unable to Load Duels</h2>
+                    <p className="error-message">{error}</p>
+                    <button onClick={fetchDuels} className="btn btn-primary">
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="duels-page">
-            <div className="duels-header">
+        <div className="container">
+            <div className="page-header">
                 <h1>Duels</h1>
-                <button onClick={() => setShowCreateModal(true)} className="create-duel-btn">+ Create Duel</button>
+                <button 
+                    onClick={() => setShowCreateModal(true)} 
+                    className="btn btn-primary"
+                >
+                    + Create Duel
+                </button>
             </div>
 
-            {showCreateModal && <CreateDuelModal onClose={() => setShowCreateModal(false)} onDuelCreated={onDuelCreated} />}
-            {showSessionModal && <SessionSelectModal duel={selectedDuel} onClose={() => setShowSessionModal(false)} onSessionSubmitted={onSessionSubmitted} />}
+            {showCreateModal && (
+                <CreateDuelModal 
+                    onClose={() => setShowCreateModal(false)} 
+                    onDuelCreated={onDuelCreated} 
+                />
+            )}
+            
+            {showSessionModal && (
+                <SessionSelectModal 
+                    duel={selectedDuel} 
+                    onClose={() => setShowSessionModal(false)} 
+                    onSessionSubmitted={onSessionSubmitted} 
+                />
+            )}
 
             <DuelHistoryStats 
                 duels={duels} 
@@ -200,9 +310,9 @@ const DuelsPage = () => {
                 playerData={playerData} 
             />
 
-            {renderDuelCategory('Pending Invitations', categorizedDuels.pending, 'pending')}
-            {renderDuelCategory('Active Duels', categorizedDuels.active, 'active')}
-            {renderDuelCategory('Completed & Past Duels', categorizedDuels.completed, 'completed')}
+            {renderDuelCategory('Pending Invitations', categorizedDuels.pending)}
+            {renderDuelCategory('Active Duels', categorizedDuels.active)}
+            {renderDuelCategory('Completed & Past Duels', categorizedDuels.completed)}
         </div>
     );
 };
