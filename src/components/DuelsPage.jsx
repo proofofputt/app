@@ -174,8 +174,11 @@ const DuelsPage = () => {
         fetchDuels();
     };
 
-    const sortedDuels = useMemo(() => {
-        let sortableItems = [...duels];
+    // Process duels data without circular dependencies
+    const categorizedDuels = useMemo(() => {
+        let sortableItems = Array.isArray(duels) ? [...duels] : [];
+        
+        // Apply sorting
         if (sortConfig.key) {
             sortableItems.sort((a, b) => {
                 if (a[sortConfig.key] < b[sortConfig.key]) {
@@ -187,14 +190,14 @@ const DuelsPage = () => {
                 return 0;
             });
         }
-        return sortableItems;
-    }, [duels, sortConfig]);
-
-    const categorizedDuels = {
-        pending: sortedDuels.filter(d => d.status === 'pending' && d.invited_player_id === playerData.player_id),
-        active: sortedDuels.filter(d => d.status === 'active'),
-        completed: sortedDuels.filter(d => ['completed', 'expired', 'declined'].includes(d.status)),
-    };
+        
+        // Categorize duels
+        return {
+            pending: sortableItems.filter(d => d.status === 'pending' && d.invited_player_id === playerData?.player_id),
+            active: sortableItems.filter(d => d.status === 'active'),
+            completed: sortableItems.filter(d => ['completed', 'expired', 'declined'].includes(d.status)),
+        };
+    }, [duels, sortConfig, playerData?.player_id]);
 
     const handleSort = (key) => {
         let direction = 'asc';
