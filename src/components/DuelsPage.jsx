@@ -280,10 +280,12 @@ const DuelsPage = () => {
 
     if (isLoading) {
         return (
-            <div className="container">
-                <div className="loading-state">
-                    <h2>Loading Duels...</h2>
-                    <div className="loading-spinner"></div>
+            <div className="duels-page">
+                <div className="container">
+                    <div className="loading-state">
+                        <h2>Loading Duels...</h2>
+                        <div className="loading-spinner"></div>
+                    </div>
                 </div>
             </div>
         );
@@ -291,21 +293,24 @@ const DuelsPage = () => {
     
     if (error) {
         return (
-            <div className="container">
-                <div className="error-state">
-                    <h2>Unable to Load Duels</h2>
-                    <p className="error-message">{error}</p>
-                    <button onClick={fetchDuels} className="btn btn-primary">
-                        Try Again
-                    </button>
+            <div className="duels-page">
+                <div className="container">
+                    <div className="error-state">
+                        <h2>Unable to Load Duels</h2>
+                        <p className="error-message">{error}</p>
+                        <button onClick={fetchDuels} className="btn btn-primary">
+                            Try Again
+                        </button>
+                    </div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="container">
-            <div className="page-header">
+        <div className="duels-page">
+            <div className="container">
+                <div className="page-header">
                 <h1>Duels</h1>
                 <button 
                     onClick={() => setShowCreateModal(true)} 
@@ -340,6 +345,7 @@ const DuelsPage = () => {
             {renderDuelCategory('Invitations Sent', categorizedDuels.pendingSent)}
             {renderDuelCategory('Active Duels', categorizedDuels.active)}
             {renderDuelCategory('Completed & Past Duels', categorizedDuels.completed)}
+            </div>
         </div>
     );
 };

@@ -1,17 +1,24 @@
 /* DuelsPage.css */
 
+/* Override container margins specifically for duels page */
+.duels-page .container {
+  margin: 0 21%; /* Add 21% margins on both sides */
+  width: 58%; /* Restrict content width (100% - 42%) */
+}
+
 .duels-page {
   display: flex;
   flex-direction: column;
 }
 
 /* Loading and Error States */
-.loading-state, .error-state {
+.duels-page .loading-state, 
+.duels-page .error-state {
   text-align: center;
   padding: 3rem 1rem;
 }
 
-.loading-spinner {
+.duels-page .loading-spinner {
   margin: 1rem auto;
   width: 40px;
   height: 40px;
@@ -26,11 +33,19 @@
   100% { transform: rotate(360deg); }
 }
 
-.empty-state {
+/* Empty state styling to match table background */
+.duels-page .empty-state {
   text-align: center;
   padding: 2rem;
-  color: var(--text-muted);
-  font-style: italic;
+  background-color: var(--background-color, #1a1a1a); /* Same background as tables */
+  border: 1px solid var(--border-color, #333);
+  border-radius: 12px;
+  color: var(--warning-color, #fbbf24); /* Yellow text */
+}
+
+.duels-page .empty-state p {
+  margin: 0;
+  font-weight: 500;
 }
 
 /* Status badges */

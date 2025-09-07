@@ -207,21 +207,26 @@
   font-size: 0.9rem;
 }
 
-/* No Stats Message */
+/* No Stats Message - Match table styling with yellow text */
 .no-stats-message {
   text-align: center;
   padding: 3rem 2rem;
-  color: #666;
+  background-color: var(--background-color, #1a1a1a); /* Same background as tables */
+  border: 1px solid var(--border-color, #333);
+  border-radius: 12px;
+  color: var(--warning-color, #fbbf24); /* Yellow text */
 }
 
 .no-stats-message h3 {
-  color: #333;
+  color: var(--warning-color, #fbbf24); /* Yellow text */
   margin-bottom: 1rem;
 }
 
 .no-stats-message p {
   font-size: 1.1rem;
   line-height: 1.5;
+  color: var(--warning-color, #fbbf24); /* Yellow text */
+  font-weight: 500;
 }
 
 /* Responsive Design */
