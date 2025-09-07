@@ -4,6 +4,12 @@
   This file adds container styles, hover effects, and specific header styles.
 */
 
+/* Add 10.5% margins to the entire career stats page content */
+.career-stats-page {
+  margin-left: 10.5%;
+  margin-right: 10.5%;
+}
+
 .career-stats-page .career-stats-table {
   border: 1px solid var(--border-color);
   background-color: var(--surface-color);
