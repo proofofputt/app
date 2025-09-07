@@ -88,7 +88,7 @@
 }
 
 .dashboard-card {
-  background: white;
+  background: #188400; /* Changed from white to green for consistency */
   border-radius: 12px;
   padding: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -128,8 +128,19 @@
 .stat-value {
   font-size: 28px;
   font-weight: 700;
-  color: transparent;
+  color: #FFD700; /* Changed from transparent to yellow/gold */
   margin-bottom: 4px;
+  background: transparent !important; /* Force remove any white background */
+  padding: 0.5rem;
+  border-radius: 6px;
+}
+
+/* More specific selector to override any conflicting styles */
+.stats-card .stat-value,
+.dashboard-card .stat-value,
+p.stat-value {
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 .stat-label {

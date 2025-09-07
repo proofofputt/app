@@ -219,8 +219,11 @@ main {
 .stat-value {
   font-size: 1.5rem;
   font-weight: bold;
-  color: var(--text-white); /* Changed from primary (yellow) to white */
+  color: #FFD700; /* Yellow/gold color for visibility */
   margin: 0; /* p tags have margin by default, ensure it's off */
+  background: transparent !important; /* Remove white background */
+  padding: 0.5rem;
+  border-radius: 6px;
 }
 
 .session-list-container {
@@ -384,7 +387,9 @@ main {
 .details-section h4 {
   margin-top: 0;
   margin-bottom: 0.5rem;
-  color: var(--text-color-secondary);
+  color: var(--primary-color); /* Changed to yellow like table headers */
+  font-size: 1.3rem; /* Increased font size for category names */
+  font-weight: 600;
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 0.5rem;
 }
@@ -392,6 +397,9 @@ main {
 .details-section h5 {
   margin-top: 1rem;
   margin-bottom: 0.5rem;
+  font-size: 1.1rem; /* Slightly smaller than category but bigger than default */
+  color: var(--text-white);
+  font-weight: 500;
 }
 
 .details-section ul {
@@ -585,6 +593,21 @@ button.btn-danger:hover, .btn-danger:hover {
 
 .leaderboard-card .leader-name {
   font-weight: 500;
+}
+
+.leaderboard-card .leader-name a {
+  color: inherit; /* Default color for all players */
+  text-decoration: none;
+}
+
+.leaderboard-card .leader-name a:hover {
+  text-decoration: underline;
+}
+
+/* Highlight current player in orange */
+.leaderboard-card .leader-name.current-player a {
+  color: #ff8c00; /* Orange color for current player */
+  font-weight: 600;
 }
 
 .leaderboard-card .leader-value {

@@ -1,7 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const LeaderboardCard = ({ title, leaders = [] }) => {
+  const { playerData } = useAuth();
+  const currentPlayerId = playerData?.player_id;
+  
   // Ensure we always have an array of 3 for the podium display
   const displayLeaders = [...leaders];
   while (displayLeaders.length < 3) {
@@ -21,7 +25,9 @@ const LeaderboardCard = ({ title, leaders = [] }) => {
               </>
             ) : (
               <>
-                <span className="leader-name"><Link to={`/player/${leader.player_id}/stats`}>{leader.player_name}</Link></span>
+                <span className={`leader-name ${leader.player_id === currentPlayerId ? 'current-player' : ''}`}>
+                  <Link to={`/player/${leader.player_id}/stats`}>{leader.player_name}</Link>
+                </span>
                 <span className="leader-value">{leader.value}</span>
               </>
             )}
