@@ -38,6 +38,7 @@ const DuelRow = ({ duel, onRespond, onSubmitSession, currentUserId }) => {
 
     const renderActions = () => {
         if (duel.status === 'pending' && isInvitee) {
+            // User received this invitation - show Accept/Decline
             return (
                 <div className="duel-actions">
                     <button 
@@ -52,6 +53,15 @@ const DuelRow = ({ duel, onRespond, onSubmitSession, currentUserId }) => {
                     >
                         Decline
                     </button>
+                </div>
+            );
+        }
+        
+        if (duel.status === 'pending' && isCreator) {
+            // User sent this invitation - show waiting status
+            return (
+                <div className="waiting-response">
+                    <span className="text-muted">Awaiting response...</span>
                 </div>
             );
         }
@@ -191,12 +201,25 @@ const DuelsPage = () => {
             });
         }
         
-        // Categorize duels
-        return {
-            pending: sortableItems.filter(d => d.status === 'pending' && d.invited_player_id === playerData?.player_id),
+        // Categorize duels with better separation of sent vs received
+        const currentPlayerId = playerData?.player_id;
+        
+        const categories = {
+            pendingReceived: sortableItems.filter(d => d.status === 'pending' && d.invited_player_id === currentPlayerId),
+            pendingSent: sortableItems.filter(d => d.status === 'pending' && d.creator_id === currentPlayerId),
             active: sortableItems.filter(d => d.status === 'active'),
             completed: sortableItems.filter(d => ['completed', 'expired', 'declined'].includes(d.status)),
         };
+        
+        console.log('[DuelsPage] Categorized duels:', {
+            pendingReceived: categories.pendingReceived.length,
+            pendingSent: categories.pendingSent.length, 
+            active: categories.active.length,
+            completed: categories.completed.length,
+            currentPlayerId
+        });
+        
+        return categories;
     }, [duels, sortConfig, playerData?.player_id]);
 
     const handleSort = (key) => {
@@ -313,7 +336,8 @@ const DuelsPage = () => {
                 playerData={playerData} 
             />
 
-            {renderDuelCategory('Pending Invitations', categorizedDuels.pending)}
+            {renderDuelCategory('Invitations Received', categorizedDuels.pendingReceived)}
+            {renderDuelCategory('Invitations Sent', categorizedDuels.pendingSent)}
             {renderDuelCategory('Active Duels', categorizedDuels.active)}
             {renderDuelCategory('Completed & Past Duels', categorizedDuels.completed)}
         </div>
