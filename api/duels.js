@@ -62,6 +62,7 @@ async function handleGetDuels(req, res) {
         d.duel_invited_player_id,
         d.status,
         d.settings,
+        d.rules,
         d.created_at,
         d.expires_at,
         d.winner_id,
@@ -84,12 +85,22 @@ async function handleGetDuels(req, res) {
       // Parse settings and rules to extract time limit
       const settings = duel.settings || {};
       const rules = duel.rules || {};
-      const timeLimit = settings.session_duration_limit_minutes || 
-                       settings.time_limit_minutes || 
-                       rules.time_limit_minutes || 
-                       settings.time_limit || 
-                       rules.time_limit || 
-                       null;
+      
+      // Extract time limit from multiple possible fields, converting hours to minutes if needed
+      let timeLimit = null;
+      if (settings.session_duration_limit_minutes) {
+        timeLimit = settings.session_duration_limit_minutes;
+      } else if (settings.time_limit_minutes) {
+        timeLimit = settings.time_limit_minutes;
+      } else if (rules.time_limit_minutes) {
+        timeLimit = rules.time_limit_minutes;
+      } else if (rules.time_limit_hours) {
+        timeLimit = rules.time_limit_hours * 60; // Convert hours to minutes
+      } else if (settings.time_limit) {
+        timeLimit = settings.time_limit;
+      } else if (rules.time_limit) {
+        timeLimit = rules.time_limit;
+      }
       
       
       return {
