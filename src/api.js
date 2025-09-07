@@ -148,8 +148,28 @@ export const apiGetPlayerVsPlayerLeaderboard = (player1Id, player2Id) =>
 export const apiCreateDuel = (duelData) => 
   fetch(`${API_BASE_URL}/duels`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(duelData) }).then(handleResponse);
 
-export const apiRespondToDuel = (duelId, playerId, response) => 
-  fetch(`${API_BASE_URL}/duels/${duelId}/respond`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ player_id: playerId, response }) }).then(handleResponse);
+export const apiRespondToDuel = (duelId, playerId, response) => {
+  console.log('[apiRespondToDuel] Request:', { duelId, playerId, response, url: `${API_BASE_URL}/duels/${duelId}/respond` });
+  return fetch(`${API_BASE_URL}/duels/${duelId}/respond`, { 
+    method: 'POST', 
+    headers: getHeaders(), 
+    body: JSON.stringify({ player_id: playerId, response }) 
+  }).then(async res => {
+    console.log('[apiRespondToDuel] Response status:', res.status, res.statusText);
+    if (!res.ok) {
+      const errorText = await res.text().catch(() => '');
+      console.error('[apiRespondToDuel] Error response:', errorText);
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { message: errorText || 'Unknown error' };
+      }
+      throw new Error(errorData.message || errorData.error || 'Failed to respond to duel');
+    }
+    return res.json();
+  });
+};
 
 export const apiSubmitSessionToDuel = (duelId, playerId, sessionId) => 
   fetch(`${API_BASE_URL}/duels/${duelId}/submit`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ player_id: playerId, session_id: sessionId }) }).then(handleResponse);
