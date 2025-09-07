@@ -148,7 +148,10 @@ const DuelsPage = () => {
             if (Array.isArray(duelsData) && duelsData.length > 0) {
                 console.log('[DuelsPage] Sample duel data for time limit debugging:', {
                     settings: duelsData[0].settings,
+                    settingsKeys: duelsData[0].settings ? Object.keys(duelsData[0].settings) : null,
+                    settingsStringified: JSON.stringify(duelsData[0].settings),
                     rules: duelsData[0].rules,
+                    rulesKeys: duelsData[0].rules ? Object.keys(duelsData[0].rules) : null,
                     time_limit_minutes: duelsData[0].time_limit_minutes,
                     duel_id: duelsData[0].duel_id
                 });

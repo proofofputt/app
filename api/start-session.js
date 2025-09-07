@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
 function verifyToken(req) {
@@ -23,6 +24,8 @@ function verifyToken(req) {
 }
 
 export default async function handler(req, res) {
+  console.log('[start-session] Handler called with method:', req.method);
+  
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -33,16 +36,22 @@ export default async function handler(req, res) {
   }
 
   if (req.method !== 'POST') {
+    console.log('[start-session] Method not allowed:', req.method);
     return res.status(405).json({ success: false, message: 'Method Not Allowed' });
   }
 
+  console.log('[start-session] Verifying token...');
   // Verify authentication
   const user = await verifyToken(req);
   if (!user) {
+    console.log('[start-session] Authentication failed');
     return res.status(401).json({ success: false, message: 'Authentication required' });
   }
 
+  console.log('[start-session] User authenticated:', user);
+
   const { player_id, duel_id, league_round_id } = req.body;
+  console.log('[start-session] Request body:', { player_id, duel_id, league_round_id });
 
   if (!player_id) {
     return res.status(400).json({ success: false, message: 'player_id is required' });
