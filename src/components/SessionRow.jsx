@@ -48,13 +48,33 @@ const DetailCategory = ({ title, overview, detailed, allDetailed }) => {
 const ConsecutiveCategory = ({ consecutiveData }) => {
   // For consecutive makes, always show all standard thresholds, even if zero
   const standardThresholds = ['3', '7', '10', '15', '21', '50', '100'];
-  const data = consecutiveData || {};
+  
+  // Parse the data if it's a JSON string
+  let data = {};
+  if (consecutiveData) {
+    if (typeof consecutiveData === 'string') {
+      try {
+        data = JSON.parse(consecutiveData);
+      } catch (e) {
+        console.error('Failed to parse consecutive data:', e);
+        data = {};
+      }
+    } else if (typeof consecutiveData === 'object') {
+      data = consecutiveData;
+    }
+  }
   
   // Create entries for all standard thresholds, using data or 0
   const consecutiveEntries = standardThresholds.map(threshold => [
     threshold, 
     data[threshold] || 0
   ]);
+  
+  // Debug logging in development
+  if (process.env.NODE_ENV === 'development' && Object.keys(data).length > 0) {
+    console.log('[ConsecutiveCategory] Parsed data:', data);
+    console.log('[ConsecutiveCategory] Entries:', consecutiveEntries);
+  }
   
   return (
     <div className="details-section">
