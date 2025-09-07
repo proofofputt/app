@@ -78,11 +78,10 @@ export const AuthProvider = ({ children }) => {
                   stats_total_makes: stats.total_makes 
                 });
                 
-                const playerDataWithStats = {
-                  ...parsedPlayerData,
+                const playerDataWithStats = Object.assign({}, parsedPlayerData, {
                   stats,
                   sessions
-                };
+                });
                 localStorage.setItem('playerData', JSON.stringify(playerDataWithStats));
                 setPlayerData(playerDataWithStats);
               }
@@ -104,24 +103,22 @@ export const AuthProvider = ({ children }) => {
                   most_in_60_seconds: 0, max_session_duration: 0, make_percentage: 0, last_session_at: null
                 };
                 
-                const playerDataWithStats = {
-                  ...parsedPlayerData,
+                const playerDataWithStats = Object.assign({}, parsedPlayerData, {
                   stats,
                   sessions
-                };
+                });
                 localStorage.setItem('playerData', JSON.stringify(playerDataWithStats));
                 setPlayerData(playerDataWithStats);
                 console.log('[AuthContext] Successfully loaded fallback data:', { sessions: sessions.length, makes: stats.total_makes });
               } catch (fallbackError) {
                 console.error('[AuthContext] Fallback APIs also failed:', fallbackError);
                 // Final fallback to basic structure
-                const playerDataWithStats = {
-                  ...parsedPlayerData,
+                const playerDataWithStats = Object.assign({}, parsedPlayerData, {
                   stats: { total_sessions: 0, total_makes: 0, total_misses: 0, best_streak: 0,
                     fastest_21_makes_seconds: null, max_makes_per_minute: 0, max_putts_per_minute: 0,
                     most_in_60_seconds: 0, max_session_duration: 0, make_percentage: 0, last_session_at: null },
                   sessions: []
-                };
+                });
                 localStorage.setItem('playerData', JSON.stringify(playerDataWithStats));
                 setPlayerData(playerDataWithStats);
               }
@@ -168,8 +165,7 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
           // Fallback to basic player data with empty stats if comprehensive fetch fails
           console.warn('Could not fetch comprehensive player data, using basic data with default stats:', error);
-          const basicPlayerDataWithStats = {
-            ...data.player,
+          const basicPlayerDataWithStats = Object.assign({}, data.player, {
             stats: {
               total_sessions: 0,
               total_makes: 0,
@@ -184,7 +180,7 @@ export const AuthProvider = ({ children }) => {
               last_session_at: null
             },
             sessions: []
-          };
+          });
           localStorage.setItem('playerData', JSON.stringify(basicPlayerDataWithStats));
           setPlayerData(basicPlayerDataWithStats);
         }
@@ -245,11 +241,10 @@ export const AuthProvider = ({ children }) => {
     if (!playerData) return;
     try {
       const latestSessions = await apiGetLatestSessions(playerData.player_id, 5);
-      const updatedPlayerData = {
-        ...playerData,
+      const updatedPlayerData = Object.assign({}, playerData, {
         sessions: latestSessions,
         last_session_refresh: new Date().toISOString()
-      };
+      });
       localStorage.setItem('playerData', JSON.stringify(updatedPlayerData));
       setPlayerData(updatedPlayerData);
       return latestSessions;
