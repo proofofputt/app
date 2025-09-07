@@ -62,7 +62,7 @@ export default async function handler(req, res) {
         
         // Get duel details for time limit and validation
         const duelResult = await client.query(
-          'SELECT * FROM duels WHERE duel_id = $1 AND (creator_id = $2 OR invited_player_id = $2)',
+          'SELECT * FROM duels WHERE duel_id = $1 AND (duel_creator_id = $2 OR duel_invited_player_id = $2)',
           [duel_id, player_id]
         );
 

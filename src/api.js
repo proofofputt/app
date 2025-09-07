@@ -113,11 +113,35 @@ export const apiGetSessions = (playerId, limit = 20) =>
 export const apiGetPlayerSessions = (playerId, page = 1, limit = 21) => 
   fetch(`${API_BASE_URL}/player/${playerId}/sessions?page=${page}&limit=${limit}`, { headers: getHeaders() }).then(handleResponse);
 
-export const apiStartSession = (player_id, duel_id = null, league_round_id = null) => {
+export const apiStartSession = async (player_id, duel_id = null, league_round_id = null) => {
   const body = { player_id };
   if (duel_id) body.duel_id = duel_id;
   if (league_round_id) body.league_round_id = league_round_id;
-  return fetch(`${API_BASE_URL}/start-session`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(body) }).then(handleResponse);
+  
+  console.log('[apiStartSession] Request:', body);
+  
+  try {
+    const response = await fetch(`${API_BASE_URL}/start-session`, { 
+      method: 'POST', 
+      headers: getHeaders(), 
+      body: JSON.stringify(body) 
+    });
+    
+    console.log('[apiStartSession] Response status:', response.status);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('[apiStartSession] Error response:', errorData);
+      throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    console.log('[apiStartSession] Success response:', result);
+    return result;
+  } catch (error) {
+    console.error('[apiStartSession] Request failed:', error);
+    throw error;
+  }
 };
 
 export const apiStartCalibration = (playerId) => 

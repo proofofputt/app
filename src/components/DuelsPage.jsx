@@ -171,9 +171,15 @@ const DuelsPage = () => {
 
     const handleSubmitSession = async (duel) => {
         try {
+            console.log('[DuelsPage] Starting duel session:', {
+                player_id: playerData.player_id,
+                duel_id: duel.duel_id,
+                time_limit: duel.time_limit_minutes
+            });
+            
             const response = await apiStartSession(playerData.player_id, duel.duel_id);
             
-            if (response.success && response.deep_link_url) {
+            if (response && response.success && response.deep_link_url) {
                 // Open the deep link to launch the desktop app with duel session
                 window.location.href = response.deep_link_url;
                 
@@ -182,11 +188,25 @@ const DuelsPage = () => {
                     false
                 );
             } else {
-                throw new Error(response.message || 'Failed to start duel session');
+                throw new Error(response?.message || 'Failed to start duel session');
             }
         } catch (err) {
             console.error('[DuelsPage] Failed to start duel session:', err);
-            showNotification(err.message || 'Failed to start duel session. Make sure the desktop app is installed.', true);
+            
+            // Enhanced error handling with desktop login guidance
+            let errorMessage = 'Failed to start duel session.';
+            
+            if (err.message.includes('Authentication required') || err.message.includes('access denied')) {
+                errorMessage = 'Session start failed due to authentication issues. Please ensure you are logged into the same account on both the web app and desktop app, then try again.';
+            } else if (err.message.includes('not found') || err.message.includes('500')) {
+                errorMessage = 'Unable to start session. Please make sure you are logged into the desktop app with the same account, then try again. If the issue persists, try restarting the desktop app.';
+            } else if (err.message.includes('network') || err.message.includes('fetch')) {
+                errorMessage = 'Network error starting session. Please check your connection and try again.';
+            } else {
+                errorMessage = `${err.message || 'Failed to start duel session'} Please ensure the desktop app is installed and you are logged in with the same account.`;
+            }
+            
+            showNotification(errorMessage, true);
         }
     };
 
