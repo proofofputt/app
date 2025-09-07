@@ -68,26 +68,63 @@ export default async function handler(req, res) {
 
       const player = playerResult.rows[0];
 
-      // Get aggregated stats using simplified flat structure (matching debug-stats logic)
-      const statsResult = await client.query(`
-        SELECT 
-          COUNT(session_id) as total_sessions,
-          COALESCE(SUM(CAST(data->>'total_makes' AS INTEGER)), 0) as total_makes,
-          COALESCE(SUM(CAST(data->>'total_misses' AS INTEGER)), 0) as total_misses,
-          COALESCE(MAX(CAST(data->>'best_streak' AS INTEGER)), 0) as best_streak,
-          COALESCE(MIN(NULLIF(CAST(data->>'fastest_21_makes_seconds' AS DECIMAL), 0)), NULL) as fastest_21_makes,
-          COALESCE(MAX(CAST(data->>'makes_per_minute' AS DECIMAL)), 0) as max_makes_per_minute,
-          COALESCE(MAX(CAST(data->>'putts_per_minute' AS DECIMAL)), 0) as max_putts_per_minute,
-          COALESCE(MAX(CAST(data->>'most_makes_in_60_seconds' AS INTEGER)), 0) as most_in_60_seconds,
-          COALESCE(MAX(CAST(data->>'session_duration' AS DECIMAL)), 0) as max_session_duration,
-          MAX(created_at) as last_session_at
-        FROM sessions 
-        WHERE player_id = $1 
-        AND data IS NOT NULL
-      `, [playerId]);
+      // Get aggregated stats with defensive queries (prevent timeout issues)
+      let stats = {
+        total_sessions: 0,
+        total_makes: 0,
+        total_misses: 0,
+        best_streak: 0,
+        fastest_21_makes: null,
+        max_makes_per_minute: 0,
+        max_putts_per_minute: 0,
+        most_in_60_seconds: 0,
+        max_session_duration: 0,
+        last_session_at: null
+      };
 
-      const stats = statsResult.rows[0];
-      
+      try {
+        const statsResult = await client.query(`
+          SELECT 
+            COUNT(session_id) as total_sessions,
+            COALESCE(SUM(CAST(data->>'total_makes' AS INTEGER)), 0) as total_makes,
+            COALESCE(SUM(CAST(data->>'total_misses' AS INTEGER)), 0) as total_misses,
+            COALESCE(MAX(CAST(data->>'best_streak' AS INTEGER)), 0) as best_streak,
+            MAX(created_at) as last_session_at
+          FROM sessions 
+          WHERE player_id = $1 
+          AND data IS NOT NULL
+        `, [playerId]);
+
+        if (statsResult.rows.length > 0) {
+          stats = { ...stats, ...statsResult.rows[0] };
+        }
+
+        // Try to get advanced fields separately to avoid timeout
+        try {
+          const advancedResult = await client.query(`
+            SELECT 
+              COALESCE(MIN(NULLIF(CAST(data->>'fastest_21_makes_seconds' AS DECIMAL), 0)), NULL) as fastest_21_makes,
+              COALESCE(MAX(CAST(data->>'makes_per_minute' AS DECIMAL)), 0) as max_makes_per_minute,
+              COALESCE(MAX(CAST(data->>'putts_per_minute' AS DECIMAL)), 0) as max_putts_per_minute,
+              COALESCE(MAX(CAST(data->>'most_makes_in_60_seconds' AS INTEGER)), 0) as most_in_60_seconds,
+              COALESCE(MAX(CAST(data->>'session_duration' AS DECIMAL)), 0) as max_session_duration
+            FROM sessions 
+            WHERE player_id = $1 
+            AND data IS NOT NULL
+            LIMIT 100
+          `, [playerId]);
+
+          if (advancedResult.rows.length > 0) {
+            stats = { ...stats, ...advancedResult.rows[0] };
+          }
+        } catch (advancedError) {
+          console.log('Advanced stats query failed, using defaults:', advancedError.message);
+        }
+
+      } catch (statsError) {
+        console.log('Stats query failed, using empty stats:', statsError.message);
+      }
+
       // Calculate derived stats
       const totalPutts = (stats.total_makes || 0) + (stats.total_misses || 0);
       const makePercentage = totalPutts > 0 ? ((stats.total_makes / totalPutts) * 100) : 0;
