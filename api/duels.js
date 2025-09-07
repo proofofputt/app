@@ -84,7 +84,12 @@ async function handleGetDuels(req, res) {
       // Parse settings and rules to extract time limit
       const settings = duel.settings || {};
       const rules = duel.rules || {};
-      const timeLimit = settings.time_limit_minutes || rules.time_limit_minutes || settings.time_limit || rules.time_limit || null;
+      const timeLimit = settings.session_duration_limit_minutes || 
+                       settings.time_limit_minutes || 
+                       rules.time_limit_minutes || 
+                       settings.time_limit || 
+                       rules.time_limit || 
+                       null;
       
       // Debug time limit extraction
       if (duel.duel_id) {

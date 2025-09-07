@@ -81,7 +81,15 @@ export default async function handler(req, res) {
         }
 
         const duel = duelResult.rows[0];
-        timeLimit = duel.time_limit_minutes;
+        // Extract time limit from settings or rules
+        const settings = duel.settings || {};
+        const rules = duel.rules || {};
+        timeLimit = settings.session_duration_limit_minutes || 
+                   settings.time_limit_minutes || 
+                   rules.time_limit_minutes || 
+                   settings.time_limit || 
+                   rules.time_limit || 
+                   null;
         sessionMetadata.duel_id = duel_id;
       } 
       else if (league_round_id) {
@@ -139,18 +147,26 @@ export default async function handler(req, res) {
         sessionMetadata.league_id = round.league_id;
       }
 
-      // Create session record
+      // Create session record - using the correct sessions table schema
+      const sessionData = {
+        session_type: sessionType,
+        duel_id: duel_id,
+        league_round_id: league_round_id,
+        time_limit_minutes: timeLimit,
+        status: 'active',
+        ...sessionMetadata
+      };
+      
       console.log('[start-session] Creating session with:', {
         player_id,
-        status: 'active',
-        metadata: sessionMetadata,
+        sessionData,
         sessionType,
         timeLimit
       });
       
       const sessionResult = await client.query(
-        'INSERT INTO sessions (player_id, status, metadata, created_at) VALUES ($1, $2, $3, $4) RETURNING session_id',
-        [player_id, 'active', JSON.stringify(sessionMetadata), new Date()]
+        'INSERT INTO sessions (player_id, data, created_at, updated_at) VALUES ($1, $2, $3, $4) RETURNING session_id',
+        [player_id, JSON.stringify(sessionData), new Date(), new Date()]
       );
       
       console.log('[start-session] Session created successfully:', sessionResult.rows[0]);
