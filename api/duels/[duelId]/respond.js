@@ -117,15 +117,30 @@ export default async function handler(req, res) {
 
     // Update the duel status
     const newStatus = response === 'accepted' ? 'active' : 'declined';
-    const updateResult = await client.query(`
-      UPDATE duels 
-      SET 
-        status = $1,
-        accepted_at = CASE WHEN $1 = 'active' THEN NOW() ELSE NULL END,
-        updated_at = NOW()
-      WHERE duel_id = $2
-      RETURNING duel_id, status, accepted_at
-    `, [newStatus, duelIdInt]);
+    
+    // Use separate queries to avoid parameter type issues with CASE statement
+    let updateResult;
+    if (response === 'accepted') {
+      updateResult = await client.query(`
+        UPDATE duels 
+        SET 
+          status = $1,
+          accepted_at = NOW(),
+          updated_at = NOW()
+        WHERE duel_id = $2
+        RETURNING duel_id, status, accepted_at
+      `, [newStatus, duelIdInt]);
+    } else {
+      updateResult = await client.query(`
+        UPDATE duels 
+        SET 
+          status = $1,
+          accepted_at = NULL,
+          updated_at = NOW()
+        WHERE duel_id = $2
+        RETURNING duel_id, status, accepted_at
+      `, [newStatus, duelIdInt]);
+    }
 
     const updatedDuel = updateResult.rows[0];
 
