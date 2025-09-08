@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNavigate } from 'react-router-dom';
-import { apiUpdateLeagueSettings, apiDeleteLeague } from '../api.js';
+import { apiUpdateLeagueSettings, apiDeleteLeague, apiStartLeague } from '../api.js';
 
 const EditLeagueModal = ({ league, onClose, onLeagueUpdated }) => {
   const { playerData } = useAuth();
@@ -50,6 +50,20 @@ const EditLeagueModal = ({ league, onClose, onLeagueUpdated }) => {
     }
   };
 
+  const handleStartLeague = async () => {
+    setError('');
+    setIsLoading(true);
+    
+    try {
+      await apiStartLeague(league.league_id);
+      onLeagueUpdated(); // This will refresh the league data and show the rounds
+    } catch (err) {
+      setError(err.message || 'Failed to start league.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="modal-backdrop">
       <div className="modal-content">
@@ -79,6 +93,17 @@ const EditLeagueModal = ({ league, onClose, onLeagueUpdated }) => {
           {!showDeleteConfirm ? (
             <div className="modal-actions">
               <div className="modal-actions-left">
+                {league.status === 'setup' && (
+                  <button 
+                    type="button" 
+                    className="btn-primary" 
+                    onClick={handleStartLeague} 
+                    disabled={isLoading}
+                    style={{ marginRight: '0.5rem' }}
+                  >
+                    {isLoading ? 'Starting...' : 'Start League'}
+                  </button>
+                )}
                 <button 
                   type="button" 
                   className="btn-danger" 

@@ -245,6 +245,9 @@ export const apiRespondToLeagueInvite = (inviteId, playerId, action) =>
 export const apiUpdateLeagueSettings = (leagueId, editorId, settings) => 
   fetch(`${API_BASE_URL}/leagues/${leagueId}/settings`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify({ editor_id: editorId, settings }) }).then(handleResponse);
 
+export const apiStartLeague = (leagueId) => 
+  fetch(`${API_BASE_URL}/leagues/${leagueId}/start`, { method: 'POST', headers: getHeaders() }).then(handleResponse);
+
 export const apiDeleteLeague = (leagueId, deleterId) => 
   fetch(`${API_BASE_URL}/leagues/${leagueId}`, { method: 'DELETE', headers: getHeaders(), body: JSON.stringify({ deleter_id: deleterId }) }).then(handleResponse);
 
