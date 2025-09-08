@@ -70,8 +70,9 @@ const DuelRow = ({ duel, onRespond, onSubmitSession, currentUserId }) => {
                 <button 
                     onClick={() => onSubmitSession(duel)} 
                     className="btn btn-sm btn-primary"
+                    title="Copy parameters to paste into desktop app"
                 >
-                    Submit Session
+                    Copy Parameters
                 </button>
             );
         }
@@ -168,42 +169,58 @@ const DuelsPage = () => {
 
     const handleSubmitSession = async (duel) => {
         try {
-            console.log('[DuelsPage] Starting duel session:', {
+            console.log('[DuelsPage] Generating duel parameters:', {
                 player_id: playerData.player_id,
                 duel_id: duel.duel_id,
                 time_limit: duel.time_limit_minutes
             });
             
-            const response = await apiStartSession(playerData.player_id, duel.duel_id);
+            // Generate parameter string for manual entry
+            const parameters = [
+                `duel=${duel.duel_id}`,
+                duel.time_limit_minutes ? `time_limit=${duel.time_limit_minutes}` : null,
+                'scoring=total_makes'
+            ].filter(Boolean).join(',');
             
-            if (response && response.success && response.deep_link_url) {
-                // Open the deep link to launch the desktop app with duel session
-                window.location.href = response.deep_link_url;
-                
+            // Copy to clipboard
+            try {
+                await navigator.clipboard.writeText(parameters);
                 showNotification(
-                    `Starting duel session with ${duel.time_limit_minutes ? duel.time_limit_minutes + ' minute' : 'no'} time limit. Desktop app should launch automatically.`,
+                    `✅ Parameters copied to clipboard: "${parameters}". Paste this into the desktop app's parameter input field.`,
                     false
                 );
-            } else {
-                throw new Error(response?.message || 'Failed to start duel session');
+            } catch (clipboardErr) {
+                // Fallback for browsers that don't support clipboard API
+                console.warn('Clipboard API not available, showing parameter string:', clipboardErr);
+                
+                // Create a temporary textarea to select and copy
+                const textarea = document.createElement('textarea');
+                textarea.value = parameters;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    showNotification(
+                        `✅ Parameters copied: "${parameters}". Paste this into the desktop app's parameter input field.`,
+                        false
+                    );
+                } catch (copyErr) {
+                    // Final fallback - show the parameters for manual copying
+                    showNotification(
+                        `📋 Copy these parameters manually: "${parameters}". Paste them into the desktop app's parameter input field.`,
+                        false
+                    );
+                } finally {
+                    document.body.removeChild(textarea);
+                }
             }
+            
         } catch (err) {
-            console.error('[DuelsPage] Failed to start duel session:', err);
-            
-            // Enhanced error handling with desktop login guidance
-            let errorMessage = 'Failed to start duel session.';
-            
-            if (err.message.includes('Authentication required') || err.message.includes('access denied')) {
-                errorMessage = 'Session start failed due to authentication issues. Please ensure you are logged into the same account on both the web app and desktop app, then try again.';
-            } else if (err.message.includes('not found') || err.message.includes('500')) {
-                errorMessage = 'Unable to start session. Please make sure you are logged into the desktop app with the same account, then try again. If the issue persists, try restarting the desktop app.';
-            } else if (err.message.includes('network') || err.message.includes('fetch')) {
-                errorMessage = 'Network error starting session. Please check your connection and try again.';
-            } else {
-                errorMessage = `${err.message || 'Failed to start duel session'} Please ensure the desktop app is installed and you are logged in with the same account.`;
-            }
-            
-            showNotification(errorMessage, true);
+            console.error('[DuelsPage] Failed to generate duel parameters:', err);
+            showNotification('❌ Failed to generate parameters. Please try again.', true);
         }
     };
 

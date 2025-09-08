@@ -70,33 +70,62 @@ const LeagueDetailPage = () => {
 
   const handleStartLeagueSession = useCallback(async (roundId) => {
     try {
-      // The first argument is playerId, second is duelId (null), third is leagueRoundId
-      const response = await apiStartSession(playerData.player_id, null, roundId);
+      console.log('[LeagueDetailPage] Generating league round parameters:', {
+        player_id: playerData.player_id,
+        round_id: roundId,
+        league_name: league?.name,
+        time_limit: league?.settings?.time_limit_minutes
+      });
       
-      // If successful response includes deep link, try to open it
-      if (response.deep_link_url) {
+      // Generate parameter string for manual entry
+      const parameters = [
+        `league_round=${roundId}`,
+        league?.name ? `league=${league.name}` : null,
+        league?.settings?.time_limit_minutes ? `time_limit=${league.settings.time_limit_minutes}` : null,
+        'target=50_putts'
+      ].filter(Boolean).join(',');
+      
+      // Copy to clipboard
+      try {
+        await navigator.clipboard.writeText(parameters);
+        showNotification(
+          `✅ League round parameters copied to clipboard: "${parameters}". Paste this into the desktop app's parameter input field.`,
+          false
+        );
+      } catch (clipboardErr) {
+        // Fallback for browsers that don't support clipboard API
+        console.warn('Clipboard API not available, showing parameter string:', clipboardErr);
+        
+        // Create a temporary textarea to select and copy
+        const textarea = document.createElement('textarea');
+        textarea.value = parameters;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        
         try {
-          window.location.href = response.deep_link_url;
-        } catch (e) {
-          console.warn('Failed to open deep link directly:', e);
-          // Fallback: create a temporary link and click it
-          const link = document.createElement('a');
-          link.href = response.deep_link_url;
-          link.style.display = 'none';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
+          document.execCommand('copy');
+          showNotification(
+            `✅ League round parameters copied: "${parameters}". Paste this into the desktop app's parameter input field.`,
+            false
+          );
+        } catch (copyErr) {
+          // Final fallback - show the parameters for manual copying
+          showNotification(
+            `📋 Copy these league parameters manually: "${parameters}". Paste them into the desktop app's parameter input field.`,
+            false
+          );
+        } finally {
+          document.body.removeChild(textarea);
         }
       }
       
-      showNotification(response.message || 'League session started. Check desktop application.');
-      
-      // Refresh league details to update submission status
-      fetchLeagueDetails();
     } catch (err) {
-      showNotification(`Failed to start league session: ${err.message}`, true);
+      console.error('[LeagueDetailPage] Failed to generate league parameters:', err);
+      showNotification('❌ Failed to generate parameters. Please try again.', true);
     }
-  }, [playerData, showNotification, fetchLeagueDetails]);
+  }, [playerData, showNotification, league]);
 
   const handleInvitePlayer = useCallback(async (inviteeId) => {
     try {
@@ -413,7 +442,7 @@ const LeagueDetailPage = () => {
                             <CountdownTimer endTime={round.end_time} />
                             {isMember ? (
                               !hasSubmitted ? (
-                                <button onClick={() => handleStartLeagueSession(round.round_id)} className="btn btn-small">Start</button>
+                                <button onClick={() => handleStartLeagueSession(round.round_id)} className="btn btn-small" title="Copy parameters to paste into desktop app">Copy Parameters</button>
                               ) : (
                                 <span className="status-badge status-completed">Submitted</span>
                               )
