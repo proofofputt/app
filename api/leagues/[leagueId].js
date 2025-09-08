@@ -60,7 +60,7 @@ export default async function handler(req, res) {
         l.created_by,
         l.rules,
         creator.name as creator_name,
-        (SELECT COUNT(*) FROM league_memberships WHERE league_id = l.league_id AND is_active = true) as member_count
+        (SELECT COUNT(*) FROM league_memberships WHERE league_id = l.league_id) as member_count
       FROM leagues l
       JOIN players creator ON l.created_by = creator.player_id
       WHERE l.league_id = $1
@@ -78,11 +78,10 @@ export default async function handler(req, res) {
         p.player_id,
         p.name,
         lm.joined_at,
-        lm.member_role,
-        lm.is_active
+        lm.member_role
       FROM league_memberships lm
       JOIN players p ON lm.player_id = p.player_id
-      WHERE lm.league_id = $1 AND lm.is_active = true
+      WHERE lm.league_id = $1
       ORDER BY lm.joined_at ASC
     `, [leagueIdInt]);
 
@@ -127,8 +126,9 @@ export default async function handler(req, res) {
       time_limit_minutes: 60,
       num_rounds: 4,
       round_duration_hours: 168,
-      allow_late_joiners: false,
-      allow_player_invites: false
+      allow_late_joiners: true, // Default to true for better participation - matches creation API
+      allow_player_invites: false,
+      allow_catch_up_submissions: true // Default to allowing catch-up for better continuity
     };
 
     // Merge with actual rules if they exist

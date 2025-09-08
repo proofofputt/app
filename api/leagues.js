@@ -173,6 +173,7 @@ async function handleCreateLeague(req, res, client) {
     scoring_type: 'total_makes',
     allow_late_joiners: true,
     allow_player_invites: true,
+    allow_catch_up_submissions: true, // Default to allowing catch-up for better continuity
     ...settings
   };
 

@@ -11,6 +11,8 @@ const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
   const [roundDuration, setRoundDuration] = useState(168);
   const [timeLimit, setTimeLimit] = useState(15);
   const [allowPlayerInvites, setAllowPlayerInvites] = useState(true);
+  const [allowLateJoiners, setAllowLateJoiners] = useState(true);
+  const [allowCatchUpSubmissions, setAllowCatchUpSubmissions] = useState(true);
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 16)); // YYYY-MM-DDTHH:MM
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +33,9 @@ const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
           num_rounds: parseInt(numRounds, 10),
           round_duration_hours: parseInt(roundDuration, 10),
           time_limit_minutes: parseInt(timeLimit, 10),
-          allow_player_invites: privacy === 'private' ? allowPlayerInvites : false,
+          allow_player_invites: allowPlayerInvites,
+          allow_late_joiners: allowLateJoiners,
+          allow_catch_up_submissions: allowCatchUpSubmissions,
         },
       };
       await apiCreateLeague(leagueData);
@@ -70,32 +74,26 @@ const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
           </div>
           <div className="form-group">
             <label>Privacy</label>
-            <div className="privacy-options">
-              <label>
-                <input
-                  type="radio"
-                  value="private"
-                  checked={privacy === 'private'}
-                  onChange={() => {
-                    setPrivacy('private');
-                    setAllowPlayerInvites(true); // Default to true for private
-                  }}
-                />
+            <div className="privacy-toggle-group">
+              <button
+                type="button"
+                className={`privacy-toggle-btn ${privacy === 'private' ? 'active' : ''}`}
+                onClick={() => setPrivacy('private')}
+              >
                 Private
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  value="public"
-                  checked={privacy === 'public'}
-                  onChange={() => {
-                    setPrivacy('public');
-                    setAllowPlayerInvites(false); // Force false for public
-                  }}
-                />
+              </button>
+              <button
+                type="button"
+                className={`privacy-toggle-btn ${privacy === 'public' ? 'active' : ''}`}
+                onClick={() => setPrivacy('public')}
+              >
                 Public
-              </label>
+              </button>
             </div>
+            <small className="form-help">
+              <strong>Public:</strong> League and results visible to everyone, anyone can join.<br/>
+              <strong>Private:</strong> League and results only visible to members.
+            </small>
           </div>
           <div className="form-group">
             <label>
@@ -103,10 +101,32 @@ const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
                 type="checkbox"
                 checked={allowPlayerInvites}
                 onChange={(e) => setAllowPlayerInvites(e.target.checked)}
-                disabled={privacy === 'public'}
               />
-              Allow members to invite others (Private Leagues Only)
+              Allow members to invite others
             </label>
+            <small className="form-help">When disabled, only the league administrator can invite new players.</small>
+          </div>
+          <div className="form-group">
+            <label>
+              <input
+                type="checkbox"
+                checked={allowLateJoiners}
+                onChange={(e) => setAllowLateJoiners(e.target.checked)}
+              />
+              Allow late joiners after league starts
+            </label>
+            <small className="form-help">When enabled, players can join the league even after it has started. Disable to require registration before the first round begins.</small>
+          </div>
+          <div className="form-group">
+            <label>
+              <input
+                type="checkbox"
+                checked={allowCatchUpSubmissions}
+                onChange={(e) => setAllowCatchUpSubmissions(e.target.checked)}
+              />
+              Allow catch-up submissions for previous rounds
+            </label>
+            <small className="form-help">When enabled, players can complete earlier rounds even after missing deadlines. Disable for strict tournament timing.</small>
           </div>
           <div className="form-group">
             <label htmlFor="start-date">Start Date and Time</label>

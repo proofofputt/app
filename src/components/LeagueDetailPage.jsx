@@ -286,8 +286,7 @@ const LeagueDetailPage = () => {
 
   const isMember = league.members && league.members.some(m => m.player_id === playerData.player_id);
   const canInvite = league.creator_id === playerData.player_id ||
-    (isMember && league.privacy_type === 'public') ||
-    (isMember && league.settings && league.settings.allow_player_invites);
+    (isMember && league.settings?.allow_player_invites);
   const canJoin = !isMember &&
     league.privacy_type === 'public' &&
     (league.status === 'registering' || (league.status === 'active' && league.settings && league.settings.allow_late_joiners));
@@ -393,6 +392,10 @@ const LeagueDetailPage = () => {
                 <td>Player Invites</td>
                 <td>{league.settings?.allow_player_invites ? 'Allowed' : 'Not Allowed'}</td>
               </tr>
+              <tr>
+                <td>Catch-up Submissions</td>
+                <td>{league.settings?.allow_catch_up_submissions !== false ? 'Allowed' : 'Strict Timing'}</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -430,6 +433,11 @@ const LeagueDetailPage = () => {
                   const hasSubmitted = playerHasSubmittedForRound(round);
                   const displayStatus = round.status === 'active' && isRoundOver(round) ? 'completed' : round.status;
                   const roundSubmissions = new Map((round.submissions || []).map(s => [s.player_id, s]));
+                  const isRoundStarted = new Date(round.start_time) <= new Date();
+                  const allowCatchUp = league.settings?.allow_catch_up_submissions !== false; // Default to true if undefined
+                  const canParticipate = isMember && isRoundStarted && !hasSubmitted && 
+                    (displayStatus === 'active' || (allowCatchUp && displayStatus === 'completed'));
+                  
                   return (
                     <tr key={round.round_id}>
                       <td className="sort-column"><button className="sort-button" onClick={() => handleSort('round', round.round_id)}>sort</button></td>
@@ -446,21 +454,24 @@ const LeagueDetailPage = () => {
                               <span className={`status-badge status-${displayStatus}`}>{displayStatus}</span>
                             </>
                           )}
-                          {displayStatus === 'active' && (
+                          {(displayStatus === 'active' || displayStatus === 'completed') && (
                             <>
-                              <CountdownTimer endTime={round.end_time} />
+                              {displayStatus === 'active' && <CountdownTimer endTime={round.end_time} />}
                               {isMember ? (
-                                !hasSubmitted ? (
+                                canParticipate ? (
                                   <button onClick={() => handleStartLeagueSession(round.round_id)} className="btn btn-small" title="Copy parameters to paste into desktop app">Copy Parameters</button>
-                                ) : (
+                                ) : hasSubmitted ? (
                                   <span className="status-badge status-completed">Submitted</span>
+                                ) : !isRoundStarted ? (
+                                  <span className="status-badge status-scheduled">Scheduled</span>
+                                ) : (
+                                  <span className="status-badge status-completed">Round Closed</span>
                                 )
                               ) : (
-                                <span className="status-badge status-active">Active</span>
+                                <span className={`status-badge status-${displayStatus}`}>{displayStatus}</span>
                               )}
                             </>
                           )}
-                          {displayStatus === 'completed' && <span className={`status-badge status-completed`}>completed</span>}
                         </div>
                       </td>
                       {sortedMembers.map(member => {

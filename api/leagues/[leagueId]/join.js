@@ -97,7 +97,23 @@ export default async function handler(req, res) {
     }
 
     // Check if league is accepting new members
-    if (!['setup', 'registering', 'active'].includes(league.status)) {
+    const allowedStatuses = ['setup', 'registering'];
+    const allowLateJoiners = rules.allow_late_joiners !== false; // Default to true if undefined
+    
+    if (league.status === 'active' && !allowLateJoiners) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'This league does not allow late joiners. Players must join before the league starts.',
+        league_status: league.status,
+        allow_late_joiners: allowLateJoiners
+      });
+    }
+    
+    if (league.status === 'active' && allowLateJoiners) {
+      allowedStatuses.push('active');
+    }
+    
+    if (!allowedStatuses.includes(league.status)) {
       return res.status(400).json({ 
         success: false, 
         message: `Cannot join league with status: ${league.status}` 
