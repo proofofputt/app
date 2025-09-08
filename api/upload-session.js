@@ -169,7 +169,7 @@ export default async function handler(req, res) {
         
         // Check if duel exists and player is part of it
         const duelResult = await client.query(
-          'SELECT duel_id, challenger_id, challenged_id, status, challenger_session_id, challenged_session_id FROM duels WHERE duel_id = $1 AND (challenger_id = $2 OR challenged_id = $2)',
+          'SELECT duel_id, duel_creator_id, duel_invited_player_id, status, duel_creator_session_id, duel_invited_player_session_id FROM duels WHERE duel_id = $1 AND (duel_creator_id = $2 OR duel_invited_player_id = $2)',
           [duel_id, player_id]
         );
         
@@ -177,11 +177,11 @@ export default async function handler(req, res) {
           const duel = duelResult.rows[0];
           
           // Determine which session field to update
-          const isChallenger = duel.challenger_id === parseInt(player_id);
-          const sessionField = isChallenger ? 'challenger_session_id' : 'challenged_session_id';
+          const isCreator = duel.duel_creator_id === parseInt(player_id);
+          const sessionField = isCreator ? 'duel_creator_session_id' : 'duel_invited_player_session_id';
           
           // Check if player has already submitted a session
-          const existingSessionId = isChallenger ? duel.challenger_session_id : duel.challenged_session_id;
+          const existingSessionId = isCreator ? duel.duel_creator_session_id : duel.duel_invited_player_session_id;
           if (existingSessionId) {
             console.log(`[upload-session] Warning: Player ${player_id} already has session ${existingSessionId} for duel ${duel_id}. Updating to ${finalSessionId}.`);
           }
@@ -194,25 +194,25 @@ export default async function handler(req, res) {
           
           // Check if both players have now submitted sessions
           const updatedDuelResult = await client.query(
-            'SELECT challenger_session_id, challenged_session_id, challenger_id, challenged_id FROM duels WHERE duel_id = $1',
+            'SELECT duel_creator_session_id, duel_invited_player_session_id, duel_creator_id, duel_invited_player_id FROM duels WHERE duel_id = $1',
             [duel_id]
           );
           
           const updatedDuel = updatedDuelResult.rows[0];
-          if (updatedDuel.challenger_session_id && updatedDuel.challenged_session_id) {
+          if (updatedDuel.duel_creator_session_id && updatedDuel.duel_invited_player_session_id) {
             console.log(`[upload-session] Both players have submitted sessions for duel ${duel_id}. Triggering automatic scoring.`);
             
             // Get both session data for scoring
             const sessionsResult = await client.query(`
               SELECT 
-                cs.data as challenger_session_data,
-                chs.data as challenged_session_data,
+                cs.data as creator_session_data,
+                chs.data as invited_player_session_data,
                 d.rules,
-                d.challenger_id,
-                d.challenged_id
+                d.duel_creator_id,
+                d.duel_invited_player_id
               FROM duels d
-              LEFT JOIN sessions cs ON d.challenger_session_id = cs.session_id
-              LEFT JOIN sessions chs ON d.challenged_session_id = chs.session_id
+              LEFT JOIN sessions cs ON d.duel_creator_session_id = cs.session_id
+              LEFT JOIN sessions chs ON d.duel_invited_player_session_id = chs.session_id
               WHERE d.duel_id = $1
             `, [duel_id]);
             
@@ -221,14 +221,14 @@ export default async function handler(req, res) {
               
               // Score the duel using the same logic as duels-v2
               const winner = scoreDuelSessions(
-                duelData.challenger_session_data,
-                duelData.challenged_session_data,
+                duelData.creator_session_data,
+                duelData.invited_player_session_data,
                 duelData.rules || {}
               );
               
               let winnerId = null;
-              if (winner === 'challenger') winnerId = duelData.challenger_id;
-              else if (winner === 'challenged') winnerId = duelData.challenged_id;
+              if (winner === 'challenger') winnerId = duelData.duel_creator_id;
+              else if (winner === 'challenged') winnerId = duelData.duel_invited_player_id;
               // winnerId remains null for ties
               
               // Update duel with results
@@ -247,7 +247,7 @@ export default async function handler(req, res) {
             }
           }
           
-          console.log(`[upload-session] Successfully linked session ${finalSessionId} to duel ${duel_id} as ${isChallenger ? 'challenger' : 'challenged'}`);
+          console.log(`[upload-session] Successfully linked session ${finalSessionId} to duel ${duel_id} as ${isCreator ? 'creator' : 'invited_player'}`);
         } else {
           console.log(`[upload-session] Warning: Duel ${duel_id} not found or player ${player_id} is not part of it`);
         }

@@ -100,16 +100,16 @@ export default async function handler(req, res) {
       let query = `
         SELECT 
           d.*,
-          challenger.display_name as challenger_name,
-          challenged.display_name as challenged_name,
-          cs.data as challenger_session_data,
-          chs.data as challenged_session_data
+          creator.display_name as creator_name,
+          invited.display_name as invited_player_name,
+          cs.data as creator_session_data,
+          chs.data as invited_player_session_data
         FROM duels d
-        LEFT JOIN users challenger ON d.challenger_id = challenger.id
-        LEFT JOIN users challenged ON d.challenged_id = challenged.id
-        LEFT JOIN sessions cs ON d.challenger_session_id = cs.session_id
-        LEFT JOIN sessions chs ON d.challenged_session_id = chs.session_id
-        WHERE d.challenger_id = $1 OR d.challenged_id = $1
+        LEFT JOIN users creator ON d.duel_creator_id = creator.id
+        LEFT JOIN users invited ON d.duel_invited_player_id = invited.id
+        LEFT JOIN sessions cs ON d.duel_creator_session_id = cs.session_id
+        LEFT JOIN sessions chs ON d.duel_invited_player_session_id = chs.session_id
+        WHERE d.duel_creator_id = $1 OR d.duel_invited_player_id = $1
       `;
       
       let queryParams = [playerId];
@@ -130,19 +130,19 @@ export default async function handler(req, res) {
       
       const duels = result.rows.map(row => ({
         duel_id: row.duel_id,
-        challenger_id: row.challenger_id,
-        challenged_id: row.challenged_id,
-        challenger_name: row.challenger_name || `Player ${row.challenger_id}`,
-        challenged_name: row.challenged_name || `Player ${row.challenged_id}`,
+        duel_creator_id: row.duel_creator_id,
+        duel_invited_player_id: row.duel_invited_player_id,
+        creator_name: row.creator_name || `Player ${row.duel_creator_id}`,
+        invited_player_name: row.invited_player_name || `Player ${row.duel_invited_player_id}`,
         status: row.status,
         rules: row.rules,
         winner_id: row.winner_id,
         started_at: row.started_at,
         completed_at: row.completed_at,
         created_at: row.created_at,
-        is_challenger: row.challenger_id === playerId,
-        has_submitted: row.challenger_id === playerId ? !!row.challenger_session_id : !!row.challenged_session_id,
-        opponent_submitted: row.challenger_id === playerId ? !!row.challenged_session_id : !!row.challenger_session_id,
+        is_creator: row.duel_creator_id === playerId,
+        has_submitted: row.duel_creator_id === playerId ? !!row.duel_creator_session_id : !!row.duel_invited_player_session_id,
+        opponent_submitted: row.duel_creator_id === playerId ? !!row.duel_invited_player_session_id : !!row.duel_creator_session_id,
         expired: isDuelExpired(row)
       }));
 
@@ -154,20 +154,20 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      const { challenged_id, rules = {} } = req.body;
+      const { invited_player_id, rules = {} } = req.body;
       
-      if (!challenged_id) {
-        return res.status(400).json({ success: false, message: 'challenged_id is required' });
+      if (!invited_player_id) {
+        return res.status(400).json({ success: false, message: 'invited_player_id is required' });
       }
       
-      if (challenged_id === playerId) {
+      if (invited_player_id === playerId) {
         return res.status(400).json({ success: false, message: 'Cannot challenge yourself' });
       }
       
-      // Check if challenged player exists
-      const userCheck = await client.query('SELECT id FROM users WHERE id = $1', [challenged_id]);
+      // Check if invited player exists
+      const userCheck = await client.query('SELECT id FROM users WHERE id = $1', [invited_player_id]);
       if (userCheck.rows.length === 0) {
-        return res.status(404).json({ success: false, message: 'Challenged player not found' });
+        return res.status(404).json({ success: false, message: 'Invited player not found' });
       }
       
       // Set default rules
@@ -184,10 +184,10 @@ export default async function handler(req, res) {
       
       // Create duel
       const insertResult = await client.query(`
-        INSERT INTO duels (challenger_id, challenged_id, status, rules, created_at, updated_at)
+        INSERT INTO duels (duel_creator_id, duel_invited_player_id, status, rules, created_at, updated_at)
         VALUES ($1, $2, $3, $4, NOW(), NOW())
         RETURNING duel_id, created_at
-      `, [playerId, challenged_id, 'pending', JSON.stringify(defaultRules)]);
+      `, [playerId, invited_player_id, 'pending', JSON.stringify(defaultRules)]);
       
       const duelId = insertResult.rows[0].duel_id;
       
@@ -196,8 +196,8 @@ export default async function handler(req, res) {
         message: 'Duel challenge created successfully',
         duel: {
           duel_id: duelId,
-          challenger_id: playerId,
-          challenged_id: challenged_id,
+          duel_creator_id: playerId,
+          duel_invited_player_id: invited_player_id,
           status: 'pending',
           rules: defaultRules,
           created_at: insertResult.rows[0].created_at
@@ -215,10 +215,10 @@ export default async function handler(req, res) {
       
       // Get duel details
       const duelResult = await client.query(`
-        SELECT d.*, cs.data as challenger_session_data, chs.data as challenged_session_data
+        SELECT d.*, cs.data as creator_session_data, chs.data as invited_player_session_data
         FROM duels d
-        LEFT JOIN sessions cs ON d.challenger_session_id = cs.session_id
-        LEFT JOIN sessions chs ON d.challenged_session_id = chs.session_id
+        LEFT JOIN sessions cs ON d.duel_creator_session_id = cs.session_id
+        LEFT JOIN sessions chs ON d.duel_invited_player_session_id = chs.session_id
         WHERE d.duel_id = $1
       `, [duelId]);
       
@@ -229,14 +229,14 @@ export default async function handler(req, res) {
       const duel = duelResult.rows[0];
       
       // Check if player is part of this duel
-      if (duel.challenger_id !== playerId && duel.challenged_id !== playerId) {
+      if (duel.duel_creator_id !== playerId && duel.duel_invited_player_id !== playerId) {
         return res.status(403).json({ success: false, message: 'Not authorized for this duel' });
       }
       
       if (action === 'accept') {
-        // Only challenged player can accept
-        if (duel.challenged_id !== playerId) {
-          return res.status(403).json({ success: false, message: 'Only the challenged player can accept' });
+        // Only invited player can accept
+        if (duel.duel_invited_player_id !== playerId) {
+          return res.status(403).json({ success: false, message: 'Only the invited player can accept' });
         }
         
         if (duel.status !== 'pending') {
@@ -280,11 +280,11 @@ export default async function handler(req, res) {
           return res.status(404).json({ success: false, message: 'Session not found or does not belong to player' });
         }
         
-        const isChallenger = duel.challenger_id === playerId;
-        const sessionField = isChallenger ? 'challenger_session_id' : 'challenged_session_id';
+        const isCreator = duel.duel_creator_id === playerId;
+        const sessionField = isCreator ? 'duel_creator_session_id' : 'duel_invited_player_session_id';
         
         // Check if player already submitted
-        if (isChallenger && duel.challenger_session_id || !isChallenger && duel.challenged_session_id) {
+        if (isCreator && duel.duel_creator_session_id || !isCreator && duel.duel_invited_player_session_id) {
           return res.status(400).json({ success: false, message: 'Session already submitted for this duel' });
         }
         
@@ -296,26 +296,26 @@ export default async function handler(req, res) {
         
         // Check if both players have submitted
         const updatedDuelResult = await client.query(`
-          SELECT d.*, cs.data as challenger_session_data, chs.data as challenged_session_data
+          SELECT d.*, cs.data as creator_session_data, chs.data as invited_player_session_data
           FROM duels d
-          LEFT JOIN sessions cs ON d.challenger_session_id = cs.session_id
-          LEFT JOIN sessions chs ON d.challenged_session_id = chs.session_id
+          LEFT JOIN sessions cs ON d.duel_creator_session_id = cs.session_id
+          LEFT JOIN sessions chs ON d.duel_invited_player_session_id = chs.session_id
           WHERE d.duel_id = $1
         `, [duelId]);
         
         const updatedDuel = updatedDuelResult.rows[0];
         
-        if (updatedDuel.challenger_session_id && updatedDuel.challenged_session_id) {
+        if (updatedDuel.duel_creator_session_id && updatedDuel.duel_invited_player_session_id) {
           // Both submitted - score the duel
           const winner = scoreDuel(
-            updatedDuel.challenger_session_data,
-            updatedDuel.challenged_session_data,
+            updatedDuel.creator_session_data,
+            updatedDuel.invited_player_session_data,
             updatedDuel.rules
           );
           
           let winnerId = null;
-          if (winner === 'challenger') winnerId = updatedDuel.challenger_id;
-          else if (winner === 'challenged') winnerId = updatedDuel.challenged_id;
+          if (winner === 'challenger') winnerId = updatedDuel.duel_creator_id;
+          else if (winner === 'challenged') winnerId = updatedDuel.duel_invited_player_id;
           // winnerId remains null for ties
           
           await client.query(`
@@ -377,7 +377,7 @@ export default async function handler(req, res) {
       const duel = duelResult.rows[0];
       
       // Check if player can cancel this duel
-      if (duel.challenger_id !== playerId && duel.challenged_id !== playerId) {
+      if (duel.duel_creator_id !== playerId && duel.duel_invited_player_id !== playerId) {
         return res.status(403).json({ success: false, message: 'Not authorized for this duel' });
       }
       
