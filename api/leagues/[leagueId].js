@@ -59,7 +59,6 @@ export default async function handler(req, res) {
         l.created_at,
         l.created_by,
         l.rules,
-        l.started_at,
         creator.name as creator_name,
         (SELECT COUNT(*) FROM league_memberships WHERE league_id = l.league_id AND is_active = true) as member_count
       FROM leagues l
@@ -155,7 +154,7 @@ export default async function handler(req, res) {
       created_by: league.created_by,
       creator_id: league.created_by,
       creator_name: league.creator_name,
-      start_time: league.started_at,
+      start_time: null,
       settings: settings,
       member_count: parseInt(league.member_count),
       members: membersResult.rows || [],
