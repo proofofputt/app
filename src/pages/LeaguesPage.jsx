@@ -2,35 +2,61 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNotification } from '../context/NotificationContext.jsx';
-import { apiListLeagues, apiJoinLeague, apiRespondToLeagueInvite } from '../api.js';
+import { apiListLeagues, apiRespondToLeagueInvite } from '../api.js';
 import CreateLeagueModal from '../components/CreateLeagueModal.jsx';
 import './Leagues.css';
  
+// Helper function to format date and time
+const formatDateTime = (dateString) => {
+  if (!dateString) return 'N/A';
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(new Date(dateString));
+  } catch (e) { 
+    return 'N/A'; 
+  }
+};
+
+// Helper function to format round duration
+const formatRoundInterval = (hours) => {
+  if (!hours) return 'N/A';
+  if (hours < 24) {
+    return `${hours} Hour${hours > 1 ? 's' : ''}`;
+  }
+  const days = hours / 24;
+  return `${days} Day${days > 1 ? 's' : ''}`;
+};
+
 // New component for a row in the main leagues table
-const LeagueTableRow = ({ league }) => (
-  <tr>
-    <td>
-      <Link to={`/leagues/${league.league_id}`}>{league.name}</Link>
-    </td>
-    <td className="league-description-cell">{league.description || 'No description provided.'}</td>
-    <td style={{ textAlign: 'center' }}>{league.member_count}</td>
-    <td>
-      <span className={`privacy-badge ${league.privacy_type}`}>{league.privacy_type}</span>
-    </td>
-    <td>
-      <span className={`status-badge status-${league.status}`}>{league.status}</span>
-    </td>
-    <td className="actions-cell">
-      {league.can_join ? (
-        <button onClick={() => league.onJoin(league.league_id)} className="btn btn-secondary btn-small">
-          Join
-        </button>
-      ) : (
-        <Link to={`/leagues/${league.league_id}`} className="btn btn-small">View</Link>
-      )}
-    </td>
-  </tr>
-);
+const LeagueTableRow = ({ league }) => {
+  const rules = league.rules || {};
+  const startDate = league.created_at || league.start_time;
+  
+  return (
+    <tr>
+      <td>
+        <Link to={`/leagues/${league.league_id}`}>{league.name}</Link>
+      </td>
+      <td className="league-description-cell">{league.description || 'No description provided.'}</td>
+      <td style={{ textAlign: 'center' }}>{league.member_count}</td>
+      <td>
+        <span className={`privacy-badge ${league.privacy_type}`}>{league.privacy_type}</span>
+      </td>
+      <td>
+        <span className={`status-badge status-${league.status}`}>{league.status}</span>
+      </td>
+      <td>{formatDateTime(startDate)}</td>
+      <td style={{ textAlign: 'center' }}>{rules.time_limit_minutes ? `${rules.time_limit_minutes} min` : 'N/A'}</td>
+      <td style={{ textAlign: 'center' }}>{rules.num_rounds || 'N/A'}</td>
+      <td>{formatRoundInterval(rules.round_duration_hours)}</td>
+    </tr>
+  );
+};
  
 // New component for a row in the invites table
 const InviteTableRow = ({ league, onRespond }) => (
@@ -89,15 +115,6 @@ const LeaguesPage = () => {
     fetchLeagues();
   }, [fetchLeagues]);
 
-  const handleJoinLeague = async (leagueId) => {
-    try {
-      await apiJoinLeague(leagueId, playerData.player_id);
-      showNotification('Successfully joined league!');
-      fetchLeagues(); // Refresh the lists after joining
-    } catch (err) {
-      setError(err.message || 'Could not join league.');
-    }
-  };
 
   const handleInviteResponse = async (leagueId, action) => {
     try {
@@ -167,7 +184,10 @@ const LeaguesPage = () => {
                 <th>Members</th>
                 <th>Privacy</th>
                 <th>Status</th>
-                <th className="actions-cell">Actions</th>
+                <th>Start Date/Time</th>
+                <th>Round Time Limit</th>
+                <th>Number of Rounds</th>
+                <th>Round Interval</th>
               </tr>
             </thead>
             <tbody>
@@ -175,7 +195,7 @@ const LeaguesPage = () => {
                 myLeagues.map(league => <LeagueTableRow key={league.league_id} league={league} />)
               ) : (
                 <tr>
-                  <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', fontStyle: 'italic' }}>You haven't joined any leagues yet.</td>
+                  <td colSpan="9" style={{ textAlign: 'center', padding: '2rem', fontStyle: 'italic' }}>You haven't joined any leagues yet.</td>
                 </tr>
               )}
             </tbody>
@@ -194,15 +214,18 @@ const LeaguesPage = () => {
                 <th>Members</th>
                 <th>Privacy</th>
                 <th>Status</th>
-                <th className="actions-cell">Actions</th>
+                <th>Start Date/Time</th>
+                <th>Round Time Limit</th>
+                <th>Number of Rounds</th>
+                <th>Round Interval</th>
               </tr>
             </thead>
             <tbody>
               {publicLeagues.length > 0 ? (
-                publicLeagues.map(league => <LeagueTableRow key={league.league_id} league={{...league, can_join: true, onJoin: handleJoinLeague}} />)
+                publicLeagues.map(league => <LeagueTableRow key={league.league_id} league={league} />)
               ) : (
                 <tr>
-                  <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', fontStyle: 'italic' }}>No public leagues to join right now.</td>
+                  <td colSpan="9" style={{ textAlign: 'center', padding: '2rem', fontStyle: 'italic' }}>No public leagues to join right now.</td>
                 </tr>
               )}
             </tbody>

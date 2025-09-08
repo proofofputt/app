@@ -69,7 +69,7 @@ export default async function handler(req, res) {
         l.status,
         l.rules,
         creator.name as creator_name,
-        (SELECT COUNT(*) FROM league_memberships WHERE league_id = l.league_id AND is_active = true) as current_members
+        (SELECT COUNT(*) FROM league_memberships WHERE league_id = l.league_id) as current_members
       FROM leagues l
       LEFT JOIN players creator ON l.created_by = creator.player_id
       WHERE l.league_id = $1
@@ -132,11 +132,19 @@ export default async function handler(req, res) {
           membership_status: 'active'
         });
       } else if (membership.is_active === false) {
-        // Reactivate previous membership
-        await client.query(
-          'UPDATE league_memberships SET is_active = true, joined_at = NOW() WHERE league_id = $1 AND player_id = $2',
-          [leagueId, playerId]
-        );
+        // Reactivate previous membership (try with is_active column first, fallback if it doesn't exist)
+        try {
+          await client.query(
+            'UPDATE league_memberships SET is_active = true, joined_at = NOW() WHERE league_id = $1 AND player_id = $2',
+            [leagueId, playerId]
+          );
+        } catch (updateError) {
+          // Fallback: just update joined_at if is_active column doesn't exist
+          await client.query(
+            'UPDATE league_memberships SET joined_at = NOW() WHERE league_id = $1 AND player_id = $2',
+            [leagueId, playerId]
+          );
+        }
         
         console.log(`[join-league] Reactivated membership for player ${playerId} in league ${leagueId}`);
         

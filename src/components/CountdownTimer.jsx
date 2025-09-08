@@ -39,12 +39,12 @@ const CountdownTimer = ({ endTime, startTime, isStartCountdown = false }) => {
   return (
     <div className="countdown-timer">
       {Object.keys(timeLeft).length > 0 ? (
-        <span>
+        <span style={{ color: 'white' }}>
           {isStartCountdown ? 'Starts in: ' : 'Ends in: '}
           <strong>{formatTime()}</strong>
         </span>
       ) : (
-        <span>{isStartCountdown ? 'Round has started!' : 'Round has ended.'}</span>
+        <span style={{ color: 'white' }}>{isStartCountdown ? 'Round has started!' : 'Round has ended.'}</span>
       )}
     </div>
   );
