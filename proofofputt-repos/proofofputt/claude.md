@@ -10,9 +10,11 @@
 
 Proof of Putt is a sophisticated competitive sports technology platform that transforms golf putting practice into verifiable performance data through computer vision tracking, web-based analytics, and social competition features. The platform serves as a complete ecosystem for skill development and competitive play, ready for scaling to 10,000+ concurrent users.
 
-**Current Status:** Production Ready+ (Battle-Tested) - January 2025
+**Current Status:** Production Ready+ (Battle-Tested) - September 2025
 
-### 🚀 **Recent Critical Achievements (January 2025)**
+### 🚀 **Recent Critical Achievements (September 2025)**
+- **✅ Manual Parameter Entry System**: Replaced unreliable deeplinks with robust copy-paste parameter system for desktop-web integration
+- **✅ Active Duels Display Enhancement**: Dynamic table columns showing Your Score/Opponent's Score with proper duel expiry tracking
 - **✅ Fair-Play Timer Restoration**: Critical competitive integrity fix - timer now starts only on first putt attempt (ball transition from mat to ramp), ensuring fair setup time for timed sessions
 - **✅ Dashboard Data Integration**: Resolved "N/A" stats display with unified player data loading via `/api/player/[id]/data.js` endpoint
 - **✅ League Tournament System**: Comprehensive round scheduling with countdown timers, time limits, and seamless desktop integration
@@ -32,7 +34,9 @@ Proof of Putt is a sophisticated competitive sports technology platform that tra
 
 ### 🏆 **Advanced Feature Set**
 - **Computer Vision Engine**: Real-time putt detection using Python + OpenCV + YOLO models
+- **Manual Parameter Entry System**: Robust copy-paste workflow replacing unreliable deeplinks for competitive session setup
 - **Fair-Play Timer System**: Competitive integrity - timer starts only on first putt attempt for fair timed sessions
+- **Enhanced Active Duels Display**: Dynamic score tracking with Your Score/Opponent's Score columns and proper expiry management
 - **V2 Leaderboard System**: Context-driven rankings (global, friends, leagues, custom groups)
 - **Cross-Platform Integration**: Seamless data sync between desktop tracking and web analytics
 - **Social Competition**: Duels, leagues, tournaments with verified performance data
@@ -291,6 +295,7 @@ proofofputt/
 | `app/api/redeem-coupon.js` | Promotional code system | **Access management**: Early access codes (EARLY/BETA/POP123), premium feature unlock |
 | **🖥️ Desktop Application (`desktop/`)** |
 | `desktop/src/App.jsx` | Desktop UI controller | **Desktop experience**: Session management, CV controls, upload status, local analytics |
+| `desktop/src/components/ParameterInput.jsx` | Manual parameter entry system | **Competition workflow**: Real-time parameter parsing, duel/league session setup, copy-paste integration |
 | `desktop/src/AuthContext.jsx` | Desktop authentication | **Seamless login**: Shared authentication with web app, session persistence |
 | `desktop/src/DesktopSession.jsx` | Training session interface | **Practice control**: Start/stop sessions, real-time CV feedback, performance tracking |
 | `desktop/src/DesktopAnalytics.jsx` | Local performance dashboard | **Immediate feedback**: Session results, local performance history, improvement metrics |
@@ -427,6 +432,71 @@ coupons              -- Promotional codes and early access management
 - **Stored Procedures**: Complex leaderboard calculations at database level
 - **Intelligent Caching**: 1-hour TTL with automatic invalidation on new sessions
 - **Context Isolation**: Independent caching per leaderboard type for optimal performance
+
+---
+
+## Manual Parameter Entry System
+
+### **Cross-Platform Competition Workflow**
+Replacing unreliable deeplink protocol with robust manual parameter entry for competitive sessions:
+
+#### **Web Application (Copy Parameters)**
+**Duels & Leagues → "Copy Parameters" Button:**
+```javascript
+// Generated parameter string format
+"duel=22,time_limit=300,scoring=total_makes"
+"league_round=5,league=Weekly Tournament,time_limit=600,target=50_putts"
+```
+
+**Clipboard Integration:**
+- Primary: `navigator.clipboard.writeText()` for modern browsers
+- Fallback: Temporary textarea with `document.execCommand('copy')` for compatibility
+- User feedback: Success notification with parameter preview
+
+#### **Desktop Application (Manual Entry)**
+**ParameterInput Component (`/desktop/src/components/ParameterInput.jsx`):**
+- **Real-time Parsing**: Validates parameters as user types
+- **Context Preview**: Visual confirmation of session type, scoring, time limits
+- **Secure Routing**: Direct session start without intermediate confirmation dialogs
+- **Error Handling**: Clear feedback for invalid parameter formats
+
+**Supported Parameter Types:**
+```javascript
+// Duel Sessions
+parseParameters("duel=22,time_limit=300,scoring=total_makes")
+→ { type: 'duel', duelId: 22, timeLimit: 300, scoring: 'total_makes', autoUpload: true }
+
+// League Sessions  
+parseParameters("league_round=5,league=Weekly Tournament,time_limit=600,target=50_putts")
+→ { type: 'league', leagueRoundId: 5, league: 'Weekly Tournament', timeLimit: 600, target: '50_putts', autoUpload: true }
+```
+
+### **Enhanced Active Duels Display**
+**Dynamic Table Columns by Section:**
+
+**Active Duels Table:**
+| Opponent | Your Score | Opponent's Score | Expires | Time Limit | Actions |
+|----------|------------|------------------|---------|------------|---------|
+| Player123 | 15 | 12 | Oct 15 | 5 min | Copy Parameters |
+
+**Pending/Completed Tables:**
+| Opponent | Status | Date Created | Expires | Time Limit | Actions |
+|----------|---------|-------------|---------|------------|---------|
+| Player456 | Pending | Oct 10 | Oct 15 | 5 min | Accept/Decline |
+
+**Score Calculation Logic:**
+```javascript
+// User-perspective score display
+const yourScore = isCreator ? duel.creator_score : duel.invited_player_score;
+const opponentScore = isCreator ? duel.invited_player_score : duel.creator_score;
+```
+
+### **Benefits & Reliability**
+- **✅ Cross-Platform Compatibility**: Works on all operating systems and browsers
+- **✅ Reliable Data Transfer**: No protocol registration or system permission requirements
+- **✅ User Control**: Clear visibility of what parameters are being transferred
+- **✅ Error Recovery**: Graceful handling of malformed parameters with user feedback
+- **✅ Security**: No automatic execution - user confirms before session start
 
 ---
 
@@ -655,7 +725,7 @@ Long-term (100K+ users): CDN, horizontal scaling, microservices
 
 ---
 
-*Comprehensive Documentation Updated: January 2025*  
+*Comprehensive Documentation Updated: September 2025*  
 *System Status: Production Ready+ (Battle-Tested)*  
 *Major Updates: Fair-Play Timer, League System, Dashboard Integration, Career Stats, API Optimization*
 *Next Update: Post-Upload Endpoint Implementation*
