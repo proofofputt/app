@@ -87,7 +87,7 @@ async function handleGetLeagues(req, res, client) {
       l.description,
       l.status,
       l.created_at,
-      l.league_creator_id as creator_id,
+      l.created_by as creator_id,
       l.created_by,
       l.rules,
       creator.name as creator_name,
@@ -102,7 +102,7 @@ async function handleGetLeagues(req, res, client) {
       ) as active_round_number
     FROM leagues l
     JOIN league_memberships lm ON l.league_id = lm.league_id
-    JOIN players creator ON l.league_creator_id = creator.player_id
+    JOIN players creator ON l.created_by = creator.player_id
     WHERE lm.player_id = $1
     ORDER BY l.created_at DESC
   `, [player_id]);
@@ -115,7 +115,7 @@ async function handleGetLeagues(req, res, client) {
       l.description,
       l.status,
       l.created_at,
-      l.league_creator_id as creator_id,
+      l.created_by as creator_id,
       l.created_by,
       l.rules,
       creator.name as creator_name,
@@ -128,12 +128,12 @@ async function handleGetLeagues(req, res, client) {
         LIMIT 1
       ) as active_round_number
     FROM leagues l
-    JOIN players creator ON l.league_creator_id = creator.player_id
+    JOIN players creator ON l.created_by = creator.player_id
     WHERE l.rules->>'privacy' = 'public'
     AND l.league_id NOT IN (
       SELECT league_id FROM league_memberships WHERE player_id = $1
     )
-    AND l.status = 'active'
+    AND l.status IN ('active', 'setup')
     ORDER BY l.created_at DESC
     LIMIT 20
   `, [player_id]);
@@ -194,15 +194,17 @@ async function handleCreateLeague(req, res, client) {
 
   const league = leagueResult.rows[0];
 
-  // Try to add creator as first member - handle potential table structure differences
+  // Add creator as first member
   try {
     await client.query(`
       INSERT INTO league_memberships (league_id, player_id, joined_at)
       VALUES ($1, $2, NOW())
     `, [league.league_id, user.playerId]);
+    console.log(`[DEBUG] League membership created for player ${user.playerId} in league ${league.league_id}`);
   } catch (membershipError) {
-    console.log('[DEBUG] League membership insert failed:', membershipError.message);
-    // Continue without membership for now - league was created successfully
+    console.error(`[ERROR] Failed to create league membership:`, membershipError.message);
+    console.error(`[ERROR] League: ${league.league_id}, Player: ${user.playerId}`);
+    throw membershipError; // Re-throw to fail the league creation if membership fails
   }
 
   return res.status(201).json({
