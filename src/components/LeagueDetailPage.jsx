@@ -80,7 +80,7 @@ const LeagueDetailPage = () => {
       // Generate parameter string for manual entry
       const parameters = [
         `league_round=${roundId}`,
-        league?.name ? `league=${league.name}` : null,
+        league?.league_id ? `league_id=${league.league_id}` : null,
         league?.settings?.time_limit_minutes ? `time_limit=${league.settings.time_limit_minutes}` : null,
         'target=50_putts'
       ].filter(Boolean).join(',');
