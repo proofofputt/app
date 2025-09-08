@@ -166,6 +166,10 @@ function processSessionsForCareerStats(sessionRows, playerName) {
     processObjectCategoryData(data, 'misses_overview', stats.misses_overview);
     processObjectCategoryData(data, 'consecutive_by_category', stats.consecutive);
     
+    // Process detailed classification data from CV tracker
+    processObjectCategoryData(data, 'makes_by_category', stats.makes_detailed);
+    processObjectCategoryData(data, 'misses_by_category', stats.misses_detailed);
+    
     // Also process any array-based category data (for compatibility)
     processCategoryData(data, 'consecutive_makes', stats.consecutive);
     processCategoryData(data, 'makes_detailed', stats.makes_detailed);
@@ -175,24 +179,6 @@ function processSessionsForCareerStats(sessionRows, playerName) {
   // Calculate averages
   stats.avg_ppm = ppmCount > 0 ? totalPpm / ppmCount : 0;
   stats.avg_mpm = mpmCount > 0 ? totalMpm / mpmCount : 0;
-
-  // Populate detailed classifications from overview data if detailed is empty
-  // Since desktop app currently only generates overview data, use it for detailed display
-  if (Object.keys(stats.makes_detailed).length === 0) {
-    Object.entries(stats.makes_overview).forEach(([category, data]) => {
-      if (data.sum > 0) {
-        stats.makes_detailed[category] = { high: data.high, sum: data.sum };
-      }
-    });
-  }
-  
-  if (Object.keys(stats.misses_detailed).length === 0) {
-    Object.entries(stats.misses_overview).forEach(([category, data]) => {
-      if (data.sum > 0) {
-        stats.misses_detailed[category] = { high: data.high, sum: data.sum };
-      }
-    });
-  }
 
   return stats;
 }
