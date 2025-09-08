@@ -10,7 +10,7 @@ import SortButton from './SortButton';
 import Pagination from './Pagination';
 import './DuelsPage.css';
 
-const DuelRow = ({ duel, onRespond, onSubmitSession, currentUserId }) => {
+const DuelRow = ({ duel, onRespond, onSubmitSession, currentUserId, isActiveSection }) => {
     const isCreator = duel.creator_id === currentUserId;
     const opponentName = isCreator ? duel.invited_player_name : duel.creator_name;
     const opponentId = isCreator ? duel.invited_player_id : duel.creator_id;
@@ -87,6 +87,10 @@ const DuelRow = ({ duel, onRespond, onSubmitSession, currentUserId }) => {
         return <span className="text-muted">—</span>;
     };
 
+    // Calculate scores based on user perspective
+    const yourScore = isCreator ? (duel.creator_score || 0) : (duel.invited_player_score || 0);
+    const opponentScore = isCreator ? (duel.invited_player_score || 0) : (duel.creator_score || 0);
+
     return (
         <tr>
             <td>
@@ -94,22 +98,42 @@ const DuelRow = ({ duel, onRespond, onSubmitSession, currentUserId }) => {
                     {opponentName}
                 </Link>
             </td>
-            <td>
-                <span 
-                    className="status-badge" 
-                    style={{backgroundColor: getStatusColor(duel.status)}}
-                >
-                    {duel.status.charAt(0).toUpperCase() + duel.status.slice(1)}
-                </span>
-            </td>
-            <td>{formatDate(duel.created_at)}</td>
-            <td>
-                {duel.expires_at && duel.status === 'pending' ? (
-                    <div className="expiration-box">
-                        {formatDate(duel.expires_at)}
-                    </div>
-                ) : '—'}
-            </td>
+            {isActiveSection ? (
+                <>
+                    <td className="score-cell">
+                        <span className="score-badge your-score">{yourScore}</span>
+                    </td>
+                    <td className="score-cell">
+                        <span className="score-badge opponent-score">{opponentScore}</span>
+                    </td>
+                    <td>
+                        {duel.expires_at ? (
+                            <div className="expiration-box">
+                                {formatDate(duel.expires_at)}
+                            </div>
+                        ) : '—'}
+                    </td>
+                </>
+            ) : (
+                <>
+                    <td>
+                        <span 
+                            className="status-badge" 
+                            style={{backgroundColor: getStatusColor(duel.status)}}
+                        >
+                            {duel.status.charAt(0).toUpperCase() + duel.status.slice(1)}
+                        </span>
+                    </td>
+                    <td>{formatDate(duel.created_at)}</td>
+                    <td>
+                        {duel.expires_at && duel.status === 'pending' ? (
+                            <div className="expiration-box">
+                                {formatDate(duel.expires_at)}
+                            </div>
+                        ) : '—'}
+                    </td>
+                </>
+            )}
             <td>
                 {duel.time_limit_minutes ? `${duel.time_limit_minutes} min` : '—'}
             </td>
@@ -313,21 +337,33 @@ const DuelsPage = () => {
                                 >
                                     Opponent {sortConfig.key === 'opponent_name' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
                                 </th>
-                                <th 
-                                    style={{ cursor: 'pointer' }}
-                                    onClick={() => handleSort('status')}
-                                >
-                                    Status {sortConfig.key === 'status' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
-                                </th>
-                                <th 
-                                    style={{ cursor: 'pointer' }}
-                                    onClick={() => handleSort('created_at')}
-                                >
-                                    Date Created {sortConfig.key === 'created_at' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
-                                </th>
-                                <th>Expires</th>
-                                <th>Time Limit</th>
-                                <th className="actions-header">Actions</th>
+                                {title === 'Active Duels' ? (
+                                    <>
+                                        <th>Your Score</th>
+                                        <th>Opponent's Score</th>
+                                        <th>Expires</th>
+                                        <th>Time Limit</th>
+                                        <th className="actions-header">Actions</th>
+                                    </>
+                                ) : (
+                                    <>
+                                        <th 
+                                            style={{ cursor: 'pointer' }}
+                                            onClick={() => handleSort('status')}
+                                        >
+                                            Status {sortConfig.key === 'status' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
+                                        </th>
+                                        <th 
+                                            style={{ cursor: 'pointer' }}
+                                            onClick={() => handleSort('created_at')}
+                                        >
+                                            Date Created {sortConfig.key === 'created_at' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
+                                        </th>
+                                        <th>Expires</th>
+                                        <th>Time Limit</th>
+                                        <th className="actions-header">Actions</th>
+                                    </>
+                                )}
                             </tr>
                         </thead>
                         <tbody>
@@ -338,6 +374,7 @@ const DuelsPage = () => {
                                     onRespond={handleRespond}
                                     onSubmitSession={handleSubmitSession}
                                     currentUserId={playerData.player_id}
+                                    isActiveSection={title === 'Active Duels'}
                                 />
                             ))}
                         </tbody>
