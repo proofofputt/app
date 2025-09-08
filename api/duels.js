@@ -46,7 +46,7 @@ async function handleGetDuels(req, res) {
   let client;
   try {
     client = await pool.connect();
-    console.log('Duels API: Database connected successfully');
+    console.log('Duels API: Database connected successfully - v2 with time fixes');
 
     const { player_id } = req.query;
 
@@ -88,18 +88,42 @@ async function handleGetDuels(req, res) {
       
       // Extract time limit from multiple possible fields, converting hours to minutes if needed
       let timeLimit = null;
+      
+      console.log('[DEBUG] Processing duel:', duel.duel_id, 'settings:', JSON.stringify(settings), 'rules:', JSON.stringify(rules));
+      
       if (settings.session_duration_limit_minutes) {
         timeLimit = settings.session_duration_limit_minutes;
+        console.log('[DEBUG] Found time limit in settings.session_duration_limit_minutes:', timeLimit);
+      } else if (rules.session_duration_limit_minutes) {
+        timeLimit = rules.session_duration_limit_minutes;
+        console.log('[DEBUG] Found time limit in rules.session_duration_limit_minutes:', timeLimit);
       } else if (settings.time_limit_minutes) {
         timeLimit = settings.time_limit_minutes;
+        console.log('[DEBUG] Found time limit in settings.time_limit_minutes:', timeLimit);
       } else if (rules.time_limit_minutes) {
         timeLimit = rules.time_limit_minutes;
+        console.log('[DEBUG] Found time limit in rules.time_limit_minutes:', timeLimit);
       } else if (rules.time_limit_hours) {
         timeLimit = rules.time_limit_hours * 60; // Convert hours to minutes
+        console.log('[DEBUG] Found time limit in rules.time_limit_hours:', timeLimit);
       } else if (settings.time_limit) {
         timeLimit = settings.time_limit;
+        console.log('[DEBUG] Found time limit in settings.time_limit:', timeLimit);
       } else if (rules.time_limit) {
         timeLimit = rules.time_limit;
+        console.log('[DEBUG] Found time limit in rules.time_limit:', timeLimit);
+      }
+      
+      if (!timeLimit) {
+        console.log('[DEBUG] No time limit found in any field');
+      }
+      
+      // Calculate expiration date from invitation_expiry_minutes if expires_at is null
+      let expiresAt = duel.expires_at;
+      if (!expiresAt && (settings.invitation_expiry_minutes || rules.invitation_expiry_minutes)) {
+        const expiryMinutes = settings.invitation_expiry_minutes || rules.invitation_expiry_minutes;
+        const createdAt = new Date(duel.created_at);
+        expiresAt = new Date(createdAt.getTime() + (expiryMinutes * 60 * 1000)).toISOString();
       }
       
       
@@ -113,7 +137,7 @@ async function handleGetDuels(req, res) {
         settings: duel.settings,
         rules: duel.rules,
         created_at: duel.created_at,
-        expires_at: duel.expires_at,
+        expires_at: expiresAt,
         winner_id: duel.winner_id,
         time_limit_minutes: timeLimit, // Extract time limit for frontend
         creator_score: duel.duel_creator_score,
