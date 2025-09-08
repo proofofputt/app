@@ -176,6 +176,24 @@ function processSessionsForCareerStats(sessionRows, playerName) {
   stats.avg_ppm = ppmCount > 0 ? totalPpm / ppmCount : 0;
   stats.avg_mpm = mpmCount > 0 ? totalMpm / mpmCount : 0;
 
+  // Populate detailed classifications from overview data if detailed is empty
+  // Since desktop app currently only generates overview data, use it for detailed display
+  if (Object.keys(stats.makes_detailed).length === 0) {
+    Object.entries(stats.makes_overview).forEach(([category, data]) => {
+      if (data.sum > 0) {
+        stats.makes_detailed[category] = { high: data.high, sum: data.sum };
+      }
+    });
+  }
+  
+  if (Object.keys(stats.misses_detailed).length === 0) {
+    Object.entries(stats.misses_overview).forEach(([category, data]) => {
+      if (data.sum > 0) {
+        stats.misses_detailed[category] = { high: data.high, sum: data.sum };
+      }
+    });
+  }
+
   return stats;
 }
 

@@ -177,9 +177,9 @@ const PlayerCareerPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {duels.filter(d => ['accepted', 'completed'].includes(d.status)).length > 0 ? (
+                {duels.filter(d => ['active', 'accepted', 'completed'].includes(d.status)).length > 0 ? (
                   duels
-                    .filter(d => ['accepted', 'completed'].includes(d.status)) // Filter for active and completed
+                    .filter(d => ['active', 'accepted', 'completed'].includes(d.status)) // Filter for active and completed
                     .map(duel => {
                       const isCreator = duel.creator_id === parseInt(playerId);
                       const opponentName = isCreator ? duel.invited_player_name : duel.creator_name;
@@ -206,7 +206,7 @@ const PlayerCareerPage = () => {
                       );
                     })
                 ) : (
-                  <tr><td colSpan="3" style={{ fontStyle: 'italic' }}>No active or completed duels found.</td></tr>
+                  <tr><td colSpan="3" style={{ fontStyle: 'italic' }}>No active, accepted, or completed duels found.</td></tr>
                 )}
               </tbody>
             </table>
