@@ -417,50 +417,60 @@ const LeagueDetailPage = () => {
               </tr>
             </thead>
             <tbody>
-              {(league.rounds || []).map((round) => {
-                const hasSubmitted = playerHasSubmittedForRound(round);
-                const displayStatus = round.status === 'active' && isRoundOver(round) ? 'completed' : round.status;
-                const roundSubmissions = new Map((round.submissions || []).map(s => [s.player_id, s]));
-                return (
-                  <tr key={round.round_id}>
-                    <td className="sort-column"><button className="sort-button" onClick={() => handleSort('round', round.round_id)}>sort</button></td>
-                    <td className="round-label-cell">
-                      <span>Round {round.round_number}</span>
-                      <div className="round-status-group">
-                        {displayStatus === 'scheduled' && (
-                          <>
-                            <CountdownTimer 
-                              startTime={round.start_time} 
-                              endTime={round.end_time}
-                              isStartCountdown={true}
-                            />
-                            <span className={`status-badge status-${displayStatus}`}>{displayStatus}</span>
-                          </>
-                        )}
-                        {displayStatus === 'active' && (
-                          <>
-                            <CountdownTimer endTime={round.end_time} />
-                            {isMember ? (
-                              !hasSubmitted ? (
-                                <button onClick={() => handleStartLeagueSession(round.round_id)} className="btn btn-small" title="Copy parameters to paste into desktop app">Copy Parameters</button>
+              {(league.rounds || []).length === 0 ? (
+                <tr>
+                  <td colSpan={2 + sortedMembers.length} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-color-secondary)' }}>
+                    {league.status === 'setup' 
+                      ? 'No rounds scheduled yet. League rounds will appear when the league starts.'
+                      : 'No rounds found for this league.'}
+                  </td>
+                </tr>
+              ) : (
+                (league.rounds || []).map((round) => {
+                  const hasSubmitted = playerHasSubmittedForRound(round);
+                  const displayStatus = round.status === 'active' && isRoundOver(round) ? 'completed' : round.status;
+                  const roundSubmissions = new Map((round.submissions || []).map(s => [s.player_id, s]));
+                  return (
+                    <tr key={round.round_id}>
+                      <td className="sort-column"><button className="sort-button" onClick={() => handleSort('round', round.round_id)}>sort</button></td>
+                      <td className="round-label-cell">
+                        <span>Round {round.round_number}</span>
+                        <div className="round-status-group">
+                          {displayStatus === 'scheduled' && (
+                            <>
+                              <CountdownTimer 
+                                startTime={round.start_time} 
+                                endTime={round.end_time}
+                                isStartCountdown={true}
+                              />
+                              <span className={`status-badge status-${displayStatus}`}>{displayStatus}</span>
+                            </>
+                          )}
+                          {displayStatus === 'active' && (
+                            <>
+                              <CountdownTimer endTime={round.end_time} />
+                              {isMember ? (
+                                !hasSubmitted ? (
+                                  <button onClick={() => handleStartLeagueSession(round.round_id)} className="btn btn-small" title="Copy parameters to paste into desktop app">Copy Parameters</button>
+                                ) : (
+                                  <span className="status-badge status-completed">Submitted</span>
+                                )
                               ) : (
-                                <span className="status-badge status-completed">Submitted</span>
-                              )
-                            ) : (
-                              <span className="status-badge status-active">Active</span>
-                            )}
-                          </>
-                        )}
-                        {displayStatus === 'completed' && <span className={`status-badge status-completed`}>completed</span>}
-                      </div>
-                    </td>
-                    {sortedMembers.map(member => {
-                      const submission = roundSubmissions.get(member.player_id);
-                      return <td key={member.player_id}>{submission ? submission.score : '—'}</td>;
-                    })}
-                  </tr>
-                );
-              })}
+                                <span className="status-badge status-active">Active</span>
+                              )}
+                            </>
+                          )}
+                          {displayStatus === 'completed' && <span className={`status-badge status-completed`}>completed</span>}
+                        </div>
+                      </td>
+                      {sortedMembers.map(member => {
+                        const submission = roundSubmissions.get(member.player_id);
+                        return <td key={member.player_id}>{submission ? submission.score : '—'}</td>;
+                      })}
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
             <tfoot>
               <tr className="summary-row">
