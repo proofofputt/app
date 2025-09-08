@@ -58,13 +58,12 @@ export default async function handler(req, res) {
         l.privacy_level,
         l.created_at,
         l.created_by,
-        l.league_creator_id,
         l.rules,
         l.started_at,
         creator.name as creator_name,
         (SELECT COUNT(*) FROM league_memberships WHERE league_id = l.league_id AND is_active = true) as member_count
       FROM leagues l
-      JOIN players creator ON COALESCE(l.league_creator_id, l.created_by) = creator.player_id
+      JOIN players creator ON l.created_by = creator.player_id
       WHERE l.league_id = $1
     `, [leagueIdInt]);
 
@@ -83,7 +82,7 @@ export default async function handler(req, res) {
         lm.member_role,
         lm.is_active
       FROM league_memberships lm
-      JOIN players p ON lm.league_member_id = p.player_id
+      JOIN players p ON lm.player_id = p.player_id
       WHERE lm.league_id = $1 AND lm.is_active = true
       ORDER BY lm.joined_at ASC
     `, [leagueIdInt]);
@@ -154,7 +153,7 @@ export default async function handler(req, res) {
       privacy_type: league.privacy_level || 'public',
       created_at: league.created_at,
       created_by: league.created_by,
-      creator_id: league.league_creator_id || league.created_by,
+      creator_id: league.created_by,
       creator_name: league.creator_name,
       start_time: league.started_at,
       settings: settings,
