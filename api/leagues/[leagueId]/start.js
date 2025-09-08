@@ -56,7 +56,7 @@ export default async function handler(req, res) {
     // Update league status to active
     await client.query(`
       UPDATE leagues 
-      SET status = 'active', started_at = NOW(), updated_at = NOW()
+      SET status = 'active'
       WHERE league_id = $1
     `, [leagueIdInt]);
 
