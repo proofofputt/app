@@ -59,19 +59,20 @@ export default async function handler(req, res) {
   try {
     client = await pool.connect();
     
-    // Get the league details
+    // Get the league details with current member count
     const leagueResult = await client.query(`
       SELECT 
-        league_id,
-        name,
-        league_creator_id,
-        status,
-        rules,
-        privacy_level,
-        max_members,
-        current_members
-      FROM leagues 
-      WHERE league_id = $1
+        l.league_id,
+        l.name,
+        l.description,
+        l.created_by,
+        l.status,
+        l.rules,
+        creator.name as creator_name,
+        (SELECT COUNT(*) FROM league_memberships WHERE league_id = l.league_id AND is_active = true) as current_members
+      FROM leagues l
+      LEFT JOIN players creator ON l.created_by = creator.player_id
+      WHERE l.league_id = $1
     `, [leagueId]);
 
     if (leagueResult.rows.length === 0) {
@@ -83,11 +84,15 @@ export default async function handler(req, res) {
 
     const league = leagueResult.rows[0];
 
-    // Check if league allows direct joining
-    if (league.privacy_level === 'private' || league.rules?.invitation_only) {
+    // Check if league allows direct joining (handle both privacy formats)
+    const rules = league.rules || {};
+    const privacy = rules.privacy || league.privacy_level || 'public';
+    
+    if (privacy === 'private' || rules.invitation_only) {
       return res.status(403).json({ 
         success: false, 
-        message: 'This league requires an invitation to join' 
+        message: 'This league requires an invitation to join',
+        league_privacy: privacy
       });
     }
 
@@ -99,30 +104,68 @@ export default async function handler(req, res) {
       });
     }
 
-    // Check member limit
-    if (league.max_members && league.current_members >= league.max_members) {
+    // Check member limit (use rules.max_members or default reasonable limit)
+    const maxMembers = rules.max_members || 1000; // Default reasonable limit
+    if (league.current_members >= maxMembers) {
       return res.status(400).json({ 
         success: false, 
-        message: 'League has reached maximum member capacity' 
+        message: 'League has reached maximum member capacity',
+        current_members: league.current_members,
+        max_members: maxMembers
       });
     }
 
-    // Check if player is already a member
+    // Check if player is already a member (handle is_active column if it exists)
     const membershipResult = await client.query(`
-      SELECT membership_id FROM league_memberships 
+      SELECT * FROM league_memberships 
       WHERE league_id = $1 AND player_id = $2
     `, [leagueId, playerId]);
 
     if (membershipResult.rows.length > 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Player is already a member of this league' 
-      });
+      const membership = membershipResult.rows[0];
+      
+      // If there's an is_active column and the membership is active
+      if (membership.is_active === true || membership.is_active === undefined) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Player is already a member of this league',
+          membership_status: 'active'
+        });
+      } else if (membership.is_active === false) {
+        // Reactivate previous membership
+        await client.query(
+          'UPDATE league_memberships SET is_active = true, joined_at = NOW() WHERE league_id = $1 AND player_id = $2',
+          [leagueId, playerId]
+        );
+        
+        console.log(`[join-league] Reactivated membership for player ${playerId} in league ${leagueId}`);
+        
+        // Continue to notification creation below
+      }
+    } else {
+      // Create new membership with fallback for different table structures
+      try {
+        await client.query(`
+          INSERT INTO league_memberships (league_id, player_id, joined_at, is_active)
+          VALUES ($1, $2, NOW(), true)
+        `, [leagueId, playerId]);
+        
+        console.log(`[join-league] Created new membership for player ${playerId} in league ${leagueId}`);
+      } catch (membershipError) {
+        // Try simpler structure if the first attempt fails
+        console.log(`[join-league] Attempting alternative membership creation...`);
+        await client.query(`
+          INSERT INTO league_memberships (league_id, player_id, joined_at)
+          VALUES ($1, $2, NOW())
+        `, [leagueId, playerId]);
+        
+        console.log(`[join-league] Created membership with alternative structure for player ${playerId} in league ${leagueId}`);
+      }
     }
 
-    // Get player details
+    // Get player details for notifications
     const playerResult = await client.query(`
-      SELECT player_id, name FROM players WHERE player_id = $1
+      SELECT player_id, name, email FROM players WHERE player_id = $1
     `, [playerId]);
 
     if (playerResult.rows.length === 0) {
@@ -133,40 +176,89 @@ export default async function handler(req, res) {
     }
 
     const player = playerResult.rows[0];
+    const playerName = player.name || `Player ${playerId}`;
 
-    // Add player to league
-    await client.query(`
-      INSERT INTO league_memberships (
-        league_id, 
-        player_id,
-        league_member_id,
-        league_inviter_id,
-        member_role,
-        is_active,
-        joined_at
-      )
-      VALUES ($1, $2, $2, NULL, 'member', true, NOW())
-    `, [leagueId, playerId]);
+    // Create notification for league creator about new member
+    try {
+      await client.query(`
+        INSERT INTO notifications (player_id, type, title, message, data, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+      `, [
+        league.created_by,
+        'league_member_joined',
+        'New League Member',
+        `${playerName} has joined ${league.name}`,
+        JSON.stringify({
+          league_id: leagueId,
+          new_member_id: playerId,
+          new_member_name: playerName,
+          joined_via: 'public_join',
+          league_name: league.name
+        })
+      ]);
+    } catch (notificationError) {
+      console.log(`[join-league] Failed to create admin notification: ${notificationError.message}`);
+    }
+
+    // Create welcome notification for the new member
+    try {
+      await client.query(`
+        INSERT INTO notifications (player_id, type, title, message, data, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+      `, [
+        playerId,
+        'league_welcome',
+        `Welcome to ${league.name}!`,
+        `You've successfully joined ${league.name}. Check the league schedule and start competing!`,
+        JSON.stringify({
+          league_id: leagueId,
+          league_name: league.name,
+          creator_name: league.creator_name,
+          member_count: league.current_members + 1,
+          next_steps: [
+            'View league schedule and current round',
+            'Submit practice sessions to earn points',
+            'Check leaderboard to track progress'
+          ]
+        })
+      ]);
+    } catch (notificationError) {
+      console.log(`[join-league] Failed to create welcome notification: ${notificationError.message}`);
+    }
 
     return res.status(200).json({
       success: true,
-      message: `Successfully joined ${league.name}`,
+      message: `Successfully joined ${league.name}!`,
+      league: {
+        league_id: league.league_id,
+        name: league.name,
+        description: league.description,
+        status: league.status,
+        creator_name: league.creator_name,
+        member_count: league.current_members + 1,
+        rules: league.rules
+      },
       membership: {
         league_id: league.league_id,
         league_name: league.name,
         player_id: playerId,
-        player_name: player.name,
+        player_name: playerName,
         member_role: 'member',
         joined_at: new Date().toISOString()
-      }
+      },
+      next_steps: [
+        'View the league dashboard to see current standings',
+        'Check the schedule for upcoming rounds',
+        'Submit practice sessions to start competing'
+      ]
     });
 
   } catch (error) {
-    console.error('League join error:', error);
+    console.error('[join-league] Error:', error);
     return res.status(500).json({
       success: false,
       message: 'Failed to join league',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error_details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   } finally {
     if (client) client.release();

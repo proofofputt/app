@@ -173,7 +173,8 @@ const PlayerCareerPage = () => {
                 <tr>
                   <th>Opponent</th>
                   <th>Status</th>
-                  <th>Score</th>
+                  <th>Player's Score</th>
+                  <th>Opponent's Score</th>
                 </tr>
               </thead>
               <tbody>
@@ -195,18 +196,19 @@ const PlayerCareerPage = () => {
 
                       return (
                         <tr key={duel.duel_id}>
-                          <td><Link to={`/player/${opponentId}/stats`}>{opponentName}</Link></td>
+                          <td><Link to={`/duels/${duel.duel_id}`}>{opponentName}</Link></td>
                           <td>
                             <span className={`status-badge status-${resultText.toLowerCase() || (duel.status === 'accepted' ? 'pending' : duel.status)}`}>
                               {resultText || 'Active'}
                             </span>
                           </td>
-                          <td>{duel.status === 'completed' ? `${myScore ?? 'N/A'} - ${opponentScore ?? 'N/A'}` : '—'}</td>
+                          <td>{duel.status === 'completed' ? (myScore ?? 'N/A') : '—'}</td>
+                          <td>{duel.status === 'completed' ? (opponentScore ?? 'N/A') : '—'}</td>
                         </tr>
                       );
                     })
                 ) : (
-                  <tr><td colSpan="3" style={{ fontStyle: 'italic' }}>No active, accepted, or completed duels found.</td></tr>
+                  <tr><td colSpan="4" style={{ fontStyle: 'italic' }}>No active, accepted, or completed duels found.</td></tr>
                 )}
               </tbody>
             </table>

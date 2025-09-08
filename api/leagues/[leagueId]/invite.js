@@ -65,7 +65,7 @@ export default async function handler(req, res) {
       SELECT 
         l.league_id,
         l.name,
-        l.league_creator_id,
+        l.created_by,
         l.status,
         l.rules,
         lm.member_role
@@ -85,7 +85,7 @@ export default async function handler(req, res) {
 
     // Check if user has permission to invite (creator, admin, or if league allows member invites)
     const canInvite = (
-      league.league_creator_id === parseInt(inviterId) ||
+      league.created_by === parseInt(inviterId) ||
       league.member_role === 'admin' ||
       (league.member_role === 'member' && league.rules?.allow_player_invites)
     );

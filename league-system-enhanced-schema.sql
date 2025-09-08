@@ -172,48 +172,87 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Function to calculate league rankings
+-- Function to calculate league rankings using points-per-rank system
 CREATE OR REPLACE FUNCTION update_league_rankings(p_league_id INTEGER) 
 RETURNS BOOLEAN AS $$
 DECLARE
-    league_rec RECORD;
-    member_rec RECORD;
-    rank_counter INTEGER := 1;
-    scoring_method VARCHAR(50);
+    round_rec RECORD;
+    player_rec RECORD;
+    member_count INTEGER;
+    rank_counter INTEGER;
+    final_member_rec RECORD;
+    final_rank_counter INTEGER := 1;
 BEGIN
-    -- Get league configuration
-    SELECT rules->>'scoring_method' INTO scoring_method
-    FROM leagues WHERE league_id = p_league_id;
+    -- Get total number of active members for points calculation
+    SELECT COUNT(*) INTO member_count
+    FROM league_memberships 
+    WHERE league_id = p_league_id AND is_active = true;
     
-    IF scoring_method IS NULL THEN
-        scoring_method := 'cumulative';
-    END IF;
+    -- Reset all member scores to 0
+    UPDATE league_memberships 
+    SET total_score = 0, average_make_percentage = 0
+    WHERE league_id = p_league_id AND is_active = true;
     
-    -- Calculate scores and update rankings
-    FOR member_rec IN (
+    -- Process each completed round for points-per-rank scoring
+    FOR round_rec IN (
+        SELECT round_id, round_number 
+        FROM league_rounds 
+        WHERE league_id = p_league_id 
+        AND status = 'completed'
+        ORDER BY round_number ASC
+    ) LOOP
+        rank_counter := 1;
+        
+        -- Rank players by their score in this specific round and award points
+        FOR player_rec IN (
+            SELECT 
+                lrs.player_id,
+                lrs.round_score,
+                (lrs.session_data->>'make_percentage')::decimal as round_make_percentage
+            FROM league_round_sessions lrs
+            JOIN league_memberships lm ON lrs.player_id = lm.player_id AND lrs.league_id = lm.league_id
+            WHERE lrs.round_id = round_rec.round_id 
+            AND lm.is_active = true
+            ORDER BY lrs.round_score DESC, (lrs.session_data->>'make_percentage')::decimal DESC
+        ) LOOP
+            -- Award points: highest rank gets member_count points, lowest gets 1 point
+            UPDATE league_memberships 
+            SET total_score = total_score + (member_count - rank_counter + 1)
+            WHERE league_id = p_league_id AND player_id = player_rec.player_id;
+            
+            rank_counter := rank_counter + 1;
+        END LOOP;
+    END LOOP;
+    
+    -- Calculate average make percentage across all completed rounds for tiebreaker
+    UPDATE league_memberships lm
+    SET average_make_percentage = (
+        SELECT COALESCE(AVG((lrs.session_data->>'make_percentage')::decimal), 0)
+        FROM league_round_sessions lrs
+        JOIN league_rounds lr ON lrs.round_id = lr.round_id
+        WHERE lrs.player_id = lm.player_id 
+        AND lrs.league_id = p_league_id
+        AND lr.status = 'completed'
+    )
+    WHERE lm.league_id = p_league_id AND lm.is_active = true;
+    
+    -- Final ranking based on total points, with average make percentage as tiebreaker
+    FOR final_member_rec IN (
         SELECT 
             lm.player_id,
-            CASE 
-                WHEN scoring_method = 'cumulative' THEN COALESCE(SUM((lrs.session_data->>'total_makes')::integer), 0)
-                WHEN scoring_method = 'average' THEN COALESCE(AVG((lrs.session_data->>'make_percentage')::decimal), 0)
-                WHEN scoring_method = 'best_session' THEN COALESCE(MAX((lrs.session_data->>'total_makes')::integer), 0)
-                WHEN scoring_method = 'consistency' THEN COALESCE(1.0 / NULLIF(STDDEV((lrs.session_data->>'make_percentage')::decimal), 0), 0)
-                ELSE COALESCE(SUM((lrs.session_data->>'total_makes')::integer), 0)
-            END as calculated_score
+            lm.total_score,
+            lm.average_make_percentage
         FROM league_memberships lm
-        LEFT JOIN league_round_sessions lrs ON lm.league_id = lrs.league_id AND lm.player_id = lrs.player_id
         WHERE lm.league_id = p_league_id AND lm.is_active = true
-        GROUP BY lm.player_id
-        ORDER BY calculated_score DESC, lm.joined_at ASC
+        ORDER BY lm.total_score DESC, lm.average_make_percentage DESC
     ) LOOP
         UPDATE league_memberships 
         SET 
-            total_score = member_rec.calculated_score,
-            current_rank = rank_counter,
+            current_rank = final_rank_counter,
             last_activity = NOW()
-        WHERE league_id = p_league_id AND player_id = member_rec.player_id;
+        WHERE league_id = p_league_id AND player_id = final_member_rec.player_id;
         
-        rank_counter := rank_counter + 1;
+        final_rank_counter := final_rank_counter + 1;
     END LOOP;
     
     RETURN TRUE;

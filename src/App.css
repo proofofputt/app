@@ -382,6 +382,15 @@ main {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
+  margin-left: 21%; /* Add left margin as requested for session details popup */
+  /* Force single row layout */
+  grid-template-rows: 1fr;
+  grid-auto-flow: column;
+}
+
+/* Add specific margin to the first column (Makes by category) */
+.details-grid .details-section:first-child {
+  margin-left: 2rem;
 }
 
 .details-section h4 {

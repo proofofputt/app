@@ -46,7 +46,7 @@ async function handleGetDuels(req, res) {
   let client;
   try {
     client = await pool.connect();
-    console.log('Duels API: Database connected successfully - v2 with time fixes');
+    console.log('Duels API: Database connected successfully');
 
     const { player_id } = req.query;
 
@@ -89,33 +89,20 @@ async function handleGetDuels(req, res) {
       // Extract time limit from multiple possible fields, converting hours to minutes if needed
       let timeLimit = null;
       
-      console.log('[DEBUG] Processing duel:', duel.duel_id, 'settings:', JSON.stringify(settings), 'rules:', JSON.stringify(rules));
-      
       if (settings.session_duration_limit_minutes) {
         timeLimit = settings.session_duration_limit_minutes;
-        console.log('[DEBUG] Found time limit in settings.session_duration_limit_minutes:', timeLimit);
       } else if (rules.session_duration_limit_minutes) {
         timeLimit = rules.session_duration_limit_minutes;
-        console.log('[DEBUG] Found time limit in rules.session_duration_limit_minutes:', timeLimit);
       } else if (settings.time_limit_minutes) {
         timeLimit = settings.time_limit_minutes;
-        console.log('[DEBUG] Found time limit in settings.time_limit_minutes:', timeLimit);
       } else if (rules.time_limit_minutes) {
         timeLimit = rules.time_limit_minutes;
-        console.log('[DEBUG] Found time limit in rules.time_limit_minutes:', timeLimit);
       } else if (rules.time_limit_hours) {
         timeLimit = rules.time_limit_hours * 60; // Convert hours to minutes
-        console.log('[DEBUG] Found time limit in rules.time_limit_hours:', timeLimit);
       } else if (settings.time_limit) {
         timeLimit = settings.time_limit;
-        console.log('[DEBUG] Found time limit in settings.time_limit:', timeLimit);
       } else if (rules.time_limit) {
         timeLimit = rules.time_limit;
-        console.log('[DEBUG] Found time limit in rules.time_limit:', timeLimit);
-      }
-      
-      if (!timeLimit) {
-        console.log('[DEBUG] No time limit found in any field');
       }
       
       // Calculate expiration date from invitation_expiry_minutes if expires_at is null

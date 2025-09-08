@@ -51,7 +51,7 @@ const InlineInviteForm = ({ onInvite }) => {
       setIsSubmitting(true);
       setError('');
       try {
-        await onInvite(inviteeName);
+        await onInvite(selectedPlayerId);
         // Clear form on success
         setInviteeName('');
         setSelectedPlayerId(null);

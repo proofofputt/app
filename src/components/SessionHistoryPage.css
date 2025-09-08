@@ -113,9 +113,18 @@
 
 .session-history-page .details-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(3, 1fr); /* Fixed 3 columns for single row */
   gap: 2.5rem;
   max-width: none; /* Allow grid to use full available width */
+  margin-left: 21%; /* Add left margin as requested for session details popup */
+  /* Force single row layout */
+  grid-template-rows: 1fr;
+  grid-auto-flow: column;
+}
+
+/* Add specific margin to the first column (Makes by category) in session history */
+.session-history-page .details-grid .details-section:first-child {
+  margin-left: 2rem;
 }
 
 .upgrade-prompt-sessions {
