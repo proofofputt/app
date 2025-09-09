@@ -230,7 +230,7 @@ const PlayerProfile = ({ playerId, requestingPlayerId, onClose, onChallenge }) =
               {profile.recent_sessions.slice(0, 3).map((session, index) => (
                 <div key={session.session_id} className="session-item">
                   <div className="session-date">
-                    {new Date(session.date).toLocaleDateString()}
+                    {new Date(session.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </div>
                   <div className="session-stats">
                     <span>{session.total_makes}/{session.total_putts} ({formatPercentage(session.make_percentage)})</span>

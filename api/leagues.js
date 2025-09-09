@@ -90,6 +90,7 @@ async function handleGetLeagues(req, res, client) {
       l.created_by as creator_id,
       l.created_by,
       l.rules,
+      l.privacy_level,
       creator.name as creator_name,
       lm.joined_at,
       (SELECT COUNT(*) FROM league_memberships WHERE league_id = l.league_id) as member_count,
@@ -118,6 +119,7 @@ async function handleGetLeagues(req, res, client) {
       l.created_by as creator_id,
       l.created_by,
       l.rules,
+      l.privacy_level,
       creator.name as creator_name,
       (SELECT COUNT(*) FROM league_memberships WHERE league_id = l.league_id) as member_count,
       (
@@ -129,7 +131,7 @@ async function handleGetLeagues(req, res, client) {
       ) as active_round_number
     FROM leagues l
     JOIN players creator ON l.created_by = creator.player_id
-    WHERE l.rules->>'privacy' = 'public'
+    WHERE l.privacy_level = 'public'
     AND l.league_id NOT IN (
       SELECT league_id FROM league_memberships WHERE player_id = $1
     )
@@ -188,10 +190,10 @@ async function handleCreateLeague(req, res, client) {
 
   // Try to create league with minimal required fields first
   const leagueResult = await client.query(`
-    INSERT INTO leagues (name, description, created_by, rules, status, created_at)
-    VALUES ($1, $2, $3, $4, 'setup', NOW())
-    RETURNING league_id, name, description, rules, created_by
-  `, [name, description, user.playerId, JSON.stringify(defaultSettings)]);
+    INSERT INTO leagues (name, description, created_by, rules, privacy_level, status, created_at)
+    VALUES ($1, $2, $3, $4, $5, 'setup', NOW())
+    RETURNING league_id, name, description, rules, privacy_level, created_by
+  `, [name, description, user.playerId, JSON.stringify(defaultSettings), defaultSettings.privacy || 'public']);
 
   const league = leagueResult.rows[0];
 
@@ -206,6 +208,40 @@ async function handleCreateLeague(req, res, client) {
     console.error(`[ERROR] Failed to create league membership:`, membershipError.message);
     console.error(`[ERROR] League: ${league.league_id}, Player: ${user.playerId}`);
     throw membershipError; // Re-throw to fail the league creation if membership fails
+  }
+
+  // Create league rounds automatically
+  try {
+    const numRounds = defaultSettings.num_rounds || 4;
+    const roundDurationHours = defaultSettings.round_duration_hours || 168; // 1 week default
+    
+    for (let roundNum = 1; roundNum <= numRounds; roundNum++) {
+      const roundStart = new Date(Date.now() + ((roundNum - 1) * roundDurationHours * 60 * 60 * 1000));
+      const roundEnd = new Date(roundStart.getTime() + (roundDurationHours * 60 * 60 * 1000));
+      
+      await client.query(`
+        INSERT INTO league_rounds (league_id, round_number, start_time, end_time, status, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+      `, [
+        league.league_id, 
+        roundNum, 
+        roundStart, 
+        roundEnd, 
+        roundNum === 1 ? 'active' : 'scheduled'
+      ]);
+    }
+    
+    // Update league status to active
+    await client.query(`
+      UPDATE leagues 
+      SET status = 'active', updated_at = NOW()
+      WHERE league_id = $1
+    `, [league.league_id]);
+    
+    console.log(`[DEBUG] Created ${numRounds} rounds for league ${league.league_id}`);
+  } catch (roundsError) {
+    console.error(`[ERROR] Failed to create league rounds:`, roundsError.message);
+    // Don't fail the league creation if rounds fail - can be created later
   }
 
   return res.status(201).json({

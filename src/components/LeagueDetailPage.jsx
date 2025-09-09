@@ -68,21 +68,21 @@ const LeagueDetailPage = () => {
     }
   }, [leagueId, playerData, fetchLeagueDetails, showNotification]);
 
-  const handleStartLeagueSession = useCallback(async (roundId) => {
+  const handleStartLeagueSession = useCallback(async (round) => {
     try {
       console.log('[LeagueDetailPage] Generating league round parameters:', {
         player_id: playerData.player_id,
-        round_id: roundId,
+        round_number: round.round_number,
+        round_id: round.round_id,
         league_name: league?.name,
         time_limit: league?.settings?.time_limit_minutes
       });
       
-      // Generate parameter string for manual entry
+      // Generate parameter string for manual entry - use round_number (1,2,3) not database round_id
       const parameters = [
-        `league_round=${roundId}`,
+        `league_round=${round.round_number}`,
         league?.league_id ? `league_id=${league.league_id}` : null,
-        league?.settings?.time_limit_minutes ? `time_limit=${league.settings.time_limit_minutes}` : null,
-        'target=50_putts'
+        league?.settings?.time_limit_minutes ? `time_limit=${league.settings.time_limit_minutes}` : null
       ].filter(Boolean).join(',');
       
       // Copy to clipboard
@@ -459,11 +459,13 @@ const LeagueDetailPage = () => {
                               {displayStatus === 'active' && <CountdownTimer endTime={round.end_time} />}
                               {isMember ? (
                                 canParticipate ? (
-                                  <button onClick={() => handleStartLeagueSession(round.round_id)} className="btn btn-small" title="Copy parameters to paste into desktop app">Copy Parameters</button>
+                                  <button onClick={() => handleStartLeagueSession(round)} className="btn btn-small" title="Copy parameters to paste into desktop app">Copy Parameters</button>
                                 ) : hasSubmitted ? (
                                   <span className="status-badge status-completed">Submitted</span>
                                 ) : !isRoundStarted ? (
                                   <span className="status-badge status-scheduled">Scheduled</span>
+                                ) : displayStatus === 'completed' ? (
+                                  <span className="status-badge status-completed">Completed</span>
                                 ) : (
                                   <span className="status-badge status-completed">Round Closed</span>
                                 )

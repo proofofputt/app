@@ -185,8 +185,8 @@ const PlayerCareerPage = () => {
                       const isCreator = duel.creator_id === parseInt(playerId);
                       const opponentName = isCreator ? duel.invited_player_name : duel.creator_name;
                       const opponentId = isCreator ? duel.invited_player_id : duel.creator_id;
-                      const myScore = isCreator ? duel.creator_makes : duel.invited_makes;
-                      const opponentScore = isCreator ? duel.invited_makes : duel.creator_makes;
+                      const myScore = isCreator ? duel.creator_score : duel.invited_player_score;
+                      const opponentScore = isCreator ? duel.invited_player_score : duel.creator_score;
                       let resultText = '';
                       if (duel.status === 'completed') {
                         if (duel.winner_id === null) resultText = 'Draw';

@@ -48,17 +48,21 @@ function scoreDuelSessions(challengerSession, challengedSession, rules) {
       challengerScore = challengerSession.fastest_21_makes || 999999;
       challengedScore = challengedSession.fastest_21_makes || 999999;
       // For time-based, lower is better
-      return challengerScore < challengedScore ? 'challenger' : 'challenged';
+      const winner = challengerScore < challengedScore ? 'challenger' : 'challenged';
+      return { winner, challengerScore, challengedScore };
     default:
       challengerScore = challengerSession.total_makes || 0;
       challengedScore = challengedSession.total_makes || 0;
   }
   
+  let winner;
   if (challengerScore === challengedScore) {
-    return 'tie';
+    winner = 'tie';
+  } else {
+    winner = challengerScore > challengedScore ? 'challenger' : 'challenged';
   }
   
-  return challengerScore > challengedScore ? 'challenger' : 'challenged';
+  return { winner, challengerScore, challengedScore };
 }
 
 export default async function handler(req, res) {
@@ -220,7 +224,7 @@ export default async function handler(req, res) {
               const duelData = sessionsResult.rows[0];
               
               // Score the duel using the same logic as duels-v2
-              const winner = scoreDuelSessions(
+              const { winner, challengerScore, challengedScore } = scoreDuelSessions(
                 duelData.creator_session_data,
                 duelData.invited_player_session_data,
                 duelData.rules || {}
@@ -231,17 +235,19 @@ export default async function handler(req, res) {
               else if (winner === 'challenged') winnerId = duelData.duel_invited_player_id;
               // winnerId remains null for ties
               
-              // Update duel with results
+              // Update duel with results and scores
               await client.query(`
                 UPDATE duels SET 
                   status = 'completed',
                   winner_id = $1,
+                  duel_creator_score = $2,
+                  duel_invited_player_score = $3,
                   completed_at = NOW(),
                   updated_at = NOW()
-                WHERE duel_id = $2
-              `, [winnerId, duel_id]);
+                WHERE duel_id = $4
+              `, [winnerId, challengerScore, challengedScore, duel_id]);
               
-              console.log(`[upload-session] Duel ${duel_id} automatically scored and completed. Winner: ${winner} (player ${winnerId || 'tie'})`);
+              console.log(`[upload-session] Duel ${duel_id} automatically scored and completed. Winner: ${winner} (player ${winnerId || 'tie'}). Scores: ${challengerScore} vs ${challengedScore}`);
             } else {
               console.log(`[upload-session] Error: Could not retrieve session data for duel scoring`);
             }

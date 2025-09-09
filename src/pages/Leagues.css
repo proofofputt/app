@@ -88,7 +88,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: var(--text-color-secondary);
 }
 
@@ -106,7 +106,7 @@
 }
 
 .round-start-time {
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: var(--text-color-secondary);
   font-weight: normal;
   margin-left: 0.75rem;
@@ -137,7 +137,7 @@
 .round-submission-table th {
   font-weight: bold;
   color: var(--text-color-secondary);
-  font-size: 0.85rem;
+  font-size: 0.95rem;
 }
 
 .round-submission-table tbody tr:last-child td {
@@ -155,7 +155,7 @@
   color: var(--masters-green-dark);
   padding: 0.15rem 0.5rem;
   border-radius: 8px;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: bold;
 }
 
@@ -293,7 +293,7 @@
 }
 
 .round-start-time-label {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: normal;
   color: var(--masters-green-dark);
   opacity: 0.8;
@@ -304,7 +304,7 @@
   background-color: var(--surface-color);
   border: none;
   padding: 0;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   text-align: right;
   color: var(--masters-green-dark);
 }
@@ -508,7 +508,7 @@
 .privacy-badge {
   padding: 0.25rem 0.6rem;
   border-radius: 12px;
-  font-size: 0.75rem;
+  font-size: 0.95rem;
   font-weight: bold;
   text-transform: uppercase;
 }
@@ -560,7 +560,7 @@
 .leagues-table th {
   color: var(--text-color-secondary);
   text-transform: uppercase;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   letter-spacing: 0.5px;
 }
 

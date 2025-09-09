@@ -5,12 +5,11 @@ import { useNotification } from '../context/NotificationContext';
 import { useNavigate, Link } from 'react-router-dom';
 import CreateDuelModal from './CreateDuelModal';
 import DuelResults from './DuelResults';
-import DuelHistoryStats from './DuelHistoryStats';
 import SortButton from './SortButton';
 import Pagination from './Pagination';
 import './DuelsPage.css';
 
-const DuelRow = ({ duel, onRespond, onSubmitSession, currentUserId, isActiveSection }) => {
+const DuelRow = ({ duel, onRespond, onSubmitSession, currentUserId, isActiveSection, isCompletedSection }) => {
     const isCreator = duel.creator_id === currentUserId;
     const opponentName = isCreator ? duel.invited_player_name : duel.creator_name;
     const opponentId = isCreator ? duel.invited_player_id : duel.creator_id;
@@ -113,6 +112,24 @@ const DuelRow = ({ duel, onRespond, onSubmitSession, currentUserId, isActiveSect
                             </div>
                         ) : '—'}
                     </td>
+                </>
+            ) : isCompletedSection ? (
+                <>
+                    <td className="score-cell">
+                        <span className="score-badge your-score">{yourScore}</span>
+                    </td>
+                    <td className="score-cell">
+                        <span className="score-badge opponent-score">{opponentScore}</span>
+                    </td>
+                    <td>
+                        <span 
+                            className="status-badge" 
+                            style={{backgroundColor: getStatusColor(duel.status)}}
+                        >
+                            {duel.winner_id === currentUserId ? 'Won' : duel.winner_id === null ? 'Draw' : 'Lost'}
+                        </span>
+                    </td>
+                    <td>{formatDate(duel.completed_at || duel.created_at)}</td>
                 </>
             ) : (
                 <>
@@ -345,6 +362,24 @@ const DuelsPage = () => {
                                         <th>Time Limit</th>
                                         <th className="actions-header">Actions</th>
                                     </>
+                                ) : title === 'Completed Duels' ? (
+                                    <>
+                                        <th>Your Score</th>
+                                        <th>Opponent's Score</th>
+                                        <th 
+                                            style={{ cursor: 'pointer' }}
+                                            onClick={() => handleSort('status')}
+                                        >
+                                            Result {sortConfig.key === 'status' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
+                                        </th>
+                                        <th 
+                                            style={{ cursor: 'pointer' }}
+                                            onClick={() => handleSort('completed_at')}
+                                        >
+                                            Completed {sortConfig.key === 'completed_at' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
+                                        </th>
+                                        <th className="actions-header">Actions</th>
+                                    </>
                                 ) : (
                                     <>
                                         <th 
@@ -375,6 +410,7 @@ const DuelsPage = () => {
                                     onSubmitSession={handleSubmitSession}
                                     currentUserId={playerData.player_id}
                                     isActiveSection={title === 'Active Duels'}
+                                    isCompletedSection={title === 'Completed Duels'}
                                 />
                             ))}
                         </tbody>
@@ -434,16 +470,11 @@ const DuelsPage = () => {
             )}
             
 
-            <DuelHistoryStats 
-                duels={duels} 
-                currentUserId={playerData.player_id} 
-                playerData={playerData} 
-            />
 
             {renderDuelCategory('Invitations Received', categorizedDuels.pendingReceived)}
             {renderDuelCategory('Invitations Sent', categorizedDuels.pendingSent)}
             {renderDuelCategory('Active Duels', categorizedDuels.active)}
-            {renderDuelCategory('Completed & Past Duels', categorizedDuels.completed)}
+            {renderDuelCategory('Completed Duels', categorizedDuels.completed)}
             </div>
         </div>
     );
