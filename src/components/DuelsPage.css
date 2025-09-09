@@ -119,6 +119,7 @@
 .duel-category-section {
   margin-bottom: 2.5rem;
   width: 100%; /* Ensure section uses full container width */
+  box-sizing: border-box; /* Include padding/borders in width */
 }
 
 .duel-category-title {
@@ -139,12 +140,13 @@
   border: 1px solid var(--border-color);
   border-radius: 12px;
   width: 100%; /* Ensure table container uses full container width */
+  box-sizing: border-box; /* Include borders in width calculation */
 }
 
 .duels-table {
   width: 100%; /* Ensure table uses full container width */
-  min-width: 800px; /* Minimum width to ensure readability */
-  table-layout: auto; /* Auto layout for better content adaptation */
+  min-width: 600px; /* Reduced minimum width to fit within page margins */
+  table-layout: fixed; /* Fixed layout for consistent column sizing */
   border-collapse: collapse; /* Clean borders */
 }
 
@@ -169,38 +171,48 @@
   width: 140px; /* Fixed width for "Copy Parameters" button */
 }
 
-/* Optimized column widths for better space usage */
+/* Optimized column widths for fixed layout within page margins */
 .duels-table th[data-col="opponent"],
 .duels-table td[data-cell="opponent"] {
-  min-width: 120px; /* Minimum width for names */
-  width: auto; /* Let it grow as needed */
+  width: 25%; /* Proportional width for names */
+  min-width: 100px;
 }
 
 .duels-table th[data-col="your-score"],
 .duels-table td[data-cell="your-score"],
 .duels-table th[data-col="opponent-score"], 
 .duels-table td[data-cell="opponent-score"] {
-  width: 80px; /* Compact fixed width for scores */
+  width: 12%; /* Compact proportional width for scores */
   text-align: center;
   white-space: nowrap;
 }
 
 .duels-table th[data-col="result"],
 .duels-table td[data-cell="result"] {
-  width: 80px; /* Compact width for Win/Loss/Draw */
+  width: 15%; /* Proportional width for Win/Loss/Draw */
   text-align: center;
 }
 
 .duels-table th[data-col="completed"],
 .duels-table td[data-cell="completed"] {
-  width: 100px; /* Compact date display */
+  width: 18%; /* Proportional width for date display */
   white-space: nowrap;
 }
 
 .duels-table th[data-col="actions"],
 .duels-table td[data-cell="actions"] {
-  width: 140px; /* Fixed width for "Copy Parameters" button */
+  width: 18%; /* Proportional width for buttons */
   text-align: center;
+}
+
+/* For active duels table - adjust for different columns */
+.duels-table th:nth-child(3), /* Expires column */
+.duels-table td:nth-child(3),
+.duels-table th:nth-child(4), /* Time Limit column */
+.duels-table td:nth-child(4) {
+  width: 15%;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .duels-table thead th {
@@ -262,6 +274,12 @@
   gap: 0.5rem;
 }
 
+/* Ensure consistent alignment across all screen sizes */
+.duels-page .page-header {
+  width: 100%; /* Match the container width constraint */
+  box-sizing: border-box;
+}
+
 /* Responsive table headers - allow wrapping on smaller screens */
 @media (max-width: 768px) {
   .duels-table th {
@@ -279,7 +297,13 @@
   }
   
   .duels-table {
-    min-width: 600px; /* Smaller minimum width for mobile */
+    min-width: 500px; /* Even smaller minimum width for mobile */
+  }
+  
+  /* Adjust page margins for mobile */
+  .duels-page .container {
+    margin: 0 5%; /* Reduced margins on mobile */
+    width: 90%; /* Increased content width on mobile */
   }
 }
 
