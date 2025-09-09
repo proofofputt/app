@@ -19,9 +19,10 @@ export default async function handler(req, res) {
   }
 
   const { player_id } = req.query;
+  const playerIdInt = parseInt(player_id);
 
-  if (!player_id) {
-    return res.status(400).json({ success: false, message: 'Player ID is required' });
+  if (!player_id || isNaN(playerIdInt)) {
+    return res.status(400).json({ success: false, message: 'Valid Player ID is required' });
   }
 
   try {
@@ -30,7 +31,7 @@ export default async function handler(req, res) {
     // Get player info
     const playerResult = await client.query(
       'SELECT name FROM players WHERE player_id = $1',
-      [player_id]
+      [playerIdInt]
     );
 
     if (playerResult.rows.length === 0) {
@@ -41,11 +42,15 @@ export default async function handler(req, res) {
     const player = playerResult.rows[0];
 
     // Get all sessions with data
+    console.log(`DEBUG: Fetching career stats for player_id=${playerIdInt} (type: ${typeof playerIdInt})`);
+    
     const sessionsResult = await client.query(`
       SELECT data FROM sessions 
       WHERE player_id = $1 AND data IS NOT NULL
       ORDER BY created_at ASC
-    `, [player_id]);
+    `, [playerIdInt]);
+    
+    console.log(`DEBUG: Found ${sessionsResult.rows.length} sessions for player ${playerIdInt}`);
 
     client.release();
 
@@ -179,6 +184,8 @@ function processSessionsForCareerStats(sessionRows, playerName) {
   // Calculate averages
   stats.avg_ppm = ppmCount > 0 ? totalPpm / ppmCount : 0;
   stats.avg_mpm = mpmCount > 0 ? totalMpm / mpmCount : 0;
+
+  console.log(`DEBUG: Processed ${sessionRows.length} sessions, total makes: ${stats.sum_makes}`);
 
   return stats;
 }
