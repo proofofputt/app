@@ -135,6 +135,7 @@
   /* Define a max-height to make the container scrollable */
   max-height: 60vh; /* Adjust as needed */
   overflow-y: auto;
+  overflow-x: auto; /* Allow horizontal scrolling for wide content */
   border: 1px solid var(--border-color);
   border-radius: 12px;
   width: 100%; /* Ensure table container uses full container width */
@@ -142,51 +143,64 @@
 
 .duels-table {
   width: 100%; /* Ensure table uses full container width */
-  table-layout: fixed; /* Fixed layout to prevent column width issues */
+  min-width: 800px; /* Minimum width to ensure readability */
+  table-layout: auto; /* Auto layout for better content adaptation */
   border-collapse: collapse; /* Clean borders */
 }
 
 .duels-table th,
 .duels-table td {
-  overflow: hidden; /* Prevent content overflow */
-  text-overflow: ellipsis; /* Add ellipsis for long text */
-  white-space: nowrap; /* Prevent text wrapping */
+  padding: 0.75rem 0.5rem; /* Comfortable padding */
+  vertical-align: middle;
+  word-wrap: break-word; /* Allow long words to break */
 }
 
-/* Allow actions column to wrap if needed */
+/* Score cells - compact but readable */
+.duels-table .score-cell {
+  text-align: center;
+  white-space: nowrap; /* Keep scores on one line */
+  width: 80px; /* Fixed narrow width for scores */
+}
+
+/* Actions column configuration */
 .duels-table .actions-cell {
-  white-space: normal; /* Allow wrapping in actions column */
+  white-space: nowrap; /* Keep buttons together */
+  text-align: center;
+  width: 140px; /* Fixed width for "Copy Parameters" button */
 }
 
-/* Specific column widths for completed duels table */
+/* Optimized column widths for better space usage */
 .duels-table th[data-col="opponent"],
 .duels-table td[data-cell="opponent"] {
-  width: 20%; /* Opponent name column */
+  min-width: 120px; /* Minimum width for names */
+  width: auto; /* Let it grow as needed */
 }
 
 .duels-table th[data-col="your-score"],
-.duels-table td[data-cell="your-score"] {
-  width: 15%; /* Your score column */
-}
-
+.duels-table td[data-cell="your-score"],
 .duels-table th[data-col="opponent-score"], 
 .duels-table td[data-cell="opponent-score"] {
-  width: 15%; /* Opponent score column */
+  width: 80px; /* Compact fixed width for scores */
+  text-align: center;
+  white-space: nowrap;
 }
 
 .duels-table th[data-col="result"],
 .duels-table td[data-cell="result"] {
-  width: 15%; /* Result column */
+  width: 80px; /* Compact width for Win/Loss/Draw */
+  text-align: center;
 }
 
 .duels-table th[data-col="completed"],
 .duels-table td[data-cell="completed"] {
-  width: 20%; /* Completed date column */
+  width: 100px; /* Compact date display */
+  white-space: nowrap;
 }
 
 .duels-table th[data-col="actions"],
 .duels-table td[data-cell="actions"] {
-  width: 15%; /* Actions column */
+  width: 140px; /* Fixed width for "Copy Parameters" button */
+  text-align: center;
 }
 
 .duels-table thead th {
@@ -213,13 +227,27 @@
   border-right: 1px solid var(--border-color);
 }
 
-.duels-table .actions-header,
-.duels-table .actions-cell {
-  padding-left: 0;
-  padding-right: 0;
+/* Score badges styling */
+.score-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  min-width: 30px;
   text-align: center;
-  width: 1%; /* Helps the column shrink to fit its content */
-  white-space: nowrap; /* Prevents buttons from wrapping on smaller screens */
+}
+
+.score-badge.your-score {
+  background-color: rgba(16, 185, 129, 0.2); /* Green tint */
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.score-badge.opponent-score {
+  background-color: rgba(239, 68, 68, 0.2); /* Red tint */
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 /* This overrides any global styles to ensure the actions are centered. */
@@ -234,9 +262,33 @@
   gap: 0.5rem;
 }
 
-/* Add margin to buttons in actions cell to prevent touching borders */
+/* Responsive table headers - allow wrapping on smaller screens */
+@media (max-width: 768px) {
+  .duels-table th {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.25rem;
+  }
+  
+  .duels-table td {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.875rem;
+  }
+  
+  .duels-table-container {
+    overflow-x: auto; /* Enable horizontal scrolling on mobile */
+  }
+  
+  .duels-table {
+    min-width: 600px; /* Smaller minimum width for mobile */
+  }
+}
+
+/* Button styling in actions column */
 .duels-table .actions-cell .btn {
-  margin: 0.25rem;
+  margin: 0.125rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  white-space: nowrap;
 }
 
 /* Yellow styling for Submit Session button */

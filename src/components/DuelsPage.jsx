@@ -359,16 +359,16 @@ const DuelsPage = () => {
                                 </th>
                                 {title === 'Active Duels' ? (
                                     <>
-                                        <th>Your Score</th>
-                                        <th>Opponent's Score</th>
+                                        <th data-col="your-score">Your Score</th>
+                                        <th data-col="opponent-score">Opponent Score</th>
                                         <th>Expires</th>
                                         <th>Time Limit</th>
-                                        <th className="actions-header">Actions</th>
+                                        <th data-col="actions">Actions</th>
                                     </>
                                 ) : title === 'Completed Duels' ? (
                                     <>
                                         <th data-col="your-score">Your Score</th>
-                                        <th data-col="opponent-score">Opponent's Score</th>
+                                        <th data-col="opponent-score">Opponent Score</th>
                                         <th 
                                             data-col="result"
                                             style={{ cursor: 'pointer' }}
@@ -381,9 +381,9 @@ const DuelsPage = () => {
                                             style={{ cursor: 'pointer' }}
                                             onClick={() => handleSort('completed_at')}
                                         >
-                                            Completed {sortConfig.key === 'completed_at' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
+                                            Date {sortConfig.key === 'completed_at' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
                                         </th>
-                                        <th className="actions-header" data-col="actions">Actions</th>
+                                        <th data-col="actions">Actions</th>
                                     </>
                                 ) : (
                                     <>
@@ -397,11 +397,11 @@ const DuelsPage = () => {
                                             style={{ cursor: 'pointer' }}
                                             onClick={() => handleSort('created_at')}
                                         >
-                                            Date Created {sortConfig.key === 'created_at' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
+                                            Created {sortConfig.key === 'created_at' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
                                         </th>
                                         <th>Expires</th>
                                         <th>Time Limit</th>
-                                        <th className="actions-header">Actions</th>
+                                        <th data-col="actions">Actions</th>
                                     </>
                                 )}
                             </tr>

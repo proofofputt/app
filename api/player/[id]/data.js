@@ -55,9 +55,13 @@ export default async function handler(req, res) {
     const client = await pool.connect();
     
     try {
-      // Get player basic info
+      // Get player basic info with display_name from users table
       const playerResult = await client.query(
-        'SELECT player_id, name, email, membership_tier, timezone, created_at FROM players WHERE player_id = $1',
+        `SELECT p.player_id, p.name, p.email, p.membership_tier, p.timezone, p.created_at,
+                u.display_name, u.username
+         FROM players p 
+         LEFT JOIN users u ON p.player_id = u.id 
+         WHERE p.player_id = $1`,
         [playerId]
       );
 
