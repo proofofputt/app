@@ -151,9 +151,11 @@ const DuelRow = ({ duel, onRespond, onSubmitSession, currentUserId, isActiveSect
                     </td>
                 </>
             )}
-            <td>
-                {duel.time_limit_minutes ? `${duel.time_limit_minutes} min` : '—'}
-            </td>
+            {!isCompletedSection && (
+                <td>
+                    {duel.time_limit_minutes ? `${duel.time_limit_minutes} min` : '—'}
+                </td>
+            )}
             <td className="actions-cell">
                 {renderActions()}
             </td>
