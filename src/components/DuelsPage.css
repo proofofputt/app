@@ -40,7 +40,7 @@
   background-color: var(--background-color, #1a1a1a); /* Same background as tables */
   border: 1px solid var(--border-color, #333);
   border-radius: 12px;
-  color: white; /* White text for better readability */
+  color: white !important; /* White text for better readability - override other CSS */
   width: 100%; /* Ensure empty state uses full container width */
   box-sizing: border-box; /* Include padding in width calculation */
 }
@@ -48,6 +48,7 @@
 .duels-page .empty-state p {
   margin: 0;
   font-weight: 500;
+  color: white !important; /* Ensure paragraph text is also white */
 }
 
 /* Status badges */
@@ -141,6 +142,51 @@
 
 .duels-table {
   width: 100%; /* Ensure table uses full container width */
+  table-layout: fixed; /* Fixed layout to prevent column width issues */
+  border-collapse: collapse; /* Clean borders */
+}
+
+.duels-table th,
+.duels-table td {
+  overflow: hidden; /* Prevent content overflow */
+  text-overflow: ellipsis; /* Add ellipsis for long text */
+  white-space: nowrap; /* Prevent text wrapping */
+}
+
+/* Allow actions column to wrap if needed */
+.duels-table .actions-cell {
+  white-space: normal; /* Allow wrapping in actions column */
+}
+
+/* Specific column widths for completed duels table */
+.duels-table th[data-col="opponent"],
+.duels-table td[data-cell="opponent"] {
+  width: 20%; /* Opponent name column */
+}
+
+.duels-table th[data-col="your-score"],
+.duels-table td[data-cell="your-score"] {
+  width: 15%; /* Your score column */
+}
+
+.duels-table th[data-col="opponent-score"], 
+.duels-table td[data-cell="opponent-score"] {
+  width: 15%; /* Opponent score column */
+}
+
+.duels-table th[data-col="result"],
+.duels-table td[data-cell="result"] {
+  width: 15%; /* Result column */
+}
+
+.duels-table th[data-col="completed"],
+.duels-table td[data-cell="completed"] {
+  width: 20%; /* Completed date column */
+}
+
+.duels-table th[data-col="actions"],
+.duels-table td[data-cell="actions"] {
+  width: 15%; /* Actions column */
 }
 
 .duels-table thead th {
