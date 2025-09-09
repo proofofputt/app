@@ -40,7 +40,7 @@
   background-color: var(--background-color, #1a1a1a); /* Same background as tables */
   border: 1px solid var(--border-color, #333);
   border-radius: 12px;
-  color: var(--warning-color, #fbbf24); /* Yellow text */
+  color: white; /* White text for better readability */
   width: 100%; /* Ensure empty state uses full container width */
   box-sizing: border-box; /* Include padding in width calculation */
 }
