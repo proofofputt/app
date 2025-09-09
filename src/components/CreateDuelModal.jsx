@@ -3,13 +3,13 @@ import { apiSearchPlayers, apiCreateDuel } from '../api';
 import { useAuth } from '../context/AuthContext';
 import './CreateDuelModal.css';
 
-const CreateDuelModal = ({ onClose, onDuelCreated }) => {
+const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
   const { playerData } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  const [selectedPlayer, setSelectedPlayer] = useState(null);
-  const [duration, setDuration] = useState(5);
-  const [inviteExpiration, setInviteExpiration] = useState(72); // Default to 72 hours
+  const [selectedPlayer, setSelectedPlayer] = useState(rematchData?.opponent || null);
+  const [duration, setDuration] = useState(rematchData?.duration || 5);
+  const [inviteExpiration, setInviteExpiration] = useState(rematchData?.expiration || 72); // Default to 72 hours
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -54,38 +54,54 @@ const CreateDuelModal = ({ onClose, onDuelCreated }) => {
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <h2>Create a New Duel</h2>
-        <form onSubmit={handleSearch}>
-          <div className="form-group">
-            <label htmlFor="player-search">Find Opponent</label>
-            <input
-              id="player-search"
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by name or email"
-            />
-            <button type="submit" disabled={isLoading}>
-              {isLoading ? 'Searching...' : 'Search'}
-            </button>
+        <h2>{rematchData ? 'Challenge to Rematch' : 'Create a New Duel'}</h2>
+        
+        {rematchData ? (
+          // Rematch mode - show pre-selected opponent
+          <div className="rematch-info">
+            <div className="selected-opponent">
+              <strong>Opponent:</strong> {rematchData.opponent.name}
+            </div>
+            <p className="rematch-description">
+              Challenge {rematchData.opponent.name} to a rematch with the same settings as your previous duel.
+            </p>
           </div>
-        </form>
+        ) : (
+          // Regular duel creation - show search
+          <>
+            <form onSubmit={handleSearch}>
+              <div className="form-group">
+                <label htmlFor="player-search">Find Opponent</label>
+                <input
+                  id="player-search"
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search by name or email"
+                />
+                <button type="submit" disabled={isLoading}>
+                  {isLoading ? 'Searching...' : 'Search'}
+                </button>
+              </div>
+            </form>
 
-        {searchResults.length > 0 && (
-          <ul className="search-results">
-            {searchResults.map(player => (
-              <li
-                key={player.player_id}
-                onClick={() => setSelectedPlayer(player)}
-                className={selectedPlayer?.player_id === player.player_id ? 'selected' : ''}
-              >
-                {player.name}
-              </li>
-            ))}
-          </ul>
+            {searchResults.length > 0 && (
+              <ul className="search-results">
+                {searchResults.map(player => (
+                  <li
+                    key={player.player_id}
+                    onClick={() => setSelectedPlayer(player)}
+                    className={selectedPlayer?.player_id === player.player_id ? 'selected' : ''}
+                  >
+                    {player.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {selectedPlayer && <p>Selected: {selectedPlayer.name}</p>}
+          </>
         )}
-
-        {selectedPlayer && <p>Selected: {selectedPlayer.name}</p>}
 
         <div className="form-group">
           <label htmlFor="duration">Session Duration</label>
@@ -117,7 +133,7 @@ const CreateDuelModal = ({ onClose, onDuelCreated }) => {
             onClick={handleCreate}
             disabled={!selectedPlayer || isLoading}
           >
-            {isLoading ? 'Sending...' : 'Send Invite'}
+            {isLoading ? 'Sending...' : rematchData ? 'Send Rematch Challenge' : 'Send Invite'}
           </button>
         </div>
       </div>

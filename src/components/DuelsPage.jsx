@@ -9,7 +9,7 @@ import SortButton from './SortButton';
 import Pagination from './Pagination';
 import './DuelsPage.css';
 
-const DuelRow = ({ duel, onRespond, onSubmitSession, currentUserId, isActiveSection, isCompletedSection }) => {
+const DuelRow = ({ duel, onRespond, onSubmitSession, onRematch, currentUserId, isActiveSection, isCompletedSection }) => {
     const isCreator = duel.creator_id === currentUserId;
     const opponentName = isCreator ? duel.invited_player_name : duel.creator_name;
     const opponentId = isCreator ? duel.invited_player_id : duel.creator_id;
@@ -77,10 +77,15 @@ const DuelRow = ({ duel, onRespond, onSubmitSession, currentUserId, isActiveSect
         }
         
         if (duel.status === 'completed') {
-            const winner = duel.winner_id === currentUserId ? 'You Won!' : 
-                          duel.winner_id === duel.creator_id ? duel.creator_name :
-                          duel.winner_id === duel.invited_player_id ? duel.invited_player_name : 'Draw';
-            return <span className="winner-text">{winner}</span>;
+            return (
+                <button 
+                    onClick={() => onRematch(duel)} 
+                    className="btn btn-sm btn-secondary"
+                    title="Challenge this opponent to a rematch"
+                >
+                    Rematch
+                </button>
+            );
         }
         
         return <span className="text-muted">—</span>;
@@ -172,6 +177,7 @@ const DuelsPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [rematchData, setRematchData] = useState(null);
     const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 9;
@@ -269,7 +275,26 @@ const DuelsPage = () => {
 
     const onDuelCreated = () => {
         setShowCreateModal(false);
+        setRematchData(null); // Clear rematch data when modal closes
         fetchDuels();
+    };
+
+    const handleRematch = (duel) => {
+        const isCreator = duel.creator_id === playerData.player_id;
+        const opponent = {
+            player_id: isCreator ? duel.invited_player_id : duel.creator_id,
+            name: isCreator ? duel.invited_player_name : duel.creator_name
+        };
+        
+        const rematchInfo = {
+            opponent: opponent,
+            duration: duel.time_limit_minutes || 5,
+            expiration: 72 // Default to 72 hours for rematch
+        };
+        
+        setRematchData(rematchInfo);
+        setShowCreateModal(true);
+        showNotification(`Setting up rematch with ${opponent.name}`);
     };
 
 
@@ -413,6 +438,7 @@ const DuelsPage = () => {
                                     duel={duel}
                                     onRespond={handleRespond}
                                     onSubmitSession={handleSubmitSession}
+                                    onRematch={handleRematch}
                                     currentUserId={playerData.player_id}
                                     isActiveSection={title === 'Active Duels'}
                                     isCompletedSection={title === 'Completed Duels'}
@@ -469,8 +495,12 @@ const DuelsPage = () => {
 
             {showCreateModal && (
                 <CreateDuelModal 
-                    onClose={() => setShowCreateModal(false)} 
-                    onDuelCreated={onDuelCreated} 
+                    onClose={() => {
+                        setShowCreateModal(false);
+                        setRematchData(null); // Clear rematch data when modal closes
+                    }} 
+                    onDuelCreated={onDuelCreated}
+                    rematchData={rematchData}
                 />
             )}
             
