@@ -92,7 +92,7 @@ const DuelRow = ({ duel, onRespond, onSubmitSession, currentUserId, isActiveSect
 
     return (
         <tr>
-            <td>
+            <td data-cell="opponent">
                 <Link to={`/players/${currentUserId}/vs/${opponentId}`} className="opponent-link">
                     {opponentName}
                 </Link>
@@ -115,13 +115,13 @@ const DuelRow = ({ duel, onRespond, onSubmitSession, currentUserId, isActiveSect
                 </>
             ) : isCompletedSection ? (
                 <>
-                    <td className="score-cell">
+                    <td className="score-cell" data-cell="your-score">
                         <span className="score-badge your-score">{yourScore}</span>
                     </td>
-                    <td className="score-cell">
+                    <td className="score-cell" data-cell="opponent-score">
                         <span className="score-badge opponent-score">{opponentScore}</span>
                     </td>
-                    <td>
+                    <td data-cell="result">
                         <span 
                             className="status-badge" 
                             style={{backgroundColor: getStatusColor(duel.status)}}
@@ -129,7 +129,7 @@ const DuelRow = ({ duel, onRespond, onSubmitSession, currentUserId, isActiveSect
                             {duel.winner_id === currentUserId ? 'Won' : duel.winner_id === null ? 'Draw' : 'Lost'}
                         </span>
                     </td>
-                    <td>{formatDate(duel.completed_at || duel.created_at)}</td>
+                    <td data-cell="completed">{formatDate(duel.completed_at || duel.created_at)}</td>
                 </>
             ) : (
                 <>
@@ -156,7 +156,7 @@ const DuelRow = ({ duel, onRespond, onSubmitSession, currentUserId, isActiveSect
                     {duel.time_limit_minutes ? `${duel.time_limit_minutes} min` : '—'}
                 </td>
             )}
-            <td className="actions-cell">
+            <td className="actions-cell" data-cell="actions">
                 {renderActions()}
             </td>
         </tr>
@@ -351,6 +351,7 @@ const DuelsPage = () => {
                         <thead>
                             <tr>
                                 <th 
+                                    data-col="opponent"
                                     style={{ cursor: 'pointer' }}
                                     onClick={() => handleSort('opponent_name')}
                                 >
@@ -366,21 +367,23 @@ const DuelsPage = () => {
                                     </>
                                 ) : title === 'Completed Duels' ? (
                                     <>
-                                        <th>Your Score</th>
-                                        <th>Opponent's Score</th>
+                                        <th data-col="your-score">Your Score</th>
+                                        <th data-col="opponent-score">Opponent's Score</th>
                                         <th 
+                                            data-col="result"
                                             style={{ cursor: 'pointer' }}
                                             onClick={() => handleSort('status')}
                                         >
                                             Result {sortConfig.key === 'status' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
                                         </th>
                                         <th 
+                                            data-col="completed"
                                             style={{ cursor: 'pointer' }}
                                             onClick={() => handleSort('completed_at')}
                                         >
                                             Completed {sortConfig.key === 'completed_at' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
                                         </th>
-                                        <th className="actions-header">Actions</th>
+                                        <th className="actions-header" data-col="actions">Actions</th>
                                     </>
                                 ) : (
                                     <>
