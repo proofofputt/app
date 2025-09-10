@@ -83,34 +83,9 @@ async function handleGetActiveCompetitions(req, res) {
       ORDER BY d.expires_at ASC
     `;
 
-    // Get active league rounds where player hasn't submitted
-    const leaguesQuery = `
-      SELECT DISTINCT
-        lr.round_id,
-        l.league_id,
-        l.name as league_name,
-        lr.round_number,
-        lr.start_time,
-        lr.end_time
-      FROM leagues l
-      JOIN league_rounds lr ON l.league_id = lr.league_id
-      JOIN league_memberships lm ON l.league_id = lm.league_id
-      WHERE 
-        lm.player_id = $1
-        AND lr.start_time <= NOW()
-        AND lr.end_time > NOW()
-        AND NOT EXISTS (
-          SELECT 1 FROM league_submissions ls 
-          WHERE ls.round_id = lr.round_id 
-          AND ls.player_id = $1
-        )
-      ORDER BY lr.end_time ASC
-    `;
-
-    const [duelsResult, leaguesResult] = await Promise.all([
-      client.query(duelsQuery, [player_id]),
-      client.query(leaguesQuery, [player_id])
-    ]);
+    // For now, return empty leagues since tables don't exist yet
+    const duelsResult = await client.query(duelsQuery, [player_id]);
+    const leaguesResult = { rows: [] };
 
     // Format duels for desktop UI
     const activeDuels = duelsResult.rows.map(duel => {
