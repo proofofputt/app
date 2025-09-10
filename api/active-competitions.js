@@ -97,7 +97,6 @@ async function handleGetActiveCompetitions(req, res) {
       JOIN league_memberships lm ON l.league_id = lm.league_id
       WHERE 
         lm.player_id = $1
-        AND lm.status = 'active'
         AND lr.start_time <= NOW()
         AND lr.end_time > NOW()
         AND NOT EXISTS (
