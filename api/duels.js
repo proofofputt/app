@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import jwt from 'jsonwebtoken';
+import { sendDuelInviteEmail } from '../utils/emailService.js';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,

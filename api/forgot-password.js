@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import crypto from 'crypto';
+import { sendPasswordResetEmail } from '../utils/emailService.js';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -49,25 +50,20 @@ export default async function handler(req, res) {
       [resetToken, resetTokenExpiry, user.player_id]
     );
 
-    // TODO: Send email with reset link
-    // For now, we'll just log the reset link
-    const resetLink = `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.proofofputt.com'}/reset-password?token=${resetToken}`;
+    // Send password reset email using SendGrid
+    const username = user.username || user.name || email.split('@')[0];
+    const emailResult = await sendPasswordResetEmail(email, username, resetToken);
     
-    console.log('Password reset link for', email, ':', resetLink);
+    if (!emailResult.success) {
+      console.error('Failed to send password reset email:', emailResult.error);
+      // Continue anyway - don't block the reset process if email fails
+    }
     
-    // In production, you would send an email here using SendGrid or similar
-    // Example:
-    // await sendEmail({
-    //   to: email,
-    //   subject: 'Reset your Proof of Putt password',
-    //   html: `
-    //     <p>Hi ${user.username},</p>
-    //     <p>You requested to reset your password. Click the link below to reset it:</p>
-    //     <a href="${resetLink}">Reset Password</a>
-    //     <p>This link will expire in 1 hour.</p>
-    //     <p>If you didn't request this, please ignore this email.</p>
-    //   `
-    // });
+    // For development, also log the reset link
+    if (process.env.NODE_ENV === 'development') {
+      const resetLink = `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.proofofputt.com'}/reset-password?token=${resetToken}`;
+      console.log('Password reset link for', email, ':', resetLink);
+    }
 
     return res.status(200).json({ 
       success: true,

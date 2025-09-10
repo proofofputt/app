@@ -1,6 +1,7 @@
 import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { sendWelcomeEmail } from '../utils/emailService.js';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -109,6 +110,14 @@ export default async function handler(req, res) {
 
     // Generate username from email like login.js does
     const username = player.email.split('@')[0];
+
+    // Send welcome email (don't block registration if email fails)
+    try {
+      await sendWelcomeEmail(player.email, player.name);
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError);
+      // Continue with registration even if email fails
+    }
 
     return res.status(201).json({
       success: true,

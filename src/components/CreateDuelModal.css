@@ -51,6 +51,100 @@
   background-color: var(--masters-green-light);
 }
 
+.search-results li.selected {
+  background-color: var(--masters-green);
+  color: white;
+}
+
+/* New Player Invite Styling */
+.search-results li.new-player-invite {
+  background-color: #f4f1e8; /* Sandy/beige background */
+  border: 2px solid #2d5016; /* Dark green border */
+  color: #2d5016; /* Dark green text */
+  font-weight: 500;
+}
+
+.search-results li.new-player-invite:hover {
+  background-color: #ede8db; /* Slightly darker sandy on hover */
+  border-color: #1a3009; /* Darker green border on hover */
+}
+
+.search-results li.new-player-invite.selected {
+  background-color: #e6dfc8; /* Selected sandy background */
+  border-color: #1a3009;
+  color: #1a3009;
+}
+
+.new-player-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.new-player-label {
+  font-weight: 600;
+  color: #2d5016;
+}
+
+.new-player-contact {
+  font-size: 0.9rem;
+  color: #4a6b2a;
+}
+
+/* Player info styling for regular players */
+.player-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.player-name {
+  font-weight: 500;
+}
+
+.player-email {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+/* Selection info styling */
+.selection-info {
+  background-color: var(--background-color);
+  padding: 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  margin: 1rem 0;
+}
+
+.selection-info.new-player-selection {
+  background-color: #f9f7f0; /* Very light sandy background */
+  border-color: #2d5016;
+  color: #2d5016;
+}
+
+.selected-email {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.invite-method {
+  font-size: 0.9rem;
+  color: #4a6b2a;
+  font-style: italic;
+  margin-top: 0.5rem;
+}
+
+/* Fix overlap by adding proper spacing */
+.search-section {
+  margin-bottom: 2rem; /* Ensure adequate space before next section */
+}
+
+.search-results {
+  margin-bottom: 1.5rem; /* Additional margin after search results */
+}
+
 /* Rematch-specific styling */
 .rematch-info {
   background-color: var(--background-color);

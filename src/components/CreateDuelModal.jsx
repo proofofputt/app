@@ -156,7 +156,7 @@ const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
           </div>
         ) : (
           // Regular duel creation - show search
-          <>
+          <div className="search-section">
             <form onSubmit={handleSearch}>
               <div className="form-group">
                 <label htmlFor="player-search">Find Opponent</label>
@@ -223,7 +223,7 @@ const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
                 </p>
               </div>
             )}
-          </>
+          </div>
         )}
 
 

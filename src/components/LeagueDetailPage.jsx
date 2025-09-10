@@ -127,10 +127,17 @@ const LeagueDetailPage = () => {
     }
   }, [playerData, showNotification, league]);
 
-  const handleInvitePlayer = useCallback(async (inviteeId) => {
+  const handleInvitePlayer = useCallback(async (inviteeId, newPlayerData = null) => {
     try {
-      const response = await apiInviteToLeague(leagueId, inviteeId, playerData.player_id);
-      showNotification(response.message);
+      if (newPlayerData) {
+        // New player invite - this would need to be implemented in the API
+        // For now, show a message about new player invites
+        showNotification(`📧 New player invite functionality coming soon for ${newPlayerData.inputType}: ${newPlayerData.contact}`, false);
+      } else {
+        // Existing player invite
+        const response = await apiInviteToLeague(leagueId, inviteeId, playerData.player_id);
+        showNotification(response.message);
+      }
     } catch (err) {
       showNotification(err.message, true);
     } finally {

@@ -1,0 +1,184 @@
+/* League Invite Form Styling */
+.inline-invite-form {
+  background-color: #f4f1e8; /* Sandy/beige background */
+  border: 2px solid #2d5016; /* Dark green border */
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  color: #2d5016; /* Dark green text */
+}
+
+.search-input-wrapper {
+  position: relative;
+  margin-bottom: 0.75rem;
+}
+
+.inline-invite-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #4a6b2a;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.8);
+  color: #2d5016;
+  font-size: 0.9rem;
+}
+
+.inline-invite-input:focus {
+  outline: none;
+  border-color: #1a3009;
+  background-color: rgba(255, 255, 255, 0.95);
+}
+
+.inline-invite-input::placeholder {
+  color: #4a6b2a;
+}
+
+/* Search Results Styling */
+.inline-invite-form .search-results {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0 0;
+  border: 1px solid #4a6b2a;
+  border-radius: 4px;
+  max-height: 120px;
+  overflow-y: auto;
+  background-color: rgba(255, 255, 255, 0.95);
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 10;
+}
+
+.inline-invite-form .search-results li {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(74, 107, 42, 0.2);
+  color: #2d5016;
+}
+
+.inline-invite-form .search-results li:last-child {
+  border-bottom: none;
+}
+
+.inline-invite-form .search-results li:hover {
+  background-color: #ede8db; /* Slightly darker sandy on hover */
+}
+
+.inline-invite-form .search-results li.selected {
+  background-color: #e6dfc8; /* Selected sandy background */
+  font-weight: 500;
+}
+
+/* New Player Invite Option */
+.inline-invite-form .search-results li.new-player-invite {
+  background-color: #f9f7f0; /* Very light sandy background */
+  border: 1px solid #2d5016;
+  border-radius: 4px;
+  margin: 0.25rem;
+  font-weight: 500;
+}
+
+.inline-invite-form .search-results li.new-player-invite:hover {
+  background-color: #ede8db;
+  border-color: #1a3009;
+}
+
+.new-player-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.new-player-label {
+  font-weight: 600;
+  color: #2d5016;
+}
+
+.new-player-contact {
+  font-size: 0.85rem;
+  color: #4a6b2a;
+}
+
+/* Player info styling for regular players */
+.player-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.player-name {
+  font-weight: 500;
+}
+
+.player-email {
+  font-size: 0.8rem;
+  color: #4a6b2a;
+  opacity: 0.9;
+}
+
+/* Selection info styling */
+.selection-info {
+  background-color: rgba(255, 255, 255, 0.5);
+  padding: 0.75rem;
+  border-radius: 4px;
+  border: 1px solid #4a6b2a;
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.selection-info.new-player-selection {
+  background-color: rgba(255, 255, 255, 0.7);
+  border-color: #2d5016;
+  color: #2d5016;
+}
+
+.selected-email {
+  font-size: 0.85rem;
+  color: #4a6b2a;
+  margin-top: 0.25rem;
+}
+
+.invite-method {
+  font-size: 0.85rem;
+  color: #4a6b2a;
+  font-style: italic;
+  margin-top: 0.5rem;
+}
+
+/* Button styling */
+.inline-invite-form .btn {
+  background-color: #2d5016;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.inline-invite-form .btn:hover:not(:disabled) {
+  background-color: #1a3009;
+}
+
+.inline-invite-form .btn:disabled {
+  background-color: #4a6b2a;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Error styling */
+.inline-error {
+  color: #8b0000; /* Dark red for errors */
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+}
+
+/* Form actions */
+.invite-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
