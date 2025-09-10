@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { apiSearchPlayers } from '../api.js';
 import './InlineInviteForm.css';
 
@@ -42,6 +42,14 @@ const InlineInviteForm = ({ onInvite }) => {
   const [showNewPlayerOption, setShowNewPlayerOption] = useState(false);
 
   const searchTimeoutRef = useRef(null);
+
+  // Check if current input is valid (username, email, or phone)
+  const hasValidInput = useMemo(() => {
+    if (inviteeName.length < 3) return false;
+    const inputType = detectInputType(inviteeName);
+    return inputType === 'email' || inputType === 'phone' || 
+           (inputType === 'username' && inviteeName.length >= 3);
+  }, [inviteeName]);
 
   useEffect(() => {
     if (inviteeName.length > 2 && !selectedPlayer) {
@@ -198,7 +206,7 @@ const InlineInviteForm = ({ onInvite }) => {
       <div className="invite-form-actions">
         <button 
           type="submit" 
-          className="btn" 
+          className={`btn ${hasValidInput ? 'valid-input' : ''}`}
           disabled={(!selectedPlayer && !selectedNewPlayer) || isSubmitting}
         >
           {isSubmitting ? '...' : 
