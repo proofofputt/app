@@ -53,7 +53,6 @@ async function handleGetActiveCompetitions(req, res) {
     const duelsQuery = `
       SELECT 
         d.duel_id,
-        d.status,
         d.settings,
         d.rules,
         d.expires_at,
@@ -75,7 +74,9 @@ async function handleGetActiveCompetitions(req, res) {
       LEFT JOIN players invited_player ON d.duel_invited_player_id = invited_player.player_id
       WHERE 
         (d.duel_creator_id = $1 OR d.duel_invited_player_id = $1)
-        AND d.status IN ('active', 'pending')
+        AND d.expires_at > NOW()
+        AND ((d.duel_creator_id = $1 AND d.duel_creator_session_id IS NULL) 
+             OR (d.duel_invited_player_id = $1 AND d.duel_invited_player_session_id IS NULL))
       ORDER BY d.expires_at ASC
     `;
 
@@ -86,7 +87,6 @@ async function handleGetActiveCompetitions(req, res) {
         lr.round_number,
         lr.start_time,
         lr.end_time,
-        lr.status as round_status,
         l.league_id,
         l.name as league_name,
         l.rules,
@@ -100,7 +100,7 @@ async function handleGetActiveCompetitions(req, res) {
       WHERE 
         lm.player_id = $1 
         AND lm.is_active = true
-        AND lr.status = 'active'
+        AND lr.start_time <= NOW()
         AND lr.end_time > NOW()
         AND lrs.session_id IS NULL  -- Player hasn't submitted yet
       ORDER BY lr.end_time ASC
