@@ -76,7 +76,6 @@ async function handleGetActiveCompetitions(req, res) {
       WHERE 
         (d.duel_creator_id = $1 OR d.duel_invited_player_id = $1)
         AND d.status IN ('active', 'pending')
-        AND d.expires_at > NOW()
       ORDER BY d.expires_at ASC
     `;
 
