@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { apiGetLeaderboard } from '../api';
-import ContactsModal from './ContactsModal';
 import SessionRow from './SessionRow';
 import LeaderboardCard from './LeaderboardCard';
 import './Dashboard.css';
@@ -18,7 +17,6 @@ const StatCard = ({ title, value }) => (
 function Dashboard() {
   const { playerData, playerTimezone, refreshData, isLoading } = useAuth();
   const { showTemporaryNotification: showNotification } = useNotification();
-  const [isContactsModalOpen, setIsContactsModalOpen] = useState(false);
   const [actionError, setActionError] = useState('');
   const [expandedSessionId, setExpandedSessionId] = useState(null);
   const [leaderboardData, setLeaderboardData] = useState(null);
@@ -82,10 +80,6 @@ function Dashboard() {
     showNotification('Data refreshed!');
   };
 
-  const handleSyncDesktop = () => {
-    // TODO: Implement desktop app sync functionality
-    console.log('Syncing with desktop app...');
-  };
 
   if (isLoading) {
     return <p>Loading player data...</p>;
@@ -122,30 +116,6 @@ function Dashboard() {
   return (
     <>
       <main className="dashboard-main">
-        <div className="dashboard-actions">
-          <button 
-            onClick={() => setIsContactsModalOpen(true)}
-            className="btn btn-secondary"
-            title="View and manage friends & contacts"
-          >
-            CONTACTS
-          </button>
-          <button 
-            onClick={handleRefreshClick}
-            className="btn btn-tertiary"
-            title="Refresh data"
-          >
-            REFRESH
-          </button>
-          <button 
-            onClick={handleSyncDesktop}
-            className="btn btn-tertiary"
-            title="Sync with desktop app"
-          >
-            SYNC
-          </button>
-          {actionError && <p className="error-message">{actionError}</p>}
-        </div>
 
         <div className="stats-summary-bar">
           <h2>All-Time Stats</h2>
@@ -161,6 +131,13 @@ function Dashboard() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3>Session History</h3>
             <div style={{ display: 'flex', gap: '1rem' }}>
+              <button 
+                onClick={handleRefreshClick}
+                className="btn btn-tertiary"
+                title="Refresh data"
+              >
+                REFRESH
+              </button>
               <Link to={`/player/${playerData?.player_id}/stats`} className="btn btn-secondary">Career Stats</Link>
               <Link to={`/player/${playerData?.player_id}/sessions`} className="btn btn-secondary">Full History</Link>
             </div>
@@ -205,12 +182,6 @@ function Dashboard() {
         </div>
       </main>
 
-      {isContactsModalOpen && (
-        <ContactsModal 
-          isOpen={isContactsModalOpen}
-          onClose={() => setIsContactsModalOpen(false)}
-        />
-      )}
     </>
   );
 }

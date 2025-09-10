@@ -1,0 +1,166 @@
+.contacts-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: #0a0f0a;
+  color: white;
+  min-height: 100vh;
+}
+
+.contacts-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.contacts-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  color: #d4af37;
+}
+
+.contacts-header p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  color: #cccccc;
+}
+
+
+.contacts-content {
+  background: #1a2f1a;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Friends Section */
+.friends-section {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.search-container {
+  margin-bottom: 2rem;
+}
+
+.search-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.search-header h2 {
+  margin: 0;
+  color: #d4af37;
+  font-size: 1.8rem;
+}
+
+.privacy-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #cccccc;
+  background: rgba(212, 175, 55, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+.privacy-icon {
+  font-size: 1.1rem;
+}
+
+.search-box {
+  display: flex;
+  gap: 1rem;
+  max-width: 600px;
+}
+
+.search-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: #0a0f0a;
+  border: 2px solid #4a6a4a;
+  border-radius: 8px;
+  color: white;
+  font-size: 1rem;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #d4af37;
+}
+
+.search-button {
+  padding: 0.75rem 1.5rem;
+  background: #d4af37;
+  border: none;
+  border-radius: 8px;
+  color: #0a0f0a;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.search-button:hover {
+  background: #b8941f;
+}
+
+.friends-lists {
+  display: grid;
+  gap: 2rem;
+}
+
+.friends-list-section h3 {
+  margin-bottom: 1rem;
+  color: #d4af37;
+  font-size: 1.4rem;
+}
+
+.friends-list,
+.requests-list {
+  background: #0a0f0a;
+  border-radius: 8px;
+  padding: 1.5rem;
+  min-height: 150px;
+}
+
+.empty-state {
+  text-align: center;
+  color: #999999;
+  padding: 2rem;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.empty-state p {
+  margin: 0.5rem 0;
+}
+
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .contacts-page {
+    padding: 1rem;
+  }
+  
+  .contacts-header h1 {
+    font-size: 2rem;
+  }
+  
+  
+  .search-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .search-box {
+    flex-direction: column;
+  }
+}

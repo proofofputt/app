@@ -25,6 +25,7 @@ const Header = () => {
       <Link to="/" className="logo-link"><img src="/POP.Proof_Of_Putt.Log.576.png" alt="Proof of Putt Logo" className="logo-img" /></Link>
       {playerData && (
         <nav>
+          <NavLink to="/contacts" className={({ isActive }) => `btn ${isActive ? 'active' : ''}`}>Contacts</NavLink>
           <NavLink to="/duels" className={({ isActive }) => `btn ${isActive ? 'active' : ''}`}>Duels</NavLink>
           <NavLink to="/leagues" className={({ isActive }) => `btn ${isActive ? 'active' : ''}`}>Leagues</NavLink>
           <NavLink to="/coach" className={({ isActive }) => `btn ${isActive ? 'active' : ''}`} onClick={handleProtectedLinkClick}>Coach</NavLink>

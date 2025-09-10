@@ -1,0 +1,183 @@
+import { Pool } from 'pg';
+import jwt from 'jsonwebtoken';
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+function verifyToken(req) {
+  return new Promise((resolve) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return resolve(null);
+    }
+
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+        return resolve(null);
+      }
+      resolve(decoded);
+    });
+  });
+}
+
+export default async function handler(req, res) {
+  // Set CORS headers for desktop app access
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'GET') {
+    return res.status(405).json({ success: false, message: 'Method Not Allowed' });
+  }
+
+  return handleGetActiveCompetitions(req, res);
+}
+
+async function handleGetActiveCompetitions(req, res) {
+  let client;
+  try {
+    client = await pool.connect();
+    
+    const { player_id } = req.query;
+    if (!player_id) {
+      return res.status(400).json({ success: false, message: 'player_id is required' });
+    }
+
+    // Get active duels where player needs to submit a session
+    const duelsQuery = `
+      SELECT 
+        d.duel_id,
+        d.status,
+        d.settings,
+        d.expires_at,
+        d.created_at,
+        CASE 
+          WHEN d.duel_creator_id = $1 THEN invited_player.name
+          ELSE creator.name
+        END as opponent_name,
+        CASE 
+          WHEN d.duel_creator_id = $1 THEN 'creator'
+          ELSE 'invited'
+        END as player_role,
+        CASE 
+          WHEN d.duel_creator_id = $1 THEN d.duel_creator_session_id IS NULL
+          ELSE d.duel_invited_player_session_id IS NULL
+        END as needs_session
+      FROM duels d
+      LEFT JOIN players creator ON d.duel_creator_id = creator.player_id
+      LEFT JOIN players invited_player ON d.duel_invited_player_id = invited_player.player_id
+      WHERE 
+        (d.duel_creator_id = $1 OR d.duel_invited_player_id = $1)
+        AND d.status IN ('active', 'accepted')
+        AND d.expires_at > NOW()
+        AND (
+          (d.duel_creator_id = $1 AND d.duel_creator_session_id IS NULL) OR
+          (d.duel_invited_player_id = $1 AND d.duel_invited_player_session_id IS NULL)
+        )
+      ORDER BY d.expires_at ASC
+    `;
+
+    // Get active league rounds where player hasn't submitted
+    const leaguesQuery = `
+      SELECT DISTINCT
+        lr.round_id,
+        l.league_id,
+        l.name as league_name,
+        l.settings as league_settings,
+        lr.round_number,
+        lr.start_time,
+        lr.end_time,
+        lr.settings as round_settings
+      FROM leagues l
+      JOIN league_rounds lr ON l.league_id = lr.league_id
+      JOIN league_memberships lm ON l.league_id = lm.league_id
+      WHERE 
+        lm.player_id = $1
+        AND lm.status = 'active'
+        AND lr.start_time <= NOW()
+        AND lr.end_time > NOW()
+        AND NOT EXISTS (
+          SELECT 1 FROM league_submissions ls 
+          WHERE ls.round_id = lr.round_id 
+          AND ls.player_id = $1
+        )
+      ORDER BY lr.end_time ASC
+    `;
+
+    const [duelsResult, leaguesResult] = await Promise.all([
+      client.query(duelsQuery, [player_id]),
+      client.query(leaguesQuery, [player_id])
+    ]);
+
+    // Format duels for desktop UI
+    const activeDuels = duelsResult.rows.map(duel => {
+      const settings = typeof duel.settings === 'string' ? JSON.parse(duel.settings) : duel.settings;
+      
+      return {
+        type: 'duel',
+        id: duel.duel_id,
+        opponent: duel.opponent_name,
+        timeLimit: settings?.time_limit || null,
+        scoring: settings?.scoring || 'total_makes',
+        expiresAt: duel.expires_at,
+        createdAt: duel.created_at,
+        playerRole: duel.player_role,
+        sessionData: {
+          duelId: duel.duel_id,
+          timeLimit: settings?.time_limit || null,
+          scoring: settings?.scoring || 'total_makes',
+          autoUpload: true
+        }
+      };
+    });
+
+    // Format league rounds for desktop UI  
+    const activeLeagueRounds = leaguesResult.rows.map(league => {
+      const leagueSettings = typeof league.league_settings === 'string' ? JSON.parse(league.league_settings) : league.league_settings;
+      const roundSettings = typeof league.round_settings === 'string' ? JSON.parse(league.round_settings) : league.round_settings;
+      
+      return {
+        type: 'league',
+        id: league.round_id,
+        leagueName: league.league_name,
+        roundNumber: league.round_number,
+        timeLimit: roundSettings?.time_limit || leagueSettings?.default_time_limit || null,
+        target: roundSettings?.target || leagueSettings?.default_target || null,
+        endTime: league.end_time,
+        startTime: league.start_time,
+        sessionData: {
+          leagueRoundId: league.round_id,
+          league: league.league_name,
+          timeLimit: roundSettings?.time_limit || leagueSettings?.default_time_limit || null,
+          target: roundSettings?.target || leagueSettings?.default_target || null,
+          autoUpload: true
+        }
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        duels: activeDuels,
+        leagues: activeLeagueRounds,
+        totalActive: activeDuels.length + activeLeagueRounds.length
+      }
+    });
+
+  } catch (error) {
+    console.error('Active competitions API error:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Internal server error',
+      error: error.message 
+    });
+  } finally {
+    if (client) client.release();
+  }
+}

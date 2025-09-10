@@ -16,6 +16,7 @@ import FundraiserCreatePage from './pages/FundraiserCreatePage';
 import PlayerVsPlayerPage from './pages/PlayerVsPlayerPage';
 import FundraiserDetailPage from './components/FundraiserDetailPage';
 import NotificationsPage from './pages/NotificationsPage';
+import ContactsPage from './pages/ContactsPage';
 import Header from './components/Header';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
@@ -54,6 +55,7 @@ const AppContent = () => {
           <Route path="/fundraisers/new" element={<ProtectedRoute><FundraiserCreatePage /></ProtectedRoute>} />
           <Route path="/fundraisers/:fundraiserId" element={<ProtectedRoute><FundraiserDetailPage /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+          <Route path="/contacts" element={<ProtectedRoute><ContactsPage /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>

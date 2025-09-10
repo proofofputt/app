@@ -86,6 +86,12 @@ body {
   padding-bottom: 0.25rem;
 }
 
+/* Header navigation button hover states */
+.app-header nav .btn:hover {
+  background-color: #ff8c00; /* Orange background on hover */
+  color: var(--masters-green-dark); /* Dark green text on hover */
+}
+
 .user-info button {
   margin-left: 1rem;
 }
@@ -219,7 +225,7 @@ main {
 .stat-value {
   font-size: 1.5rem;
   font-weight: bold;
-  color: #FFD700; /* Yellow/gold color for visibility */
+  color: var(--text-white); /* Changed from yellow to white */
   margin: 0; /* p tags have margin by default, ensure it's off */
   background: transparent !important; /* Remove white background */
   padding: 0.5rem;
