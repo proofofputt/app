@@ -2,7 +2,7 @@
 
 /* Override container margins specifically for duels page */
 .duels-page .container {
-  margin: 0 21%; /* Add 21% margins on both sides */
+  margin: 0 11%; /* Add 11% margins on both sides */
   width: 58%; /* Restrict content width (100% - 42%) */
 }
 
