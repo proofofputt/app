@@ -13,9 +13,15 @@ Proof of Putt is a sophisticated competitive sports technology platform that tra
 **Current Status:** Production Ready+ (Battle-Tested) - September 2025
 
 ### 🚀 **Recent Critical Achievements (September 2025)**
+- **✅ Dashboard UI Modernization**: Streamlined dashboard with contacts moved to header navigation, removed redundant sync buttons, improved stat display hierarchy
+- **✅ Active Competitions Integration**: Eliminated manual parameter copying with automatic competition fetching for desktop app
+- **✅ Contacts Page Implementation**: Full-page contacts experience replacing modal, focused on friends and family connections
+- **✅ Practice Metronome**: Integrated practice tool with 40-100 BPM range, visual beat indicators, and training tips
+- **✅ Enhanced Header Navigation**: Orange hover states with dark green text, improved visual feedback and accessibility
+- **✅ Competitive Session Auto-Upload**: Implemented immediate auto-upload for duels and league rounds to maintain competitive integrity
+- **✅ League Points-Per-Rank Scoring**: Fixed incorrect join-date tiebreaker with proper points-per-rank system (1st = N points, 2nd = N-1 points, etc.)
 - **✅ Manual Parameter Entry System**: Replaced unreliable deeplinks with robust copy-paste parameter system for desktop-web integration
-- **✅ Active Duels Display Enhancement**: Dynamic table columns showing Your Score/Opponent's Score with proper duel expiry tracking
-- **✅ Fair-Play Timer Restoration**: Critical competitive integrity fix - timer now starts only on first putt attempt (ball transition from mat to ramp), ensuring fair setup time for timed sessions
+- **✅ Fair-Play Timer Restoration**: Critical competitive integrity fix - timer now starts only on first putt attempt (ball transition from mat to ramp)
 - **✅ Dashboard Data Integration**: Resolved "N/A" stats display with unified player data loading via `/api/player/[id]/data.js` endpoint
 - **✅ League Tournament System**: Comprehensive round scheduling with countdown timers, time limits, and seamless desktop integration
 - **✅ Career Stats Processing**: Fixed JSON array aggregation for Makes/Misses by category classification
