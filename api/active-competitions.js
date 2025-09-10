@@ -89,11 +89,14 @@ async function handleGetActiveCompetitions(req, res) {
       const rules = typeof duel.rules === 'string' ? JSON.parse(duel.rules) : duel.rules;
       const timeLimit = rules?.session_duration_limit_minutes ? rules.session_duration_limit_minutes * 60 : null; // Convert minutes to seconds
       
+      const numberOfAttempts = rules?.number_of_attempts || settings?.number_of_attempts || null;
+      
       return {
         type: 'duel',
         id: duel.duel_id,
         opponent: duel.opponent_name,
         timeLimit: timeLimit,
+        numberOfAttempts: numberOfAttempts,
         scoring: settings?.scoring || 'total_makes',
         expiresAt: duel.expires_at,
         createdAt: duel.created_at,
@@ -101,6 +104,7 @@ async function handleGetActiveCompetitions(req, res) {
         sessionData: {
           duelId: duel.duel_id,
           timeLimit: timeLimit,
+          numberOfAttempts: numberOfAttempts,
           scoring: settings?.scoring || 'total_makes',
           autoUpload: true
         }
@@ -115,14 +119,14 @@ async function handleGetActiveCompetitions(req, res) {
         leagueName: league.league_name,
         roundNumber: league.round_number,
         timeLimit: null, // No settings available, use default
-        target: null,    // No settings available, use default
+        numberOfAttempts: null, // No settings available, use default
         endTime: league.end_time,
         startTime: league.start_time,
         sessionData: {
           leagueRoundId: league.round_id,
           league: league.league_name,
           timeLimit: null,
-          target: null,
+          numberOfAttempts: null,
           autoUpload: true
         }
       };
