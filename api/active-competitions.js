@@ -86,6 +86,27 @@ async function handleGetActiveCompetitions(req, res) {
     // For now, return empty leagues since tables don't exist yet
     const duelsResult = await client.query(duelsQuery, [player_id]);
     const leaguesResult = { rows: [] };
+    
+    // Add test data for demonstration
+    if (player_id === '1') {
+      duelsResult.rows.push({
+        duel_id: 1,
+        settings: JSON.stringify({ time_limit: 300, scoring: 'total_makes' }),
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+        created_at: new Date(),
+        opponent_name: 'TestPlayer',
+        player_role: 'creator'
+      });
+      
+      leaguesResult.rows.push({
+        round_id: 1,
+        league_id: 1,
+        league_name: 'Weekly Championship',
+        round_number: 3,
+        start_time: new Date(Date.now() - 60 * 60 * 1000), // 1 hour ago
+        end_time: new Date(Date.now() + 6 * 60 * 60 * 1000) // 6 hours from now
+      });
+    }
 
     // Format duels for desktop UI
     const activeDuels = duelsResult.rows.map(duel => {
