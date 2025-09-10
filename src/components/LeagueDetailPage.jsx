@@ -341,7 +341,6 @@ const LeagueDetailPage = () => {
       {showEditModal && <EditLeagueModal league={league} onClose={() => setShowEditModal(false)} onLeagueUpdated={handleLeagueUpdated} />}
       <div className="page-header">
         <h2>{league.name}</h2>
-        {activeRound && <CountdownTimer endTime={activeRound.end_time} />}
       </div>
 
       <div className="card league-info-card">
