@@ -74,9 +74,6 @@ async function handleGetActiveCompetitions(req, res) {
       LEFT JOIN players invited_player ON d.duel_invited_player_id = invited_player.player_id
       WHERE 
         (d.duel_creator_id = $1 OR d.duel_invited_player_id = $1)
-        AND d.expires_at > NOW()
-        AND ((d.duel_creator_id = $1 AND d.duel_creator_session_id IS NULL) 
-             OR (d.duel_invited_player_id = $1 AND d.duel_invited_player_session_id IS NULL))
       ORDER BY d.expires_at ASC
     `;
 
@@ -107,8 +104,13 @@ async function handleGetActiveCompetitions(req, res) {
     `;
 
     // Get active duels and leagues
+    console.log('🔍 Querying duels for player_id:', player_id);
     const duelsResult = await client.query(duelsQuery, [player_id]);
+    console.log('🔍 Raw duels result:', duelsResult.rows);
+    
+    console.log('🔍 Querying leagues for player_id:', player_id);
     const leaguesResult = await client.query(leaguesQuery, [player_id]);
+    console.log('🔍 Raw leagues result:', leaguesResult.rows);
 
     // Format duels for desktop UI
     const activeDuels = duelsResult.rows.map(duel => {
