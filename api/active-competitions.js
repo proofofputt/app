@@ -57,73 +57,54 @@ async function handleGetActiveCompetitions(req, res) {
         d.settings,
         d.expires_at,
         d.created_at,
+        d.time_limit_minutes,
         CASE 
-          WHEN d.duel_creator_id = $1 THEN invited_player.name
+          WHEN d.creator_id = $1 THEN invited_player.name
           ELSE creator.name
         END as opponent_name,
         CASE 
-          WHEN d.duel_creator_id = $1 THEN 'creator'
+          WHEN d.creator_id = $1 THEN 'creator'
           ELSE 'invited'
         END as player_role,
         CASE 
-          WHEN d.duel_creator_id = $1 THEN d.duel_creator_session_id IS NULL
-          ELSE d.duel_invited_player_session_id IS NULL
+          WHEN d.creator_id = $1 THEN d.creator_submitted_session_id IS NULL
+          ELSE d.invited_player_submitted_session_id IS NULL
         END as needs_session
       FROM duels d
-      LEFT JOIN players creator ON d.duel_creator_id = creator.player_id
-      LEFT JOIN players invited_player ON d.duel_invited_player_id = invited_player.player_id
+      LEFT JOIN players creator ON d.creator_id = creator.player_id
+      LEFT JOIN players invited_player ON d.invited_player_id = invited_player.player_id
       WHERE 
-        (d.duel_creator_id = $1 OR d.duel_invited_player_id = $1)
-        AND d.status IN ('active', 'accepted')
+        (d.creator_id = $1 OR d.invited_player_id = $1)
+        AND d.status IN ('active', 'pending')
         AND d.expires_at > NOW()
         AND (
-          (d.duel_creator_id = $1 AND d.duel_creator_session_id IS NULL) OR
-          (d.duel_invited_player_id = $1 AND d.duel_invited_player_session_id IS NULL)
+          (d.creator_id = $1 AND d.creator_submitted_session_id IS NULL) OR
+          (d.invited_player_id = $1 AND d.invited_player_submitted_session_id IS NULL)
         )
       ORDER BY d.expires_at ASC
     `;
 
-    // For now, return empty leagues since tables don't exist yet
+    // Get active duels and leagues (leagues disabled until tables exist)
     const duelsResult = await client.query(duelsQuery, [player_id]);
     const leaguesResult = { rows: [] };
-    
-    // Add test data for demonstration
-    if (player_id === '1') {
-      duelsResult.rows.push({
-        duel_id: 1,
-        settings: JSON.stringify({ time_limit: 300, scoring: 'total_makes' }),
-        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
-        created_at: new Date(),
-        opponent_name: 'TestPlayer',
-        player_role: 'creator'
-      });
-      
-      leaguesResult.rows.push({
-        round_id: 1,
-        league_id: 1,
-        league_name: 'Weekly Championship',
-        round_number: 3,
-        start_time: new Date(Date.now() - 60 * 60 * 1000), // 1 hour ago
-        end_time: new Date(Date.now() + 6 * 60 * 60 * 1000) // 6 hours from now
-      });
-    }
 
     // Format duels for desktop UI
     const activeDuels = duelsResult.rows.map(duel => {
       const settings = typeof duel.settings === 'string' ? JSON.parse(duel.settings) : duel.settings;
+      const timeLimit = duel.time_limit_minutes ? duel.time_limit_minutes * 60 : null; // Convert minutes to seconds
       
       return {
         type: 'duel',
         id: duel.duel_id,
         opponent: duel.opponent_name,
-        timeLimit: settings?.time_limit || null,
+        timeLimit: timeLimit,
         scoring: settings?.scoring || 'total_makes',
         expiresAt: duel.expires_at,
         createdAt: duel.created_at,
         playerRole: duel.player_role,
         sessionData: {
           duelId: duel.duel_id,
-          timeLimit: settings?.time_limit || null,
+          timeLimit: timeLimit,
           scoring: settings?.scoring || 'total_makes',
           autoUpload: true
         }
