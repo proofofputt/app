@@ -89,11 +89,9 @@ async function handleGetActiveCompetitions(req, res) {
         lr.round_id,
         l.league_id,
         l.name as league_name,
-        l.settings as league_settings,
         lr.round_number,
         lr.start_time,
-        lr.end_time,
-        lr.settings as round_settings
+        lr.end_time
       FROM leagues l
       JOIN league_rounds lr ON l.league_id = lr.league_id
       JOIN league_memberships lm ON l.league_id = lm.league_id
@@ -139,23 +137,20 @@ async function handleGetActiveCompetitions(req, res) {
 
     // Format league rounds for desktop UI  
     const activeLeagueRounds = leaguesResult.rows.map(league => {
-      const leagueSettings = typeof league.league_settings === 'string' ? JSON.parse(league.league_settings) : league.league_settings;
-      const roundSettings = typeof league.round_settings === 'string' ? JSON.parse(league.round_settings) : league.round_settings;
-      
       return {
         type: 'league',
         id: league.round_id,
         leagueName: league.league_name,
         roundNumber: league.round_number,
-        timeLimit: roundSettings?.time_limit || leagueSettings?.default_time_limit || null,
-        target: roundSettings?.target || leagueSettings?.default_target || null,
+        timeLimit: null, // No settings available, use default
+        target: null,    // No settings available, use default
         endTime: league.end_time,
         startTime: league.start_time,
         sessionData: {
           leagueRoundId: league.round_id,
           league: league.league_name,
-          timeLimit: roundSettings?.time_limit || leagueSettings?.default_time_limit || null,
-          target: roundSettings?.target || leagueSettings?.default_target || null,
+          timeLimit: null,
+          target: null,
           autoUpload: true
         }
       };
