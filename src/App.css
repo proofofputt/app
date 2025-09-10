@@ -86,10 +86,10 @@ body {
   padding-bottom: 0.25rem;
 }
 
-/* Header navigation button hover states */
-.app-header nav .btn:hover {
+/* Header navigation button hover states - only for NavLink buttons in header */
+.app-header nav a.btn:hover {
   background-color: #ff8c00; /* Orange background on hover */
-  color: var(--masters-green-dark); /* Dark green text on hover */
+  color: #000000; /* Black text on hover for better readability */
 }
 
 .user-info button {
