@@ -1,4 +1,4 @@
-/* League Invite Form Styling */
+/* League Invite Form Styling - Updated with formatting improvements */
 .inline-invite-form {
   background-color: #f4f1e8; /* Sandy/beige background */
   border: 2px solid #2d5016; /* Dark green border */
@@ -12,11 +12,12 @@
   position: relative;
   margin-bottom: 0.75rem;
   overflow: visible; /* Allow input to extend beyond container */
+  width: 100%; /* Ensure wrapper takes full width */
 }
 
 .inline-invite-input {
-  width: 200%; /* Make input field twice as wide */
-  max-width: 500px; /* Prevent it from being too wide on large screens */
+  width: 400px !important; /* Force specific width - twice the normal size */
+  min-width: 400px !important;
   padding: 0.5rem;
   border: 1px solid #4a6b2a;
   border-radius: 4px;
@@ -177,12 +178,12 @@
 }
 
 .inline-invite-form .btn:disabled {
-  background: #9ca3af; /* Gray background when disabled */
-  color: #6b7280;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #f97316 100%) !important; /* Keep yellow even when disabled */
+  color: #1a1a1a !important;
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.7; /* Slightly dimmed but still yellow */
   transform: none;
-  box-shadow: none;
+  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.2); /* Lighter shadow when disabled */
 }
 
 /* Error styling */
