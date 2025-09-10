@@ -55,31 +55,31 @@ async function handleGetActiveCompetitions(req, res) {
         d.duel_id,
         d.status,
         d.settings,
+        d.rules,
         d.expires_at,
         d.created_at,
-        d.time_limit_minutes,
         CASE 
-          WHEN d.creator_id = $1 THEN invited_player.name
+          WHEN d.duel_creator_id = $1 THEN invited_player.name
           ELSE creator.name
         END as opponent_name,
         CASE 
-          WHEN d.creator_id = $1 THEN 'creator'
+          WHEN d.duel_creator_id = $1 THEN 'creator'
           ELSE 'invited'
         END as player_role,
         CASE 
-          WHEN d.creator_id = $1 THEN d.creator_submitted_session_id IS NULL
-          ELSE d.invited_player_submitted_session_id IS NULL
+          WHEN d.duel_creator_id = $1 THEN d.duel_creator_session_id IS NULL
+          ELSE d.duel_invited_player_session_id IS NULL
         END as needs_session
       FROM duels d
-      LEFT JOIN players creator ON d.creator_id = creator.player_id
-      LEFT JOIN players invited_player ON d.invited_player_id = invited_player.player_id
+      LEFT JOIN players creator ON d.duel_creator_id = creator.player_id
+      LEFT JOIN players invited_player ON d.duel_invited_player_id = invited_player.player_id
       WHERE 
-        (d.creator_id = $1 OR d.invited_player_id = $1)
+        (d.duel_creator_id = $1 OR d.duel_invited_player_id = $1)
         AND d.status IN ('active', 'pending')
         AND d.expires_at > NOW()
         AND (
-          (d.creator_id = $1 AND d.creator_submitted_session_id IS NULL) OR
-          (d.invited_player_id = $1 AND d.invited_player_submitted_session_id IS NULL)
+          (d.duel_creator_id = $1 AND d.duel_creator_session_id IS NULL) OR
+          (d.duel_invited_player_id = $1 AND d.duel_invited_player_session_id IS NULL)
         )
       ORDER BY d.expires_at ASC
     `;
@@ -91,7 +91,8 @@ async function handleGetActiveCompetitions(req, res) {
     // Format duels for desktop UI
     const activeDuels = duelsResult.rows.map(duel => {
       const settings = typeof duel.settings === 'string' ? JSON.parse(duel.settings) : duel.settings;
-      const timeLimit = duel.time_limit_minutes ? duel.time_limit_minutes * 60 : null; // Convert minutes to seconds
+      const rules = typeof duel.rules === 'string' ? JSON.parse(duel.rules) : duel.rules;
+      const timeLimit = rules?.session_duration_limit_minutes ? rules.session_duration_limit_minutes * 60 : null; // Convert minutes to seconds
       
       return {
         type: 'duel',
