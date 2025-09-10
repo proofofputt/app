@@ -89,7 +89,6 @@ async function handleGetActiveCompetitions(req, res) {
         lr.status as round_status,
         l.league_id,
         l.name as league_name,
-        l.settings,
         l.rules,
         lm.player_id as member_player_id,
         -- Check if player has already submitted for this round
@@ -141,10 +140,9 @@ async function handleGetActiveCompetitions(req, res) {
 
     // Format league rounds for desktop UI  
     const activeLeagueRounds = leaguesResult.rows.map(league => {
-      const settings = typeof league.settings === 'string' ? JSON.parse(league.settings) : league.settings;
       const rules = typeof league.rules === 'string' ? JSON.parse(league.rules) : league.rules;
       const timeLimit = rules?.time_limit_minutes ? rules.time_limit_minutes * 60 : null; // Convert minutes to seconds
-      const numberOfAttempts = rules?.num_rounds || settings?.number_of_attempts || null;
+      const numberOfAttempts = rules?.num_rounds || rules?.number_of_attempts || null;
       
       return {
         type: 'league',
