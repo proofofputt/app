@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { apiCreateLeague } from '../api';
 import { useAuth } from '../context/AuthContext';
+import './CreateLeagueModal.css';
 
 const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
   const { playerData } = useAuth();
@@ -14,8 +15,58 @@ const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
   const [allowLateJoiners, setAllowLateJoiners] = useState(true);
   const [allowCatchUpSubmissions, setAllowCatchUpSubmissions] = useState(true);
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 16)); // YYYY-MM-DDTHH:MM
+  const [isIRL, setIsIRL] = useState(false);
+  const [numPlayers, setNumPlayers] = useState(4);
+  const [playerNames, setPlayerNames] = useState({});
+  const [savedPlayerNames, setSavedPlayerNames] = useState([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Load saved player names from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('irl_player_names');
+    if (saved) {
+      try {
+        setSavedPlayerNames(JSON.parse(saved));
+      } catch (e) {
+        console.warn('Failed to parse saved player names:', e);
+      }
+    }
+  }, []);
+
+  // Initialize player names when numPlayers changes
+  useEffect(() => {
+    if (isIRL) {
+      const newPlayerNames = {};
+      for (let i = 1; i <= numPlayers; i++) {
+        newPlayerNames[i] = playerNames[i] || `Player ${i}`;
+      }
+      setPlayerNames(newPlayerNames);
+    }
+  }, [isIRL, numPlayers]);
+
+  const handlePlayerNameChange = (playerIndex, newName) => {
+    setPlayerNames(prev => ({
+      ...prev,
+      [playerIndex]: newName
+    }));
+  };
+
+  const savePlayerNames = () => {
+    const uniqueNames = [...new Set(Object.values(playerNames).filter(name => 
+      name && name.trim() !== '' && !name.startsWith('Player ')
+    ))];
+    const updatedSaved = [...new Set([...savedPlayerNames, ...uniqueNames])];
+    setSavedPlayerNames(updatedSaved);
+    localStorage.setItem('irl_player_names', JSON.stringify(updatedSaved));
+  };
+
+  const selectSavedName = (playerIndex, savedName) => {
+    setPlayerNames(prev => ({
+      ...prev,
+      [playerIndex]: savedName
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,6 +74,11 @@ const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
     setIsLoading(true);
 
     try {
+      // Save player names to localStorage for future use
+      if (isIRL) {
+        savePlayerNames();
+      }
+
       const leagueData = {
         creator_id: playerData.player_id,
         name,
@@ -33,9 +89,12 @@ const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
           num_rounds: parseInt(numRounds, 10),
           round_duration_hours: parseInt(roundDuration, 10),
           time_limit_minutes: parseInt(timeLimit, 10),
-          allow_player_invites: allowPlayerInvites,
-          allow_late_joiners: allowLateJoiners,
-          allow_catch_up_submissions: allowCatchUpSubmissions,
+          allow_player_invites: isIRL ? false : allowPlayerInvites,
+          allow_late_joiners: isIRL ? false : allowLateJoiners,
+          allow_catch_up_submissions: isIRL ? false : allowCatchUpSubmissions,
+          is_irl: isIRL,
+          num_players: isIRL ? numPlayers : undefined,
+          player_names: isIRL ? playerNames : undefined,
         },
       };
       await apiCreateLeague(leagueData);
@@ -49,7 +108,7 @@ const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
   };
 
   return (
-    <div className="modal-backdrop">
+    <div className="modal-overlay">
       <div className="modal-content">
         <h2>Create New League</h2>
         <form onSubmit={handleSubmit}>
@@ -99,35 +158,97 @@ const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
             <label>
               <input
                 type="checkbox"
-                checked={allowPlayerInvites}
-                onChange={(e) => setAllowPlayerInvites(e.target.checked)}
+                checked={isIRL}
+                onChange={(e) => setIsIRL(e.target.checked)}
               />
-              Allow members to invite others
+              In Real Life (IRL) Mode
             </label>
-            <small className="form-help">When disabled, only the league administrator can invite new players.</small>
+            <small className="form-help">Create a local multiplayer tournament without online invitations. Perfect for in-person events and group competitions.</small>
           </div>
-          <div className="form-group">
-            <label>
-              <input
-                type="checkbox"
-                checked={allowLateJoiners}
-                onChange={(e) => setAllowLateJoiners(e.target.checked)}
-              />
-              Allow late joiners after league starts
-            </label>
-            <small className="form-help">When enabled, players can join the league even after it has started. Disable to require registration before the first round begins.</small>
-          </div>
-          <div className="form-group">
-            <label>
-              <input
-                type="checkbox"
-                checked={allowCatchUpSubmissions}
-                onChange={(e) => setAllowCatchUpSubmissions(e.target.checked)}
-              />
-              Allow catch-up submissions for previous rounds
-            </label>
-            <small className="form-help">When enabled, players can complete earlier rounds even after missing deadlines. Disable for strict tournament timing.</small>
-          </div>
+          {isIRL && (
+            <>
+              <div className="form-group">
+                <label htmlFor="num-players">Number of Players</label>
+                <select 
+                  id="num-players" 
+                  value={numPlayers} 
+                  onChange={(e) => setNumPlayers(parseInt(e.target.value, 10))}
+                >
+                  {[2, 3, 4, 5, 6, 7, 8, 10, 12, 16].map(n => (
+                    <option key={n} value={n}>{n} Players</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="form-group">
+                <label>Player Names</label>
+                <small className="form-help">Customize player names for this IRL tournament. Names are automatically saved for future tournaments.</small>
+                {Array.from({ length: numPlayers }, (_, i) => {
+                  const playerIndex = i + 1;
+                  return (
+                    <div key={playerIndex} className="player-name-row">
+                      <input
+                        type="text"
+                        value={playerNames[playerIndex] || ''}
+                        onChange={(e) => handlePlayerNameChange(playerIndex, e.target.value)}
+                        placeholder={`Player ${playerIndex}`}
+                        className="player-name-input"
+                      />
+                      {savedPlayerNames.length > 0 && (
+                        <select
+                          className="saved-names-select"
+                          value=""
+                          onChange={(e) => e.target.value && selectSavedName(playerIndex, e.target.value)}
+                        >
+                          <option value="">Select saved name...</option>
+                          {savedPlayerNames.map(savedName => (
+                            <option key={savedName} value={savedName}>{savedName}</option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+          {!isIRL && (
+            <>
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={allowPlayerInvites}
+                    onChange={(e) => setAllowPlayerInvites(e.target.checked)}
+                  />
+                  Allow members to invite others
+                </label>
+                <small className="form-help">When disabled, only the league administrator can invite new players.</small>
+              </div>
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={allowLateJoiners}
+                    onChange={(e) => setAllowLateJoiners(e.target.checked)}
+                  />
+                  Allow late joiners after league starts
+                </label>
+                <small className="form-help">When enabled, players can join the league even after it has started. Disable to require registration before the first round begins.</small>
+              </div>
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={allowCatchUpSubmissions}
+                    onChange={(e) => setAllowCatchUpSubmissions(e.target.checked)}
+                  />
+                  Allow catch-up submissions for previous rounds
+                </label>
+                <small className="form-help">When enabled, players can complete earlier rounds even after missing deadlines. Disable for strict tournament timing.</small>
+              </div>
+            </>
+          )}
           <div className="form-group">
             <label htmlFor="start-date">Start Date and Time</label>
             <input
@@ -165,7 +286,7 @@ const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
           <div className="modal-actions">
             <button type="button" onClick={onClose} disabled={isLoading}>Cancel</button>
             <button type="submit" disabled={isLoading}>
-              {isLoading ? 'Creating...' : 'Create League'}
+              {isLoading ? 'Creating...' : isIRL ? 'Create IRL Tournament' : 'Create League'}
             </button>
           </div>
         </form>

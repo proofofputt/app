@@ -171,51 +171,105 @@ async function handleCreateDuel(req, res) {
     return res.status(401).json({ success: false, message: 'Authentication required' });
   }
 
-  const { creator_id, invited_player_id, settings, rules } = req.body;
+  const { creator_id, invited_player_id, settings, rules, invite_new_player, new_player_contact } = req.body;
 
-  if (!creator_id || !invited_player_id) {
+  // Use settings or rules for the duel configuration
+  const duelRules = settings || rules || {};
+  
+  if (!creator_id || (!invited_player_id && !invite_new_player)) {
     return res.status(400).json({ 
       success: false, 
-      message: 'creator_id and invited_player_id are required' 
+      message: 'creator_id and either invited_player_id or new_player_contact are required' 
+    });
+  }
+
+  // Validate new player contact information if provided
+  if (invite_new_player && (!new_player_contact || !new_player_contact.type || !new_player_contact.value)) {
+    return res.status(400).json({
+      success: false,
+      message: 'new_player_contact with type and value are required for new player invites'
     });
   }
 
   let client;
   try {
     client = await pool.connect();
-    
-    // Use settings or rules for the duel configuration
-    const duelRules = settings || rules || {};
 
-    // Insert new duel
-    const duelResult = await client.query(`
-      INSERT INTO duels (duel_creator_id, duel_invited_player_id, status, rules, created_at)
-      VALUES ($1, $2, 'pending', $3, NOW())
-      RETURNING duel_id, duel_creator_id, duel_invited_player_id, status, rules, created_at
-    `, [creator_id, invited_player_id, duelRules]);
+    let duelResult;
+    let newPlayerInviteId = null;
+
+    if (invite_new_player && new_player_contact) {
+      // Create a new player invitation record
+      const newPlayerInviteResult = await client.query(`
+        INSERT INTO player_invitations (
+          inviter_id, 
+          contact_type, 
+          contact_value, 
+          invitation_type, 
+          created_at, 
+          expires_at,
+          status
+        ) VALUES ($1, $2, $3, 'duel', NOW(), NOW() + INTERVAL '${duelRules.invitation_expiry_minutes || 4320} minutes', 'pending')
+        RETURNING invitation_id
+      `, [creator_id, new_player_contact.type, new_player_contact.value]);
+      
+      newPlayerInviteId = newPlayerInviteResult.rows[0].invitation_id;
+
+      // Create duel with invitation reference
+      duelResult = await client.query(`
+        INSERT INTO duels (duel_creator_id, duel_invited_player_id, status, rules, created_at, new_player_invitation_id)
+        VALUES ($1, NULL, 'pending_new_player', $2, NOW(), $3)
+        RETURNING duel_id, duel_creator_id, duel_invited_player_id, status, rules, created_at, new_player_invitation_id
+      `, [creator_id, duelRules, newPlayerInviteId]);
+
+    } else {
+      // Regular duel with existing player
+      duelResult = await client.query(`
+        INSERT INTO duels (duel_creator_id, duel_invited_player_id, status, rules, created_at)
+        VALUES ($1, $2, 'pending', $3, NOW())
+        RETURNING duel_id, duel_creator_id, duel_invited_player_id, status, rules, created_at
+      `, [creator_id, invited_player_id, duelRules]);
+    }
 
     const duel = duelResult.rows[0];
 
-    // Get creator and invited player names
+    // Get player names for response
+    const playerIds = [creator_id];
+    if (duel.duel_invited_player_id) {
+      playerIds.push(duel.duel_invited_player_id);
+    }
+    
     const playersResult = await client.query(`
-      SELECT player_id, name FROM players WHERE player_id IN ($1, $2)
-    `, [creator_id, invited_player_id]);
+      SELECT player_id, name FROM players WHERE player_id = ANY($1)
+    `, [playerIds]);
 
     const players = {};
     playersResult.rows.forEach(p => {
       players[p.player_id] = p.name;
     });
 
-    return res.status(201).json({
+    const responseData = {
       success: true,
       duel: {
         ...duel,
         creator_id: duel.duel_creator_id,
         invited_player_id: duel.duel_invited_player_id,
         creator_name: players[creator_id],
-        invited_player_name: players[invited_player_id]
+        invited_player_name: duel.duel_invited_player_id ? players[duel.duel_invited_player_id] : null
       }
-    });
+    };
+
+    // Add new player invitation details if applicable
+    if (invite_new_player && newPlayerInviteId) {
+      responseData.duel.new_player_invitation = {
+        invitation_id: newPlayerInviteId,
+        contact_type: new_player_contact.type,
+        contact_value: new_player_contact.value,
+        status: 'pending'
+      };
+    }
+
+    return res.status(201).json(responseData);
 
   } catch (error) {
     console.error('Create duel error:', error);

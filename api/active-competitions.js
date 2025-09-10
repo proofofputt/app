@@ -79,9 +79,37 @@ async function handleGetActiveCompetitions(req, res) {
       ORDER BY d.expires_at ASC
     `;
 
-    // Get active duels and leagues (leagues disabled until tables exist)
+    // Get active league rounds where player needs to submit a session
+    const leaguesQuery = `
+      SELECT 
+        lr.round_id,
+        lr.round_number,
+        lr.start_time,
+        lr.end_time,
+        lr.status as round_status,
+        l.league_id,
+        l.name as league_name,
+        l.settings,
+        l.rules,
+        lm.player_id as member_player_id,
+        -- Check if player has already submitted for this round
+        lrs.session_id as submitted_session_id
+      FROM league_rounds lr
+      JOIN leagues l ON lr.league_id = l.league_id
+      JOIN league_memberships lm ON l.league_id = lm.league_id
+      LEFT JOIN league_round_sessions lrs ON lr.round_id = lrs.round_id AND lrs.player_id = $1
+      WHERE 
+        lm.player_id = $1 
+        AND lm.is_active = true
+        AND lr.status = 'active'
+        AND lr.end_time > NOW()
+        AND lrs.session_id IS NULL  -- Player hasn't submitted yet
+      ORDER BY lr.end_time ASC
+    `;
+
+    // Get active duels and leagues
     const duelsResult = await client.query(duelsQuery, [player_id]);
-    const leaguesResult = { rows: [] };
+    const leaguesResult = await client.query(leaguesQuery, [player_id]);
 
     // Format duels for desktop UI
     const activeDuels = duelsResult.rows.map(duel => {
@@ -113,21 +141,27 @@ async function handleGetActiveCompetitions(req, res) {
 
     // Format league rounds for desktop UI  
     const activeLeagueRounds = leaguesResult.rows.map(league => {
+      const settings = typeof league.settings === 'string' ? JSON.parse(league.settings) : league.settings;
+      const rules = typeof league.rules === 'string' ? JSON.parse(league.rules) : league.rules;
+      const timeLimit = rules?.time_limit_minutes ? rules.time_limit_minutes * 60 : null; // Convert minutes to seconds
+      const numberOfAttempts = rules?.num_rounds || settings?.number_of_attempts || null;
+      
       return {
         type: 'league',
         id: league.round_id,
         leagueName: league.league_name,
         roundNumber: league.round_number,
-        timeLimit: null, // No settings available, use default
-        numberOfAttempts: null, // No settings available, use default
+        timeLimit: timeLimit,
+        numberOfAttempts: numberOfAttempts,
         endTime: league.end_time,
         startTime: league.start_time,
         sessionData: {
           leagueRoundId: league.round_id,
           league: league.league_name,
-          timeLimit: null,
-          numberOfAttempts: null,
-          autoUpload: true
+          timeLimit: timeLimit,
+          numberOfAttempts: numberOfAttempts,
+          autoUpload: true,
+          roundNumber: league.round_number
         }
       };
     });

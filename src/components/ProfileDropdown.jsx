@@ -10,6 +10,7 @@ const ProfileDropdown = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const isSubscribed = playerData?.membership_tier === 'premium' || playerData?.membership_tier === 'regular';
 
   if (!playerData) return null;
 
@@ -42,6 +43,11 @@ const ProfileDropdown = () => {
           <NavLink to={`/player/${playerData?.player_id}/stats`} className="dropdown-item" onClick={() => setIsOpen(false)}>
             My Stats
           </NavLink>
+          {isSubscribed && (
+            <NavLink to="/fundraisers" className="dropdown-item" onClick={() => setIsOpen(false)}>
+              Fundraising
+            </NavLink>
+          )}
           <NavLink to="/settings" className="dropdown-item" onClick={() => setIsOpen(false)}>
             Settings
           </NavLink>

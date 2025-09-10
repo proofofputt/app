@@ -3,44 +3,132 @@ import { apiSearchPlayers, apiCreateDuel } from '../api';
 import { useAuth } from '../context/AuthContext';
 import './CreateDuelModal.css';
 
+// Email validation utility
+const isValidEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+// Phone number validation utility (supports various formats)
+const isValidPhoneNumber = (phone) => {
+  // Remove all non-digit characters for validation
+  const cleanPhone = phone.replace(/\D/g, '');
+  // Valid phone number should have 10-15 digits
+  return cleanPhone.length >= 10 && cleanPhone.length <= 15;
+};
+
+// Format phone number for display
+const formatPhoneNumber = (phone) => {
+  const cleanPhone = phone.replace(/\D/g, '');
+  if (cleanPhone.length === 10) {
+    return `(${cleanPhone.slice(0, 3)}) ${cleanPhone.slice(3, 6)}-${cleanPhone.slice(6)}`;
+  }
+  return phone; // Return as-is if not 10 digits
+};
+
+// Detect input type (username, email, or phone)
+const detectInputType = (input) => {
+  if (isValidEmail(input)) return 'email';
+  if (isValidPhoneNumber(input)) return 'phone';
+  return 'username';
+};
+
 const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
   const { playerData } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState(rematchData?.opponent || null);
+  const [selectedNewPlayer, setSelectedNewPlayer] = useState(null); // For new player invites
   const [duration, setDuration] = useState(rematchData?.duration || 5);
   const [inviteExpiration, setInviteExpiration] = useState(rematchData?.expiration || 72); // Default to 72 hours
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showNewPlayerOption, setShowNewPlayerOption] = useState(false);
 
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!searchTerm) return;
     setIsLoading(true);
     setError('');
+    setSelectedPlayer(null);
+    setSelectedNewPlayer(null);
+    
     try {
       const results = await apiSearchPlayers(searchTerm, playerData.player_id);
       setSearchResults(results);
+      
+      // Determine if we should show "New Player Invite" option
+      const inputType = detectInputType(searchTerm);
+      const hasExactMatch = results.some(player => 
+        player.name.toLowerCase() === searchTerm.toLowerCase() ||
+        player.email?.toLowerCase() === searchTerm.toLowerCase()
+      );
+      
+      // Show new player option for valid emails/phones or if no exact username match
+      setShowNewPlayerOption((inputType === 'email' || inputType === 'phone') || 
+        (inputType === 'username' && !hasExactMatch));
+      
     } catch (err) {
       setError(err.message || 'Failed to search for players.');
+      // Still show new player option for valid emails/phones even if search fails
+      const inputType = detectInputType(searchTerm);
+      setShowNewPlayerOption(inputType === 'email' || inputType === 'phone');
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleSelectNewPlayer = () => {
+    const inputType = detectInputType(searchTerm);
+    const newPlayerData = {
+      isNewPlayer: true,
+      inputType,
+      contact: searchTerm,
+      displayName: inputType === 'email' ? searchTerm : 
+                   inputType === 'phone' ? formatPhoneNumber(searchTerm) : searchTerm
+    };
+    setSelectedNewPlayer(newPlayerData);
+    setSelectedPlayer(null);
+  };
+
+  const handleSelectExistingPlayer = (player) => {
+    setSelectedPlayer(player);
+    setSelectedNewPlayer(null);
+  };
+
   const handleCreate = async () => {
-    if (!selectedPlayer) return;
+    if (!selectedPlayer && !selectedNewPlayer) return;
     setIsLoading(true);
     setError('');
     try {
-      const duelData = {
-        creator_id: playerData.player_id,
-        invited_player_id: selectedPlayer.player_id,
-        settings: {
-          session_duration_limit_minutes: duration,
-          invitation_expiry_minutes: inviteExpiration * 60, // Convert hours to minutes
-        },
-      };
+      let duelData;
+      
+      if (selectedPlayer) {
+        // Existing player duel
+        duelData = {
+          creator_id: playerData.player_id,
+          invited_player_id: selectedPlayer.player_id,
+          settings: {
+            session_duration_limit_minutes: duration,
+            invitation_expiry_minutes: inviteExpiration * 60, // Convert hours to minutes
+          },
+        };
+      } else if (selectedNewPlayer) {
+        // New player invitation
+        duelData = {
+          creator_id: playerData.player_id,
+          invite_new_player: true,
+          new_player_contact: {
+            type: selectedNewPlayer.inputType,
+            value: selectedNewPlayer.contact
+          },
+          settings: {
+            session_duration_limit_minutes: duration,
+            invitation_expiry_minutes: inviteExpiration * 60, // Convert hours to minutes
+          },
+        };
+      }
+      
       await apiCreateDuel(duelData);
       onDuelCreated();
       onClose();
@@ -77,7 +165,7 @@ const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search by name or email"
+                  placeholder="Invite by username, email, or phone number"
                 />
                 <button type="submit" disabled={isLoading}>
                   {isLoading ? 'Searching...' : 'Search'}
@@ -85,23 +173,59 @@ const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
               </div>
             </form>
 
-            {searchResults.length > 0 && (
+            {(searchResults.length > 0 || showNewPlayerOption) && (
               <ul className="search-results">
                 {searchResults.map(player => (
                   <li
                     key={player.player_id}
-                    onClick={() => setSelectedPlayer(player)}
+                    onClick={() => handleSelectExistingPlayer(player)}
                     className={selectedPlayer?.player_id === player.player_id ? 'selected' : ''}
                   >
-                    {player.name}
+                    <div className="player-info">
+                      <span className="player-name">{player.name}</span>
+                      {player.email && <span className="player-email">({player.email})</span>}
+                    </div>
                   </li>
                 ))}
+                
+                {showNewPlayerOption && (
+                  <li
+                    key="new-player"
+                    onClick={handleSelectNewPlayer}
+                    className={selectedNewPlayer ? 'selected new-player-invite' : 'new-player-invite'}
+                  >
+                    <div className="new-player-info">
+                      <span className="new-player-label">📧 New Player Invite</span>
+                      <span className="new-player-contact">
+                        {detectInputType(searchTerm) === 'email' ? `Email: ${searchTerm}` :
+                         detectInputType(searchTerm) === 'phone' ? `Phone: ${formatPhoneNumber(searchTerm)}` :
+                         `Username: ${searchTerm}`}
+                      </span>
+                    </div>
+                  </li>
+                )}
               </ul>
             )}
 
-            {selectedPlayer && <p>Selected: {selectedPlayer.name}</p>}
+            {selectedPlayer && (
+              <div className="selection-info">
+                <p><strong>Selected:</strong> {selectedPlayer.name}</p>
+                {selectedPlayer.email && <p className="selected-email">{selectedPlayer.email}</p>}
+              </div>
+            )}
+            
+            {selectedNewPlayer && (
+              <div className="selection-info new-player-selection">
+                <p><strong>New Player Invite:</strong> {selectedNewPlayer.displayName}</p>
+                <p className="invite-method">
+                  Will be invited via {selectedNewPlayer.inputType === 'email' ? 'email' : 
+                                     selectedNewPlayer.inputType === 'phone' ? 'SMS' : 'username lookup'}
+                </p>
+              </div>
+            )}
           </>
         )}
+
 
         <div className="form-group">
           <label htmlFor="duration">Session Duration</label>
@@ -131,9 +255,11 @@ const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
           <button
             className="btn"
             onClick={handleCreate}
-            disabled={!selectedPlayer || isLoading}
+            disabled={(!selectedPlayer && !selectedNewPlayer) || isLoading}
           >
-            {isLoading ? 'Sending...' : rematchData ? 'Send Rematch Challenge' : 'Send Invite'}
+            {isLoading ? 'Sending...' : 
+             selectedNewPlayer ? 'Send New Player Invite' :
+             rematchData ? 'Send Rematch Challenge' : 'Send Invite'}
           </button>
         </div>
       </div>

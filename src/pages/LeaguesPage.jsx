@@ -145,9 +145,9 @@ const LeaguesPage = () => {
 
   return (
     <div className="leagues-page">
-      <div className="leagues-header">
+      <div className="leagues-header page-header">
         <h1>Leagues</h1>
-        <button onClick={handleCreateLeagueClick} className="create-league-btn">+ Create League</button>
+        <button onClick={handleCreateLeagueClick} className="btn btn-primary">+ Create League</button>
       </div>
 
       {showCreateModal && <CreateLeagueModal onClose={() => setShowCreateModal(false)} onLeagueCreated={handleLeagueCreated} />}

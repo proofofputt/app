@@ -179,6 +179,8 @@ async function handleCreateLeague(req, res, client) {
     ...settings
   };
 
+  const isIRL = defaultSettings.is_irl || false;
+
   // First verify the user exists in the players table
   const playerCheck = await client.query(`
     SELECT player_id FROM players WHERE player_id = $1
@@ -186,6 +188,29 @@ async function handleCreateLeague(req, res, client) {
 
   if (playerCheck.rows.length === 0) {
     return res.status(400).json({ success: false, message: 'Player not found' });
+  }
+
+  let temporaryPlayerIds = [];
+  
+  // Create temporary players for IRL mode
+  if (isIRL) {
+    const numPlayers = defaultSettings.num_players || 4;
+    const playerNames = defaultSettings.player_names || {};
+    
+    for (let i = 1; i <= numPlayers; i++) {
+      const playerName = playerNames[i] || `Player ${i}`;
+      const tempEmail = `temp_player_${Date.now()}_${i}@irl.local`;
+      
+      const tempPlayerResult = await client.query(`
+        INSERT INTO players (name, email, is_temporary, created_at)
+        VALUES ($1, $2, true, NOW())
+        RETURNING player_id, name
+      `, [playerName, tempEmail]);
+      
+      temporaryPlayerIds.push(tempPlayerResult.rows[0].player_id);
+    }
+    
+    console.log(`[DEBUG] Created ${temporaryPlayerIds.length} temporary players for IRL league:`, temporaryPlayerIds);
   }
 
   // Try to create league with minimal required fields first
@@ -208,6 +233,22 @@ async function handleCreateLeague(req, res, client) {
     console.error(`[ERROR] Failed to create league membership:`, membershipError.message);
     console.error(`[ERROR] League: ${league.league_id}, Player: ${user.playerId}`);
     throw membershipError; // Re-throw to fail the league creation if membership fails
+  }
+
+  // Add temporary players as members for IRL mode
+  if (isIRL && temporaryPlayerIds.length > 0) {
+    try {
+      for (const tempPlayerId of temporaryPlayerIds) {
+        await client.query(`
+          INSERT INTO league_memberships (league_id, player_id, joined_at)
+          VALUES ($1, $2, NOW())
+        `, [league.league_id, tempPlayerId]);
+      }
+      console.log(`[DEBUG] Added ${temporaryPlayerIds.length} temporary players to league ${league.league_id}`);
+    } catch (membershipError) {
+      console.error(`[ERROR] Failed to create temporary player memberships:`, membershipError.message);
+      throw membershipError; // Re-throw to fail the league creation if membership fails
+    }
   }
 
   // Create league rounds automatically
@@ -244,16 +285,28 @@ async function handleCreateLeague(req, res, client) {
     // Don't fail the league creation if rounds fail - can be created later
   }
 
+  // Get temporary player info if IRL mode
+  let temporaryPlayers = null;
+  if (isIRL && temporaryPlayerIds.length > 0) {
+    const tempPlayersResult = await client.query(`
+      SELECT player_id, name FROM players WHERE player_id = ANY($1)
+    `, [temporaryPlayerIds]);
+    
+    temporaryPlayers = tempPlayersResult.rows;
+  }
+
   return res.status(201).json({
     success: true,
-    message: 'League created successfully',
+    message: isIRL ? 'IRL League created successfully' : 'League created successfully',
     league: {
       league_id: league.league_id,
       name: league.name,
       description: league.description,
       rules: league.rules,
       status: 'setup',
-      creator_id: league.created_by
+      creator_id: league.created_by,
+      is_irl: isIRL,
+      temporary_players: temporaryPlayers
     }
   });
 }

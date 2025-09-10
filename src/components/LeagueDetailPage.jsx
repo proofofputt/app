@@ -501,29 +501,31 @@ const LeagueDetailPage = () => {
         </div>
       </div>
 
-      <div className="card">
-        <div className="section-header">
-          <h3>Members ({league.members?.length || 0})</h3>
-          <div className="member-actions">
-            {canJoin && (
-              <button
-                className="btn"
-                onClick={handleJoinLeague}
-                disabled={isJoining}
-              >
-                {isJoining ? 'Joining...' : 'Join League'}
-              </button>
-            )}
-            {canInvite && <InlineInviteForm onInvite={handleInvitePlayer} />} 
+      <div className="league-members-section">
+        <div className="card">
+          <div className="section-header">
+            <h3>Members ({league.members?.length || 0})</h3>
+            <div className="member-actions">
+              {canJoin && (
+                <button
+                  className="btn"
+                  onClick={handleJoinLeague}
+                  disabled={isJoining}
+                >
+                  {isJoining ? 'Joining...' : 'Join League'}
+                </button>
+              )}
+              {canInvite && <InlineInviteForm onInvite={handleInvitePlayer} />} 
+            </div>
           </div>
+          <ul className="member-list">
+            {sortedMembers.map(member => (
+              <li key={member.player_id}>
+                <Link to={`/player/${member.player_id}/stats`}>{member.name}</Link>
+              </li>
+            ))}
+          </ul>
         </div>
-        <ul className="member-list">
-          {sortedMembers.map(member => (
-            <li key={member.player_id}>
-              <Link to={`/player/${member.player_id}/stats`}>{member.name}</Link>
-            </li>
-          ))}
-        </ul>
       </div>
     </div>
   );

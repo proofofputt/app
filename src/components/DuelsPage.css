@@ -54,12 +54,18 @@
 /* Status badges */
 .status-badge {
   color: white;
-  padding: 0.25rem 0.75rem;
+  padding: 0.25rem 0.5rem; /* Reduced horizontal padding */
   border-radius: 12px;
-  font-size: 0.875rem;
+  font-size: 0.75rem; /* Slightly smaller font to fit in constrained columns */
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.02em; /* Reduced letter spacing */
+  display: inline-block;
+  max-width: 100%; /* Ensure it doesn't overflow its container */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
 }
 
 /* Opponent links */
@@ -83,12 +89,17 @@
 .expiration-box {
   background-color: var(--warning-bg, #fef3c7);
   color: var(--warning-text, #d97706);
-  padding: 0.25rem 0.5rem;
+  padding: 0.25rem 0.35rem; /* Reduced horizontal padding */
   border-radius: 6px;
-  font-size: 0.875rem;
+  font-size: 0.75rem; /* Smaller font to fit in constrained columns */
   font-weight: 500;
   text-align: center;
   border: 1px solid var(--warning-border, #fcd34d);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* Create Duel Button - Yellow/Orange Gradient */
@@ -155,6 +166,9 @@
   padding: 0.75rem 0.5rem; /* Comfortable padding */
   vertical-align: middle;
   word-wrap: break-word; /* Allow long words to break */
+  white-space: normal; /* Allow text wrapping */
+  overflow-wrap: break-word; /* Break long words at appropriate points */
+  hyphens: auto; /* Enable hyphenation for better word breaking */
 }
 
 /* Score cells - compact but readable */
@@ -176,6 +190,9 @@
 .duels-table td[data-cell="opponent"] {
   width: 25%; /* Proportional width for names */
   min-width: 100px;
+  padding-right: 0.25rem; /* Reduced right padding */
+  white-space: normal; /* Allow name wrapping */
+  overflow-wrap: break-word; /* Break long names at word boundaries */
 }
 
 .duels-table th[data-col="your-score"],
@@ -205,14 +222,56 @@
   text-align: center;
 }
 
-/* For active duels table - adjust for different columns */
-.duels-table th:nth-child(3), /* Expires column */
-.duels-table td:nth-child(3),
-.duels-table th:nth-child(4), /* Time Limit column */
-.duels-table td:nth-child(4) {
-  width: 15%;
+/* Fixed width columns with specific constraints */
+
+/* Status column - for pending/sent tables (2nd column) */
+.duels-table th:nth-child(2), /* Status header */
+.duels-table td:nth-child(2) { /* Status cell */
+  width: 90px;
+  min-width: 90px;
+  max-width: 90px;
   text-align: center;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Created column - for pending/sent tables (3rd column) */
+.duels-table th:nth-child(3), /* Created header in pending tables */
+.duels-table td:nth-child(3) { /* Created cell in pending tables */
+  width: 95px;
+  min-width: 95px;
+  max-width: 95px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.875rem;
+}
+
+/* Expires column - for pending/sent tables (4th column) */  
+.duels-table th:nth-child(4), /* Expires header in pending tables */
+.duels-table td:nth-child(4) { /* Expires cell in pending tables */
+  width: 95px;
+  min-width: 95px;
+  max-width: 95px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.875rem;
+}
+
+/* Time Limit column - for pending/sent tables (5th column) */
+.duels-table th:nth-child(5), /* Time Limit header in pending tables */
+.duels-table td:nth-child(5) { /* Time Limit cell in pending tables */
+  width: 75px;
+  min-width: 75px;
+  max-width: 75px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .duels-table thead th {

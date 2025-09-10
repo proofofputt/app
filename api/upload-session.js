@@ -260,6 +260,7 @@ export default async function handler(req, res) {
       }
 
       // Handle league session association
+      let isIRLLeague = false;
       if (league_round_id) {
         console.log(`[upload-session] Associating session ${finalSessionId} with league round ${league_round_id}`);
         
@@ -272,6 +273,7 @@ export default async function handler(req, res) {
             lr.start_time,
             lr.end_time,
             l.name as league_name,
+            l.rules,
             lm.membership_id,
             lm.is_active as member_active
           FROM league_rounds lr
@@ -282,6 +284,14 @@ export default async function handler(req, res) {
         
         if (roundResult.rows.length > 0) {
           const roundInfo = roundResult.rows[0];
+          
+          // Check if this is an IRL league
+          const leagueRules = roundInfo.rules ? JSON.parse(roundInfo.rules) : {};
+          isIRLLeague = leagueRules.is_irl || false;
+          
+          if (isIRLLeague) {
+            console.log(`[upload-session] Detected IRL league session - this will not count towards creator's stats`);
+          }
           
           // Check if player is a member of the league
           if (!roundInfo.membership_id || !roundInfo.member_active) {
@@ -338,20 +348,24 @@ export default async function handler(req, res) {
         }
       }
 
-      // Update player stats (aggregate statistics)
-      await client.query(`
-        INSERT INTO player_stats (player_id, total_sessions, total_putts, total_makes, total_misses, make_percentage, best_streak, last_session_at, created_at, updated_at)
-        VALUES ($1, 1, $2, $3, $4, $5, $6, NOW(), NOW(), NOW())
-        ON CONFLICT (player_id) DO UPDATE SET
-          total_sessions = player_stats.total_sessions + 1,
-          total_putts = player_stats.total_putts + $2,
-          total_makes = player_stats.total_makes + $3,
-          total_misses = player_stats.total_misses + $4,
-          make_percentage = CASE WHEN (player_stats.total_putts + $2) > 0 THEN ROUND(((player_stats.total_makes + $3)::decimal / (player_stats.total_putts + $2)::decimal) * 100, 2) ELSE 0 END,
-          best_streak = GREATEST(player_stats.best_streak, $6),
-          last_session_at = NOW(),
-          updated_at = NOW()
-      `, [player_id, statsSummary.total_putts, statsSummary.total_makes, statsSummary.total_misses, statsSummary.make_percentage, statsSummary.best_streak]);
+      // Update player stats (aggregate statistics) - skip for IRL league sessions
+      if (!isIRLLeague) {
+        await client.query(`
+          INSERT INTO player_stats (player_id, total_sessions, total_putts, total_makes, total_misses, make_percentage, best_streak, last_session_at, created_at, updated_at)
+          VALUES ($1, 1, $2, $3, $4, $5, $6, NOW(), NOW(), NOW())
+          ON CONFLICT (player_id) DO UPDATE SET
+            total_sessions = player_stats.total_sessions + 1,
+            total_putts = player_stats.total_putts + $2,
+            total_makes = player_stats.total_makes + $3,
+            total_misses = player_stats.total_misses + $4,
+            make_percentage = CASE WHEN (player_stats.total_putts + $2) > 0 THEN ROUND(((player_stats.total_makes + $3)::decimal / (player_stats.total_putts + $2)::decimal) * 100, 2) ELSE 0 END,
+            best_streak = GREATEST(player_stats.best_streak, $6),
+            last_session_at = NOW(),
+            updated_at = NOW()
+        `, [player_id, statsSummary.total_putts, statsSummary.total_makes, statsSummary.total_misses, statsSummary.make_percentage, statsSummary.best_streak]);
+      } else {
+        console.log(`[upload-session] Skipping player stats update for IRL league session - not counting towards player ${player_id}'s history`);
+      }
 
       const response = { 
         success: true, 

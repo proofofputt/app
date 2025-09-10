@@ -16,6 +16,31 @@
   border-bottom: 1px solid var(--border-color);
 }
 
+/* Create League Button - Yellow/Orange Gradient to match Create Duel button */
+.leagues-page .page-header .btn-primary {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #f97316 100%);
+  border: none;
+  color: #1a1a1a;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  text-shadow: none;
+  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
+}
+
+.leagues-page .page-header .btn-primary:hover {
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 50%, #ea580c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(251, 191, 36, 0.4);
+}
+
+.leagues-page .page-header .btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
+}
+
 .leagues-section {
   margin-bottom: 2.5rem;
 }
@@ -617,4 +642,40 @@
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+/* League Members and Invite Section Background */
+.league-members-section {
+  background-color: var(--surface-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  margin-bottom: 3rem; /* Ample bottom margin before page end */
+  border: 1px solid var(--border-color);
+}
+
+.league-members-section h3 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: var(--text-color-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.league-members-section .section-content {
+  background-color: var(--bg-color);
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid var(--border-color-light, rgba(255, 255, 255, 0.1));
+}
+
+/* Ensure league member tables have proper spacing */
+.league-members-section table {
+  margin-bottom: 0;
+}
+
+.league-members-section .inline-invite-form {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
 }
