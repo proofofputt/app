@@ -221,8 +221,8 @@ async function handleCreateLeague(req, res, client) {
       const tempEmail = `temp_player_${Date.now()}_${i}@irl.local`;
       
       const tempPlayerResult = await client.query(`
-        INSERT INTO players (name, email, is_temporary, created_at)
-        VALUES ($1, $2, true, NOW())
+        INSERT INTO players (name, email, created_at)
+        VALUES ($1, $2, NOW())
         RETURNING player_id, name
       `, [playerName, tempEmail]);
       
@@ -323,23 +323,14 @@ async function handleCreateLeague(req, res, client) {
     for (const contact of new_player_contacts) {
       try {
         // Create a temporary player for the invited contact
+        // Create temporary player with only basic fields that exist in production
         const tempPlayerResult = await client.query(`
-          INSERT INTO players (
-            name, 
-            email, 
-            is_temporary, 
-            contact_info, 
-            created_at
-          ) VALUES ($1, $2, true, $3, NOW())
+          INSERT INTO players (name, email, created_at)
+          VALUES ($1, $2, NOW())
           RETURNING player_id
         `, [
-          `Invited ${contact.type === 'email' ? 'Email' : 'Phone'}`,
-          contact.type === 'email' ? contact.value : `temp_${Date.now()}@phone.local`,
-          JSON.stringify({
-            type: contact.type,
-            value: contact.value,
-            invited_by: user.playerId
-          })
+          `Invited ${contact.type === 'email' ? 'Email' : 'Phone'} (${contact.value})`,
+          contact.type === 'email' ? contact.value : `temp_${Date.now()}@phone.local`
         ]);
         
         const tempPlayerId = tempPlayerResult.rows[0].player_id;

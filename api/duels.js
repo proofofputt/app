@@ -201,23 +201,14 @@ async function handleCreateDuel(req, res) {
 
     if (invite_new_player && new_player_contact) {
       // Create a temporary player for the invited contact
+      // Create temporary player with only basic fields that exist in production
       const tempPlayerResult = await client.query(`
-        INSERT INTO players (
-          name, 
-          email, 
-          is_temporary, 
-          contact_info, 
-          created_at
-        ) VALUES ($1, $2, true, $3, NOW())
+        INSERT INTO players (name, email, created_at)
+        VALUES ($1, $2, NOW())
         RETURNING player_id
       `, [
-        `Invited ${new_player_contact.type === 'email' ? 'Email' : 'Phone'}`,
-        new_player_contact.type === 'email' ? new_player_contact.value : `temp_${Date.now()}@phone.local`,
-        JSON.stringify({
-          type: new_player_contact.type,
-          value: new_player_contact.value,
-          invited_by: creator_id
-        })
+        `Invited ${new_player_contact.type === 'email' ? 'Email' : 'Phone'} (${new_player_contact.value})`,
+        new_player_contact.type === 'email' ? new_player_contact.value : `temp_${Date.now()}@phone.local`
       ]);
       
       const tempPlayerId = tempPlayerResult.rows[0].player_id;
