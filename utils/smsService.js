@@ -44,7 +44,7 @@ export const sendDuelInviteSMS = async (phone, inviterName, duelDetails) => {
     return { success: false, error: 'Invalid US phone number format' };
   }
   
-  const signupLink = `${APP_URL}/register?invite=duel&phone=${encodeURIComponent(validatedPhone)}`;
+  const signupLink = `${APP_URL}/register?invite=duel&phone=${encodeURIComponent(validatedPhone)}&referrer_id=${duelDetails.creatorInfo?.id || ''}`;
   
   // SMS character limit: 160 chars for single message, 1600 for concatenated
   // Include putting distance and creator contact info

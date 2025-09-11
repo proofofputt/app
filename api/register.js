@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { email, password, name } = req.body;
+  const { email, password, name, referrer_id } = req.body;
 
   if (!email || !password || !name) {
     return res.status(400).json({ error: 'Email, name, and password are required' });
@@ -98,6 +98,63 @@ export default async function handler(req, res) {
       [player.player_id]
     );
 
+    // Handle referral if provided
+    let referrerInfo = null;
+    if (referrer_id && !isNaN(referrer_id)) {
+      try {
+        // Verify referrer exists
+        const referrerResult = await client.query(
+          'SELECT player_id, name, email FROM players WHERE player_id = $1',
+          [parseInt(referrer_id)]
+        );
+        
+        if (referrerResult.rows.length > 0) {
+          const referrer = referrerResult.rows[0];
+          referrerInfo = referrer;
+          
+          // Create referral record
+          await client.query(
+            `INSERT INTO player_referrals (
+              referrer_id, 
+              referred_player_id, 
+              referral_source,
+              created_at
+            ) VALUES ($1, $2, 'duel_invitation', NOW())`,
+            [referrer.player_id, player.player_id]
+          );
+          
+          // Add to referrer's contacts automatically
+          await client.query(
+            `INSERT INTO player_friends (
+              player_id, 
+              friend_player_id, 
+              status, 
+              created_at
+            ) VALUES ($1, $2, 'accepted', NOW())
+            ON CONFLICT (player_id, friend_player_id) DO NOTHING`,
+            [referrer.player_id, player.player_id]
+          );
+          
+          // Add referrer to new player's contacts as well (bidirectional)
+          await client.query(
+            `INSERT INTO player_friends (
+              player_id, 
+              friend_player_id, 
+              status, 
+              created_at
+            ) VALUES ($1, $2, 'accepted', NOW())
+            ON CONFLICT (player_id, friend_player_id) DO NOTHING`,
+            [player.player_id, referrer.player_id]
+          );
+          
+          console.log(`✅ Referral recorded: ${referrer.name} (${referrer.player_id}) referred ${player.name} (${player.player_id})`);
+        }
+      } catch (referralError) {
+        console.error('Failed to process referral:', referralError);
+        // Don't fail registration if referral processing fails
+      }
+    }
+
     // Generate JWT token (matching login.js format)
     const token = jwt.sign(
       { 
@@ -130,7 +187,12 @@ export default async function handler(req, res) {
         membership_tier: player.membership_tier,
         subscription_status: player.subscription_status,
         timezone: player.timezone
-      }
+      },
+      referral: referrerInfo ? {
+        referred_by: referrerInfo.name,
+        referrer_id: referrerInfo.player_id,
+        auto_added_to_contacts: true
+      } : null
     });
 
   } catch (error) {

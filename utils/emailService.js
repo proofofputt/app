@@ -185,7 +185,7 @@ export const sendWelcomeEmail = async (email, name) => {
  * Send duel invitation email to new players
  */
 export const sendDuelInviteEmail = async (email, inviterName, duelDetails) => {
-  const signupLink = `${APP_URL}/register?invite=duel&email=${encodeURIComponent(email)}`;
+  const signupLink = `${APP_URL}/register?invite=duel&email=${encodeURIComponent(email)}&referrer_id=${duelDetails.creatorInfo?.id || ''}`;
   
   const msg = {
     to: email,

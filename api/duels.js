@@ -338,6 +338,7 @@ async function handleCreateDuel(req, res) {
             puttingDistance: duelRules.putting_distance_feet || 7.0,
             expiresAt: duel.expires_at,
             creatorInfo: {
+              id: creator.player_id,
               name: creator.name,
               email: creator.email,
               contactType: new_player_contact.type // email or phone
