@@ -198,4 +198,4 @@ async function handleGetActiveCompetitions(req, res) {
   } finally {
     if (client) client.release();
   }
-}// Updated Wed Sep 10 21:52:22 EDT 2025
+}
