@@ -55,30 +55,30 @@ async function handleGetDuels(req, res) {
       return res.status(400).json({ success: false, message: 'player_id is required' });
     }
 
-    // Get duels where player is involved (as creator or invited player)
+    // Get duels where player is involved (as challenger or challengee)
     const duelsResult = await client.query(`
       SELECT 
         d.duel_id,
-        d.duel_creator_id,
-        d.duel_invited_player_id,
+        d.challenger_id,
+        d.challengee_id,
         d.status,
         d.settings,
         d.rules,
         d.created_at,
         d.expires_at,
         d.winner_id,
-        creator.name as creator_name,
-        invited_player.name as invited_player_name,
-        d.duel_creator_session_id,
-        d.duel_invited_player_session_id,
-        d.duel_creator_session_data,
-        d.duel_invited_player_session_data,
-        d.duel_creator_score,
-        d.duel_invited_player_score
+        challenger.name as challenger_name,
+        challengee.name as challengee_name,
+        d.challenger_session_id,
+        d.challengee_session_id,
+        d.challenger_session_data,
+        d.challengee_session_data,
+        d.challenger_score,
+        d.challengee_score
       FROM duels d
-      JOIN players creator ON d.duel_creator_id = creator.player_id
-      JOIN players invited_player ON d.duel_invited_player_id = invited_player.player_id
-      WHERE d.duel_creator_id = $1 OR d.duel_invited_player_id = $1
+      JOIN players challenger ON d.challenger_id = challenger.player_id
+      JOIN players challengee ON d.challengee_id = challengee.player_id
+      WHERE d.challenger_id = $1 OR d.challengee_id = $1
       ORDER BY d.created_at DESC
     `, [player_id]);
 
@@ -117,10 +117,10 @@ async function handleGetDuels(req, res) {
       
       return {
         duel_id: duel.duel_id,
-        creator_id: duel.duel_creator_id,
-        invited_player_id: duel.duel_invited_player_id,
-        creator_name: duel.creator_name,
-        invited_player_name: duel.invited_player_name,
+        creator_id: duel.challenger_id,
+        invited_player_id: duel.challengee_id,
+        creator_name: duel.challenger_name,
+        invited_player_name: duel.challengee_name,
         status: duel.status,
         settings: duel.settings,
         rules: duel.rules,
@@ -128,20 +128,20 @@ async function handleGetDuels(req, res) {
         expires_at: expiresAt,
         winner_id: duel.winner_id,
         time_limit_minutes: timeLimit, // Extract time limit for frontend
-        creator_score: duel.duel_creator_score,
-        invited_player_score: duel.duel_invited_player_score,
-        creator_submitted_session_id: duel.duel_creator_session_id,
-        invited_player_submitted_session_id: duel.duel_invited_player_session_id,
-        creator_session: duel.duel_creator_session_id ? {
-          session_id: duel.duel_creator_session_id,
-          ...duel.duel_creator_session_data
+        creator_score: duel.challenger_score,
+        invited_player_score: duel.challengee_score,
+        creator_submitted_session_id: duel.challenger_session_id,
+        invited_player_submitted_session_id: duel.challengee_session_id,
+        creator_session: duel.challenger_session_id ? {
+          session_id: duel.challenger_session_id,
+          ...duel.challenger_session_data
         } : null,
-        invited_player_session: duel.duel_invited_player_session_id ? {
-          session_id: duel.duel_invited_player_session_id,
-          ...duel.duel_invited_player_session_data
+        invited_player_session: duel.challengee_session_id ? {
+          session_id: duel.challengee_session_id,
+          ...duel.challengee_session_data
         } : null,
-        is_creator: parseInt(player_id) === duel.duel_creator_id,
-        is_invited_player: parseInt(player_id) === duel.duel_invited_player_id
+        is_creator: parseInt(player_id) === duel.challenger_id,
+        is_invited_player: parseInt(player_id) === duel.challengee_id
       };
     });
 
@@ -216,19 +216,32 @@ async function handleCreateDuel(req, res) {
       
       newPlayerInviteId = newPlayerInviteResult.rows[0].invitation_id;
 
+      // Calculate expires_at for new player duels
+      const expiryMinutes = duelRules.invitation_expiry_minutes || 4320; // Default 3 days
+      
       // Create duel with invitation reference
       duelResult = await client.query(`
-        INSERT INTO duels (duel_creator_id, duel_invited_player_id, status, rules, created_at, new_player_invitation_id)
-        VALUES ($1, NULL, 'pending_new_player', $2, NOW(), $3)
-        RETURNING duel_id, duel_creator_id, duel_invited_player_id, status, rules, created_at, new_player_invitation_id
-      `, [creator_id, duelRules, newPlayerInviteId]);
+        INSERT INTO duels (challenger_id, challengee_id, status, rules, created_at, expires_at)
+        VALUES ($1, NULL, 'pending_new_player', $2, NOW(), NOW() + INTERVAL '${expiryMinutes} minutes')
+        RETURNING duel_id, challenger_id, challengee_id, status, rules, created_at, expires_at
+      `, [creator_id, duelRules]);
+      
+      // Link the invitation to the duel
+      await client.query(`
+        UPDATE player_invitations 
+        SET duel_id = $1 
+        WHERE invitation_id = $2
+      `, [duelResult.rows[0].duel_id, newPlayerInviteId]);
 
     } else {
+      // Calculate expires_at for regular duels
+      const expiryMinutes = duelRules.invitation_expiry_minutes || 4320; // Default 3 days
+      
       // Regular duel with existing player
       duelResult = await client.query(`
-        INSERT INTO duels (duel_creator_id, duel_invited_player_id, status, rules, created_at)
-        VALUES ($1, $2, 'pending', $3, NOW())
-        RETURNING duel_id, duel_creator_id, duel_invited_player_id, status, rules, created_at
+        INSERT INTO duels (challenger_id, challengee_id, status, rules, created_at, expires_at)
+        VALUES ($1, $2, 'pending', $3, NOW(), NOW() + INTERVAL '${expiryMinutes} minutes')
+        RETURNING duel_id, challenger_id, challengee_id, status, rules, created_at, expires_at
       `, [creator_id, invited_player_id, duelRules]);
     }
 
@@ -236,8 +249,8 @@ async function handleCreateDuel(req, res) {
 
     // Get player names for response
     const playerIds = [creator_id];
-    if (duel.duel_invited_player_id) {
-      playerIds.push(duel.duel_invited_player_id);
+    if (duel.challengee_id) {
+      playerIds.push(duel.challengee_id);
     }
     
     const playersResult = await client.query(`
@@ -253,10 +266,10 @@ async function handleCreateDuel(req, res) {
       success: true,
       duel: {
         ...duel,
-        creator_id: duel.duel_creator_id,
-        invited_player_id: duel.duel_invited_player_id,
+        creator_id: duel.challenger_id,
+        invited_player_id: duel.challengee_id,
         creator_name: players[creator_id],
-        invited_player_name: duel.duel_invited_player_id ? players[duel.duel_invited_player_id] : null
+        invited_player_name: duel.challengee_id ? players[duel.challengee_id] : null
       }
     };
 
