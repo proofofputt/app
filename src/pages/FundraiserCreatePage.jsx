@@ -44,8 +44,7 @@ const FundraiserCreatePage = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Include Authorization header if needed, e.g.:
-          // 'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify({
           title,

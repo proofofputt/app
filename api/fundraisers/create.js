@@ -25,72 +25,17 @@ function verifyToken(req) {
 export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  if (req.method === 'GET') {
-    return handleGetFundraisers(req, res);
-  } else if (req.method === 'POST') {
-    return handleCreateFundraiser(req, res);
-  } else {
+  if (req.method !== 'POST') {
     return res.status(405).json({ success: false, message: 'Method Not Allowed' });
   }
-}
 
-async function handleGetFundraisers(req, res) {
-  let client;
-  try {
-    client = await pool.connect();
-    console.log('Fundraisers API: Database connected successfully');
-
-    // Get all active fundraisers with organizer information
-    const result = await client.query(`
-      SELECT 
-        f.fundraiser_id,
-        f.title as name,
-        f.description as cause,
-        f.goal_amount,
-        f.amount_raised,
-        f.start_date as start_time,
-        f.end_date as end_time,
-        f.status,
-        f.created_by as player_id,
-        p.name as player_name,
-        f.created_at
-      FROM fundraisers f
-      JOIN players p ON f.created_by = p.player_id
-      WHERE f.status = 'active' AND f.end_date >= CURRENT_DATE
-      ORDER BY f.created_at DESC
-    `);
-
-    const fundraisers = result.rows;
-    console.log(`Found ${fundraisers.length} active fundraisers`);
-
-    return res.status(200).json({
-      success: true,
-      fundraisers: fundraisers,
-      count: fundraisers.length
-    });
-
-  } catch (error) {
-    console.error('Fundraisers API error:', error);
-    
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to load fundraisers',
-      fundraisers: [],
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  } finally {
-    if (client) client.release();
-  }
-}
-
-async function handleCreateFundraiser(req, res) {
   // Verify authentication for fundraiser creation
   const user = await verifyToken(req);
   if (!user) {
@@ -103,7 +48,7 @@ async function handleCreateFundraiser(req, res) {
 
     // Check if user has required membership tier
     const membershipResult = await client.query(
-      'SELECT membership_tier FROM players WHERE player_id = $1',
+      'SELECT membership_tier, name FROM players WHERE player_id = $1',
       [user.playerId]
     );
 
@@ -111,7 +56,7 @@ async function handleCreateFundraiser(req, res) {
       return res.status(404).json({ success: false, message: 'Player not found' });
     }
 
-    const membershipTier = membershipResult.rows[0].membership_tier;
+    const { membership_tier: membershipTier, name: playerName } = membershipResult.rows[0];
     if (membershipTier !== 'premium' && membershipTier !== 'regular') {
       return res.status(403).json({ 
         success: false, 
@@ -152,7 +97,7 @@ async function handleCreateFundraiser(req, res) {
 
     const newFundraiser = insertResult.rows[0];
 
-    console.log(`Fundraiser created successfully:`, newFundraiser);
+    console.log(`Fundraiser created successfully by ${playerName}:`, newFundraiser);
 
     return res.status(201).json({
       success: true,
