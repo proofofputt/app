@@ -11,6 +11,7 @@ const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
   const [numRounds, setNumRounds] = useState(4);
   const [roundDuration, setRoundDuration] = useState(168);
   const [timeLimit, setTimeLimit] = useState(15);
+  const [puttingDistance, setPuttingDistance] = useState(7.0);
   const [allowPlayerInvites, setAllowPlayerInvites] = useState(true);
   const [allowLateJoiners, setAllowLateJoiners] = useState(true);
   const [allowCatchUpSubmissions, setAllowCatchUpSubmissions] = useState(true);
@@ -89,6 +90,7 @@ const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
           num_rounds: parseInt(numRounds, 10),
           round_duration_hours: parseInt(roundDuration, 10),
           time_limit_minutes: parseInt(timeLimit, 10),
+          putting_distance_feet: parseFloat(puttingDistance),
           allow_player_invites: isIRL ? false : allowPlayerInvites,
           allow_late_joiners: isIRL ? false : allowLateJoiners,
           allow_catch_up_submissions: isIRL ? false : allowCatchUpSubmissions,
@@ -264,6 +266,26 @@ const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
             <select id="time-limit" value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)}>
               {[2, 5, 10, 15, 21].map(n => <option key={n} value={n}>{n} minutes</option>)}
             </select>
+          </div>
+          <div className="form-group">
+            <label htmlFor="putting-distance">
+              Length: {puttingDistance.toFixed(1)} feet
+            </label>
+            <input
+              id="putting-distance"
+              type="range"
+              min="3.0"
+              max="10.0"
+              step="0.1"
+              value={puttingDistance}
+              onChange={(e) => setPuttingDistance(parseFloat(e.target.value))}
+              className="distance-slider"
+            />
+            <div className="slider-labels">
+              <span>3.0'</span>
+              <span>7.0'</span>
+              <span>10.0'</span>
+            </div>
           </div>
           <div className="form-group">
             <label htmlFor="num-rounds">Number of Rounds</label>

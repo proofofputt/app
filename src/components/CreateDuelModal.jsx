@@ -41,6 +41,7 @@ const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
   const [selectedNewPlayer, setSelectedNewPlayer] = useState(null); // For new player invites
   const [duration, setDuration] = useState(rematchData?.duration || 5);
   const [inviteExpiration, setInviteExpiration] = useState(rematchData?.expiration || 72); // Default to 72 hours
+  const [puttingDistance, setPuttingDistance] = useState(rematchData?.puttingDistance || 7.0);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showNewPlayerOption, setShowNewPlayerOption] = useState(false);
@@ -111,6 +112,7 @@ const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
           settings: {
             session_duration_limit_minutes: duration,
             invitation_expiry_minutes: inviteExpiration * 60, // Convert hours to minutes
+            putting_distance_feet: parseFloat(puttingDistance),
           },
         };
       } else if (selectedNewPlayer) {
@@ -125,6 +127,7 @@ const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
           settings: {
             session_duration_limit_minutes: duration,
             invitation_expiry_minutes: inviteExpiration * 60, // Convert hours to minutes
+            putting_distance_feet: parseFloat(puttingDistance),
           },
         };
       }
@@ -246,6 +249,27 @@ const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
             <option value={72}>72 Hours</option>
             <option value={168}>1 Week</option>
           </select>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="putting-distance">
+            Length: {puttingDistance.toFixed(1)} feet
+          </label>
+          <input
+            id="putting-distance"
+            type="range"
+            min="3.0"
+            max="10.0"
+            step="0.1"
+            value={puttingDistance}
+            onChange={(e) => setPuttingDistance(parseFloat(e.target.value))}
+            className="distance-slider"
+          />
+          <div className="slider-labels">
+            <span>3.0'</span>
+            <span>7.0'</span>
+            <span>10.0'</span>
+          </div>
         </div>
 
         {error && <p className="error-message">{error}</p>}

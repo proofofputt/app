@@ -28,6 +28,55 @@
   color: var(--primary-color);
 }
 
+/* Distance slider styling */
+.distance-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #ddd;
+  outline: none;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  margin: 10px 0;
+}
+
+.distance-slider:hover {
+  opacity: 1;
+}
+
+.distance-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary-color, #2d6e3e);
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.distance-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary-color, #2d6e3e);
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85em;
+  color: #666;
+  margin-top: 5px;
+}
+
+.slider-labels span {
+  font-weight: 500;
+}
+
 .form-group {
   margin-bottom: 1.5rem;
 }
