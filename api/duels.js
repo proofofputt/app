@@ -77,7 +77,7 @@ async function handleGetDuels(req, res) {
         d.challengee_score
       FROM duels d
       JOIN players challenger ON d.challenger_id = challenger.player_id
-      JOIN players challengee ON d.challengee_id = challengee.player_id
+      LEFT JOIN players challengee ON d.challengee_id = challengee.player_id
       WHERE d.challenger_id = $1 OR d.challengee_id = $1
       ORDER BY d.created_at DESC
     `, [player_id]);
@@ -120,7 +120,7 @@ async function handleGetDuels(req, res) {
         creator_id: duel.challenger_id,
         invited_player_id: duel.challengee_id,
         creator_name: duel.challenger_name,
-        invited_player_name: duel.challengee_name,
+        invited_player_name: duel.challengee_name || 'Email Invitation',
         status: duel.status,
         settings: duel.settings,
         rules: duel.rules,
