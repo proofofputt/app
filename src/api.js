@@ -198,6 +198,28 @@ export const apiRespondToDuel = (duelId, playerId, response) => {
 export const apiSubmitSessionToDuel = (duelId, playerId, sessionId) => 
   fetch(`${API_BASE_URL}/duels/${duelId}/submit`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ player_id: playerId, session_id: sessionId }) }).then(handleResponse);
 
+export const apiCancelDuel = (duelId) => {
+  console.log('[apiCancelDuel] Request:', { duelId, url: `${API_BASE_URL}/duels/${duelId}/cancel` });
+  return fetch(`${API_BASE_URL}/duels/${duelId}/cancel`, { 
+    method: 'POST', 
+    headers: getHeaders()
+  }).then(async res => {
+    console.log('[apiCancelDuel] Response status:', res.status, res.statusText);
+    if (!res.ok) {
+      const errorText = await res.text().catch(() => '');
+      console.error('[apiCancelDuel] Error response:', errorText);
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { message: errorText || 'Unknown error' };
+      }
+      throw new Error(errorData.message || errorData.error || 'Failed to cancel duel');
+    }
+    return res.json();
+  });
+};
+
 // --- Leagues ---
 export const apiListLeagues = (playerId) => 
   fetch(`${API_BASE_URL}/leagues?player_id=${playerId}`, { headers: getHeaders() }).then(handleResponse);

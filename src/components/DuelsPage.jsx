@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { apiListDuels, apiRespondToDuel, apiSubmitSessionToDuel, apiStartSession } from '../api';
+import { apiListDuels, apiRespondToDuel, apiSubmitSessionToDuel, apiStartSession, apiCancelDuel } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { useNavigate, Link } from 'react-router-dom';
@@ -9,7 +9,7 @@ import SortButton from './SortButton';
 import Pagination from './Pagination';
 import './DuelsPage.css';
 
-const DuelRow = ({ duel, onRespond, onSubmitSession, onRematch, currentUserId, isActiveSection, isCompletedSection }) => {
+const DuelRow = ({ duel, onRespond, onSubmitSession, onRematch, onCancel, currentUserId, isActiveSection, isCompletedSection }) => {
     const isCreator = duel.creator_id === currentUserId;
     const opponentName = isCreator ? duel.invited_player_name : duel.creator_name;
     const opponentId = isCreator ? duel.invited_player_id : duel.creator_id;
@@ -56,11 +56,28 @@ const DuelRow = ({ duel, onRespond, onSubmitSession, onRematch, currentUserId, i
         }
         
         if (duel.status === 'pending' && isCreator) {
-            // User sent this invitation - show waiting status
+            // User sent this invitation - show cancel button
             return (
-                <div className="waiting-response">
-                    <span className="text-muted">Awaiting response...</span>
-                </div>
+                <button 
+                    onClick={() => onCancel(duel.duel_id)} 
+                    className="btn btn-sm btn-outline-danger"
+                    title="Cancel this duel invitation"
+                >
+                    Cancel
+                </button>
+            );
+        }
+        
+        if (duel.status === 'pending_new_player' && isCreator) {
+            // User sent this invitation to new player - show cancel button
+            return (
+                <button 
+                    onClick={() => onCancel(duel.duel_id)} 
+                    className="btn btn-sm btn-outline-danger"
+                    title="Cancel this duel invitation"
+                >
+                    Cancel
+                </button>
             );
         }
         
@@ -297,6 +314,18 @@ const DuelsPage = () => {
         showNotification(`Setting up rematch with ${opponent.name}`);
     };
 
+    const handleCancel = async (duelId) => {
+        try {
+            console.log('[DuelsPage] Cancelling duel:', duelId);
+            const result = await apiCancelDuel(duelId);
+            showNotification(`✅ ${result.message || 'Duel invitation cancelled successfully'}`);
+            fetchDuels(); // Refresh the list
+        } catch (err) {
+            console.error('[DuelsPage] Error cancelling duel:', err);
+            showNotification(`❌ ${err.message || 'Failed to cancel duel invitation'}`, true);
+        }
+    };
+
 
     // Process duels data without circular dependencies
     const categorizedDuels = useMemo(() => {
@@ -439,6 +468,7 @@ const DuelsPage = () => {
                                     onRespond={handleRespond}
                                     onSubmitSession={handleSubmitSession}
                                     onRematch={handleRematch}
+                                    onCancel={handleCancel}
                                     currentUserId={playerData.player_id}
                                     isActiveSection={title === 'Active Duels'}
                                     isCompletedSection={title === 'Completed Duels'}
