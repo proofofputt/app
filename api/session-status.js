@@ -52,7 +52,7 @@ export default async function handler(req, res) {
       SELECT 
         d.duel_id,
         d.status,
-        d.challenger_id,
+        d.duel_creator_id,
         d.challenged_id,
         d.rules,
         d.created_at,
@@ -62,16 +62,16 @@ export default async function handler(req, res) {
         challenger.display_name as challenger_name,
         challenged.display_name as challenged_name
       FROM duels d
-      LEFT JOIN users challenger ON d.challenger_id = challenger.id
+      LEFT JOIN users creator ON d.duel_creator_id = creator.id
       LEFT JOIN users challenged ON d.challenged_id = challenged.id
-      WHERE (d.challenger_id = $1 OR d.challenged_id = $1) 
+      WHERE (d.duel_creator_id = $1 OR d.duel_invited_player_id = $1) 
         AND d.status IN ('pending', 'active')
       ORDER BY d.created_at DESC
     `, [playerId]);
 
     // Calculate status for each active duel
     const activeDuels = activeDuelsResult.rows.map(duel => {
-      const isChallenger = duel.challenger_id === playerId;
+      const isCreator = duel.duel_creator_id === playerId;
       
       // Check time expiration
       let timeRemaining = null;
@@ -96,7 +96,7 @@ export default async function handler(req, res) {
         is_challenger: isChallenger,
         opponent_name: isChallenger ? 
           (duel.challenged_name || `Player ${duel.challenged_id}`) : 
-          (duel.challenger_name || `Player ${duel.challenger_id}`),
+          (duel.creator_name || `Player ${duel.duel_creator_id}`),
         my_session_submitted: isChallenger ? !!duel.challenger_session_id : !!duel.challenged_session_id,
         opponent_session_submitted: isChallenger ? !!duel.challenged_session_id : !!duel.challenger_session_id,
         time_limit_hours: duel.rules?.time_limit_hours || null,

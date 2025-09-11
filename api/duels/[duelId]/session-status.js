@@ -56,18 +56,18 @@ export default async function handler(req, res) {
     const duelResult = await client.query(`
       SELECT 
         d.*,
-        challenger.display_name as challenger_name,
-        challenged.display_name as challenged_name,
+        creator.name as creator_name,
+        invited_player.name as invited_player_name,
         cs.data as challenger_session_data,
         chs.data as challenged_session_data,
         cs.created_at as challenger_session_uploaded_at,
         chs.created_at as challenged_session_uploaded_at
       FROM duels d
-      LEFT JOIN users challenger ON d.challenger_id = challenger.id
-      LEFT JOIN users challenged ON d.challenged_id = challenged.id
-      LEFT JOIN sessions cs ON d.challenger_session_id = cs.session_id
-      LEFT JOIN sessions chs ON d.challenged_session_id = chs.session_id
-      WHERE d.duel_id = $1 AND (d.challenger_id = $2 OR d.challenged_id = $2)
+      LEFT JOIN players creator ON d.duel_creator_id = creator.player_id
+      LEFT JOIN players invited_player ON d.duel_invited_player_id = invited_player.player_id
+      LEFT JOIN sessions cs ON d.duel_creator_session_id = cs.session_id
+      LEFT JOIN sessions chs ON d.duel_invited_player_session_id = chs.session_id
+      WHERE d.duel_id = $1 AND (d.duel_creator_id = $2 OR d.duel_invited_player_id = $2)
     `, [duelId, playerId]);
 
     if (duelResult.rows.length === 0) {
@@ -75,7 +75,7 @@ export default async function handler(req, res) {
     }
 
     const duel = duelResult.rows[0];
-    const isChallenger = duel.challenger_id === playerId;
+    const isCreator = duel.duel_creator_id === playerId;
 
     // Check if duel has time limits and calculate remaining time
     let timeRemaining = null;
@@ -98,11 +98,11 @@ export default async function handler(req, res) {
     const sessionStatus = {
       duel_id: duel.duel_id,
       status: duel.status,
-      challenger_id: duel.challenger_id,
-      challenged_id: duel.challenged_id,
-      challenger_name: duel.challenger_name || `Player ${duel.challenger_id}`,
-      challenged_name: duel.challenged_name || `Player ${duel.challenged_id}`,
-      is_challenger: isChallenger,
+      duel_creator_id: duel.duel_creator_id,
+      duel_invited_player_id: duel.duel_invited_player_id,
+      creator_name: duel.creator_name || `Player ${duel.duel_creator_id}`,
+      invited_player_name: duel.invited_player_name || `Player ${duel.duel_invited_player_id}`,
+      is_creator: isCreator,
       rules: duel.rules,
       
       // Time information
@@ -114,14 +114,14 @@ export default async function handler(req, res) {
       completed_at: duel.completed_at,
       
       // Session submission status
-      challenger_session_submitted: !!duel.challenger_session_id,
-      challenged_session_submitted: !!duel.challenged_session_id,
-      challenger_session_uploaded_at: duel.challenger_session_uploaded_at,
-      challenged_session_uploaded_at: duel.challenged_session_uploaded_at,
+      creator_session_submitted: !!duel.duel_creator_session_id,
+      invited_player_session_submitted: !!duel.duel_invited_player_session_id,
+      creator_session_uploaded_at: duel.creator_session_uploaded_at,
+      invited_player_session_uploaded_at: duel.invited_player_session_uploaded_at,
       
       // Player-specific status
-      my_session_submitted: isChallenger ? !!duel.challenger_session_id : !!duel.challenged_session_id,
-      opponent_session_submitted: isChallenger ? !!duel.challenged_session_id : !!duel.challenger_session_id,
+      my_session_submitted: isCreator ? !!duel.duel_creator_session_id : !!duel.duel_invited_player_session_id,
+      opponent_session_submitted: isCreator ? !!duel.duel_invited_player_session_id : !!duel.duel_creator_session_id,
       
       // Results (if completed)
       winner_id: duel.winner_id,
@@ -130,25 +130,25 @@ export default async function handler(req, res) {
     };
 
     // Add basic session stats if available (without full session data for performance)
-    if (duel.challenger_session_data) {
-      const challengerStats = duel.challenger_session_data;
-      sessionStatus.challenger_stats = {
-        total_putts: challengerStats.total_putts || 0,
-        total_makes: challengerStats.total_makes || 0,
-        make_percentage: challengerStats.make_percentage || 0,
-        best_streak: challengerStats.best_streak || 0,
-        session_duration: challengerStats.session_duration || challengerStats.session_duration_seconds || 0
+    if (duel.duel_creator_session_data) {
+      const creatorStats = duel.duel_creator_session_data;
+      sessionStatus.creator_stats = {
+        total_putts: creatorStats.total_putts || 0,
+        total_makes: creatorStats.total_makes || 0,
+        make_percentage: creatorStats.make_percentage || 0,
+        best_streak: creatorStats.best_streak || 0,
+        session_duration: creatorStats.session_duration || creatorStats.session_duration_seconds || 0
       };
     }
 
-    if (duel.challenged_session_data) {
-      const challengedStats = duel.challenged_session_data;
-      sessionStatus.challenged_stats = {
-        total_putts: challengedStats.total_putts || 0,
-        total_makes: challengedStats.total_makes || 0,
-        make_percentage: challengedStats.make_percentage || 0,
-        best_streak: challengedStats.best_streak || 0,
-        session_duration: challengedStats.session_duration || challengedStats.session_duration_seconds || 0
+    if (duel.duel_invited_player_session_data) {
+      const invitedPlayerStats = duel.duel_invited_player_session_data;
+      sessionStatus.invited_player_stats = {
+        total_putts: invitedPlayerStats.total_putts || 0,
+        total_makes: invitedPlayerStats.total_makes || 0,
+        make_percentage: invitedPlayerStats.make_percentage || 0,
+        best_streak: invitedPlayerStats.best_streak || 0,
+        session_duration: invitedPlayerStats.session_duration || invitedPlayerStats.session_duration_seconds || 0
       };
     }
 
