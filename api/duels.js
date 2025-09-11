@@ -1,6 +1,7 @@
 import { Pool } from 'pg';
 import jwt from 'jsonwebtoken';
-import { sendDuelInviteEmail } from '../utils/emailService.js';
+import { sendSingleInvitation } from '../utils/invitationService.js';
+import { checkInvitationLimits, recordInvitationsSent } from '../utils/invitationLimiter.js';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -263,8 +264,42 @@ async function handleCreateDuel(req, res) {
       }
     };
 
-    // Add new player contact details if applicable
+    // Send invitation and update rate limits if applicable
     if (invite_new_player && new_player_contact) {
+      // Check rate limits before sending
+      const limitCheck = await checkInvitationLimits(client, creator_id, new_player_contact.type, 1);
+      
+      if (limitCheck.allowed) {
+        // Send the invitation
+        const invitationResult = await sendSingleInvitation(
+          new_player_contact,
+          players[creator_id], // inviter name
+          {
+            timeLimit: duelRules.session_duration_limit_minutes,
+            scoring: duelRules.scoring || 'total_makes',
+            expiresAt: duel.expires_at
+          },
+          'duel'
+        );
+        
+        if (invitationResult.success) {
+          // Record successful invitation
+          await recordInvitationsSent(client, creator_id, 1);
+          console.log(`✅ Sent ${new_player_contact.type} invitation to ${new_player_contact.value}`);
+        } else {
+          console.warn(`⚠️  Failed to send invitation: ${invitationResult.error}`);
+        }
+        
+        // Add invitation result to response
+        responseData.duel.invitation_sent = invitationResult.success;
+        responseData.duel.invitation_error = invitationResult.success ? null : invitationResult.error;
+      } else {
+        console.warn(`⚠️  Rate limit exceeded for ${new_player_contact.type} invitation: ${limitCheck.error}`);
+        responseData.duel.invitation_sent = false;
+        responseData.duel.invitation_error = limitCheck.error;
+      }
+      
+      // Add contact details to response
       responseData.duel.new_player_contact = {
         contact_type: new_player_contact.type,
         contact_value: new_player_contact.value,
