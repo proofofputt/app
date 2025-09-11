@@ -58,22 +58,22 @@ async function handleGetActiveCompetitions(req, res) {
         d.expires_at,
         d.created_at,
         CASE 
-          WHEN d.challenger_id = $1 THEN challengee.name
-          ELSE challenger.name
+          WHEN d.duel_creator_id = $1 THEN invited_player.name
+          ELSE creator.name
         END as opponent_name,
         CASE 
-          WHEN d.challenger_id = $1 THEN 'creator'
+          WHEN d.duel_creator_id = $1 THEN 'creator'
           ELSE 'invited'
         END as player_role,
         CASE 
-          WHEN d.challenger_id = $1 THEN d.challenger_session_id IS NULL
-          ELSE d.challengee_session_id IS NULL
+          WHEN d.duel_creator_id = $1 THEN d.duel_creator_session_id IS NULL
+          ELSE d.duel_invited_player_session_id IS NULL
         END as needs_session
       FROM duels d
-      LEFT JOIN players challenger ON d.challenger_id = challenger.player_id
-      LEFT JOIN players challengee ON d.challengee_id = challengee.player_id
+      LEFT JOIN players creator ON d.duel_creator_id = creator.player_id
+      LEFT JOIN players invited_player ON d.duel_invited_player_id = invited_player.player_id
       WHERE 
-        (d.challenger_id = $1 OR d.challengee_id = $1)
+        (d.duel_creator_id = $1 OR d.duel_invited_player_id = $1)
       ORDER BY d.expires_at ASC
     `;
 
