@@ -344,24 +344,14 @@ async function handleCreateLeague(req, res, client) {
         
         const tempPlayerId = tempPlayerResult.rows[0].player_id;
         
-        // Create player_invitations record for email/phone tracking
-        const playerInvitationResult = await client.query(`
-          INSERT INTO player_invitations (
-            inviter_id, 
-            contact_type, 
-            contact_value, 
-            invitation_type, 
-            invited_player_id,
-            league_id,
-            created_at, 
-            expires_at,
-            status
-          ) VALUES ($1, $2, $3, 'league', $4, $5, NOW(), NOW() + INTERVAL '7 days', 'pending')
-          RETURNING invitation_id, contact_type, contact_value, status, created_at, expires_at
-        `, [user.playerId, contact.type, contact.value, tempPlayerId, league.league_id]);
-        
-        const playerInvitation = playerInvitationResult.rows[0];
-        playerInvitation.invited_player_id = tempPlayerId; // Add player ID to response
+        // Track new player invitation details (simplified - no separate table)
+        const playerInvitation = {
+          contact_type: contact.type,
+          contact_value: contact.value,
+          status: 'pending',
+          created_at: new Date().toISOString(),
+          invited_player_id: tempPlayerId
+        };
         newPlayerInvitations.push(playerInvitation);
         
         // Update league to reference the first invited player (for consistency with duels)

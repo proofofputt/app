@@ -221,23 +221,6 @@ async function handleCreateDuel(req, res) {
       ]);
       
       const tempPlayerId = tempPlayerResult.rows[0].player_id;
-      
-      // Create a new player invitation record
-      const newPlayerInviteResult = await client.query(`
-        INSERT INTO player_invitations (
-          inviter_id, 
-          contact_type, 
-          contact_value, 
-          invitation_type, 
-          invited_player_id,
-          created_at, 
-          expires_at,
-          status
-        ) VALUES ($1, $2, $3, 'duel', $4, NOW(), NOW() + INTERVAL '${duelRules.invitation_expiry_minutes || 4320} minutes', 'pending')
-        RETURNING invitation_id
-      `, [creator_id, new_player_contact.type, new_player_contact.value, tempPlayerId]);
-      
-      newPlayerInviteId = newPlayerInviteResult.rows[0].invitation_id;
 
       // Calculate expires_at for new player duels
       const expiryMinutes = duelRules.invitation_expiry_minutes || 4320; // Default 3 days
@@ -248,13 +231,6 @@ async function handleCreateDuel(req, res) {
         VALUES ($1, $2, 'pending_new_player', $3, NOW(), NOW() + INTERVAL '${expiryMinutes} minutes')
         RETURNING duel_id, duel_creator_id, duel_invited_player_id, status, rules, created_at, expires_at
       `, [creator_id, tempPlayerId, duelRules]);
-      
-      // Link the invitation to the duel
-      await client.query(`
-        UPDATE player_invitations 
-        SET duel_id = $1 
-        WHERE invitation_id = $2
-      `, [duelResult.rows[0].duel_id, newPlayerInviteId]);
 
     } else {
       // Calculate expires_at for regular duels
@@ -296,13 +272,12 @@ async function handleCreateDuel(req, res) {
       }
     };
 
-    // Add new player invitation details if applicable
-    if (invite_new_player && newPlayerInviteId) {
-      responseData.duel.new_player_invitation = {
-        invitation_id: newPlayerInviteId,
+    // Add new player contact details if applicable
+    if (invite_new_player && new_player_contact) {
+      responseData.duel.new_player_contact = {
         contact_type: new_player_contact.type,
         contact_value: new_player_contact.value,
-        status: 'pending'
+        status: 'pending_new_player'
       };
     }
 
