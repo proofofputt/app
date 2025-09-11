@@ -167,13 +167,21 @@ async function handleGetDuels(req, res) {
 }
 
 async function handleCreateDuel(req, res) {
+  console.log('🎯 Starting duel creation process...');
+  console.log('📥 Request body:', JSON.stringify(req.body, null, 2));
+  
   // Verify authentication
+  console.log('🔐 Verifying authentication...');
   const user = await verifyToken(req);
+  console.log('🔐 Auth result:', user ? `✅ Valid user: ${user.playerId}` : '❌ Invalid token');
+  
   if (!user) {
+    console.log('❌ Authentication failed - returning 401');
     return res.status(401).json({ success: false, message: 'Authentication required' });
   }
 
   const { creator_id, invited_player_id, settings, rules, invite_new_player, new_player_contact } = req.body;
+  console.log('📋 Extracted request data:', { creator_id, invited_player_id, settings, rules, invite_new_player, new_player_contact });
 
   // Use settings or rules for the duel configuration
   const duelRules = settings || rules || {};
@@ -310,12 +318,30 @@ async function handleCreateDuel(req, res) {
     return res.status(201).json(responseData);
 
   } catch (error) {
-    console.error('Create duel error:', error);
+    console.error('💥 CREATE DUEL ERROR - DETAILED INFORMATION:');
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error code:', error.code);
+    console.error('Error detail:', error.detail);
+    console.error('Error hint:', error.hint);
+    console.error('Error constraint:', error.constraint);
+    console.error('Error table:', error.table);
+    console.error('Error column:', error.column);
+    console.error('Error routine:', error.routine);
+    console.error('Full error object:', error);
+    console.error('Stack trace:', error.stack);
+    
     return res.status(500).json({
       success: false,
       message: 'Failed to create duel',
-      error: error.message, // Always show error for debugging
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      error: error.message,
+      errorName: error.name,
+      errorCode: error.code,
+      errorDetail: error.detail,
+      errorHint: error.hint,
+      errorConstraint: error.constraint,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
     });
   } finally {
     if (client) client.release();
