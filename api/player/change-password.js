@@ -1,7 +1,7 @@
 import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { setCORSHeaders } from '../utils/cors.js';
+import { setCORSHeaders } from '../../utils/cors.js';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,

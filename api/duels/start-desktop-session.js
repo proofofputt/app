@@ -1,4 +1,4 @@
-import { setCORSHeaders } from '../utils/cors.js';
+import { setCORSHeaders } from '../../utils/cors.js';
 
 export default function handler(req, res) {
   setCORSHeaders(req, res);

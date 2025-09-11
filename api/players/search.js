@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { setCORSHeaders } from '../utils/cors.js';
+import { setCORSHeaders } from '../../utils/cors.js';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
