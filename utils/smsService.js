@@ -47,10 +47,12 @@ export const sendDuelInviteSMS = async (phone, inviterName, duelDetails) => {
   const signupLink = `${APP_URL}/register?invite=duel&phone=${encodeURIComponent(validatedPhone)}`;
   
   // SMS character limit: 160 chars for single message, 1600 for concatenated
-  // Keep under 160 to avoid extra charges
+  // Include putting distance and creator contact info
+  const contactInfo = duelDetails.creatorInfo ? `\n📧 ${duelDetails.creatorInfo.email || duelDetails.creatorInfo.name}` : '';
+  
   const message = `🏌️ ${inviterName} challenged you to a putting duel on ${APP_NAME}!
 
-⏱️ ${duelDetails.timeLimit ? `${duelDetails.timeLimit}min` : 'Timed'} • 🎯 ${duelDetails.scoring === 'total_makes' ? 'Total Makes' : 'Best Streak'}
+📏 ${duelDetails.puttingDistance ? `${duelDetails.puttingDistance}ft` : '7.0ft'} • ⏱️ ${duelDetails.timeLimit ? `${duelDetails.timeLimit}min` : 'Timed'} • 🎯 ${duelDetails.scoring === 'total_makes' ? 'Total Makes' : 'Best Streak'}${contactInfo}
 
 Join: ${signupLink}
 

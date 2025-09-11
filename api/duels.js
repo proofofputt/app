@@ -319,14 +319,29 @@ async function handleCreateDuel(req, res) {
       const limitCheck = await checkInvitationLimits(client, creator_id, new_player_contact.type, 1);
       
       if (limitCheck.allowed) {
+        // Get creator details for invitation
+        const creatorResult = await client.query(`
+          SELECT player_id, name, email 
+          FROM players 
+          WHERE player_id = $1
+        `, [creator_id]);
+        
+        const creator = creatorResult.rows[0];
+        
         // Send the invitation
         const invitationResult = await sendSingleInvitation(
           new_player_contact,
-          players[creator_id], // inviter name
+          creator.name, // inviter name
           {
             timeLimit: duelRules.session_duration_limit_minutes,
             scoring: duelRules.scoring || 'total_makes',
-            expiresAt: duel.expires_at
+            puttingDistance: duelRules.putting_distance_feet || 7.0,
+            expiresAt: duel.expires_at,
+            creatorInfo: {
+              name: creator.name,
+              email: creator.email,
+              contactType: new_player_contact.type // email or phone
+            }
           },
           'duel'
         );

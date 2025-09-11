@@ -215,10 +215,26 @@ export const sendDuelInviteEmail = async (email, inviterName, duelDetails) => {
           
           <div style="background: white; border: 2px solid #2d5016; border-radius: 8px; padding: 20px; margin: 20px 0;">
             <h3 style="color: #2d5016; margin-top: 0;">🎯 Duel Details</h3>
+            <p><strong>Putting Distance:</strong> ${duelDetails.puttingDistance ? `${duelDetails.puttingDistance} feet` : '7.0 feet'}</p>
             ${duelDetails.timeLimit ? `<p><strong>Time Limit:</strong> ${duelDetails.timeLimit} minutes</p>` : ''}
             <p><strong>Scoring:</strong> ${duelDetails.scoring === 'total_makes' ? 'Total Makes' : 'Best Streak'}</p>
             <p><strong>Challenge expires:</strong> ${duelDetails.expiresAt ? new Date(duelDetails.expiresAt).toLocaleDateString() : 'Soon'}</p>
           </div>
+          
+          ${duelDetails.creatorInfo ? `
+          <div style="background: #f0f8f0; border: 1px solid #4a6741; border-radius: 6px; padding: 15px; margin: 20px 0;">
+            <h4 style="color: #2d5016; margin-top: 0; margin-bottom: 10px;">📞 Connect with ${duelDetails.creatorInfo.name}</h4>
+            <p style="margin: 5px 0; font-size: 14px; color: #4a6741;">
+              ${duelDetails.creatorInfo.contactType === 'email' ? 
+                `<strong>Email:</strong> ${duelDetails.creatorInfo.email}` : 
+                `<strong>Contact:</strong> ${duelDetails.creatorInfo.email || duelDetails.creatorInfo.name}`
+              }
+            </p>
+            <p style="margin: 5px 0 0 0; font-size: 12px; color: #718096; font-style: italic;">
+              Feel free to reach out if you have questions about the challenge!
+            </p>
+          </div>
+          ` : ''}
           
           <h3 style="color: #2d5016;">What is ${APP_NAME}?</h3>
           <p>${APP_NAME} is an AI-powered golf training platform that uses computer vision to track your putting performance. Compete with friends, join leagues, and improve your game with detailed analytics!</p>
@@ -251,9 +267,16 @@ export const sendDuelInviteEmail = async (email, inviterName, duelDetails) => {
       ${inviterName} has challenged you to a putting duel on ${APP_NAME}!
 
       Duel Details:
+      - Putting Distance: ${duelDetails.puttingDistance ? `${duelDetails.puttingDistance} feet` : '7.0 feet'}
       ${duelDetails.timeLimit ? `- Time Limit: ${duelDetails.timeLimit} minutes` : ''}
       - Scoring: ${duelDetails.scoring === 'total_makes' ? 'Total Makes' : 'Best Streak'}
       - Challenge expires: ${duelDetails.expiresAt ? new Date(duelDetails.expiresAt).toLocaleDateString() : 'Soon'}
+
+      ${duelDetails.creatorInfo ? `Connect with ${duelDetails.creatorInfo.name}:
+      ${duelDetails.creatorInfo.contactType === 'email' ? 
+        `Email: ${duelDetails.creatorInfo.email}` : 
+        `Contact: ${duelDetails.creatorInfo.email || duelDetails.creatorInfo.name}`
+      }` : ''}
 
       ${APP_NAME} is an AI-powered golf training platform that uses computer vision to track your putting performance.
 
