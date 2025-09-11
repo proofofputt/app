@@ -59,26 +59,26 @@ async function handleGetDuels(req, res) {
     const duelsResult = await client.query(`
       SELECT 
         d.duel_id,
-        d.challenger_id,
-        d.challengee_id,
+        d.duel_creator_id,
+        d.duel_invited_player_id,
         d.status,
         d.settings,
         d.rules,
         d.created_at,
         d.expires_at,
         d.winner_id,
-        challenger.name as challenger_name,
-        challengee.name as challengee_name,
-        d.challenger_session_id,
-        d.challengee_session_id,
-        d.challenger_session_data,
-        d.challengee_session_data,
-        d.challenger_score,
-        d.challengee_score
+        creator.name as creator_name,
+        invited_player.name as invited_player_name,
+        d.duel_creator_session_id,
+        d.duel_invited_player_session_id,
+        d.duel_creator_session_data,
+        d.duel_invited_player_session_data,
+        d.duel_creator_score,
+        d.duel_invited_player_score
       FROM duels d
-      JOIN players challenger ON d.challenger_id = challenger.player_id
-      LEFT JOIN players challengee ON d.challengee_id = challengee.player_id
-      WHERE d.challenger_id = $1 OR d.challengee_id = $1
+      JOIN players creator ON d.duel_creator_id = creator.player_id
+      LEFT JOIN players invited_player ON d.duel_invited_player_id = invited_player.player_id
+      WHERE d.duel_creator_id = $1 OR d.duel_invited_player_id = $1
       ORDER BY d.created_at DESC
     `, [player_id]);
 
@@ -117,10 +117,10 @@ async function handleGetDuels(req, res) {
       
       return {
         duel_id: duel.duel_id,
-        creator_id: duel.challenger_id,
-        invited_player_id: duel.challengee_id,
-        creator_name: duel.challenger_name,
-        invited_player_name: duel.challengee_name || 'Email Invitation',
+        creator_id: duel.duel_creator_id,
+        invited_player_id: duel.duel_invited_player_id,
+        creator_name: duel.creator_name,
+        invited_player_name: duel.invited_player_name,
         status: duel.status,
         settings: duel.settings,
         rules: duel.rules,
@@ -128,20 +128,20 @@ async function handleGetDuels(req, res) {
         expires_at: expiresAt,
         winner_id: duel.winner_id,
         time_limit_minutes: timeLimit, // Extract time limit for frontend
-        creator_score: duel.challenger_score,
-        invited_player_score: duel.challengee_score,
-        creator_submitted_session_id: duel.challenger_session_id,
-        invited_player_submitted_session_id: duel.challengee_session_id,
-        creator_session: duel.challenger_session_id ? {
-          session_id: duel.challenger_session_id,
-          ...duel.challenger_session_data
+        creator_score: duel.duel_creator_score,
+        invited_player_score: duel.duel_invited_player_score,
+        creator_submitted_session_id: duel.duel_creator_session_id,
+        invited_player_submitted_session_id: duel.duel_invited_player_session_id,
+        creator_session: duel.duel_creator_session_id ? {
+          session_id: duel.duel_creator_session_id,
+          ...duel.duel_creator_session_data
         } : null,
-        invited_player_session: duel.challengee_session_id ? {
-          session_id: duel.challengee_session_id,
-          ...duel.challengee_session_data
+        invited_player_session: duel.duel_invited_player_session_id ? {
+          session_id: duel.duel_invited_player_session_id,
+          ...duel.duel_invited_player_session_data
         } : null,
-        is_creator: parseInt(player_id) === duel.challenger_id,
-        is_invited_player: parseInt(player_id) === duel.challengee_id
+        is_creator: parseInt(player_id) === duel.duel_creator_id,
+        is_invited_player: parseInt(player_id) === duel.duel_invited_player_id
       };
     });
 
@@ -200,6 +200,28 @@ async function handleCreateDuel(req, res) {
     let newPlayerInviteId = null;
 
     if (invite_new_player && new_player_contact) {
+      // Create a temporary player for the invited contact
+      const tempPlayerResult = await client.query(`
+        INSERT INTO players (
+          name, 
+          email, 
+          is_temporary, 
+          contact_info, 
+          created_at
+        ) VALUES ($1, $2, true, $3, NOW())
+        RETURNING player_id
+      `, [
+        `Invited ${new_player_contact.type === 'email' ? 'Email' : 'Phone'}`,
+        new_player_contact.type === 'email' ? new_player_contact.value : `temp_${Date.now()}@phone.local`,
+        JSON.stringify({
+          type: new_player_contact.type,
+          value: new_player_contact.value,
+          invited_by: creator_id
+        })
+      ]);
+      
+      const tempPlayerId = tempPlayerResult.rows[0].player_id;
+      
       // Create a new player invitation record
       const newPlayerInviteResult = await client.query(`
         INSERT INTO player_invitations (
@@ -207,24 +229,25 @@ async function handleCreateDuel(req, res) {
           contact_type, 
           contact_value, 
           invitation_type, 
+          invited_player_id,
           created_at, 
           expires_at,
           status
-        ) VALUES ($1, $2, $3, 'duel', NOW(), NOW() + INTERVAL '${duelRules.invitation_expiry_minutes || 4320} minutes', 'pending')
+        ) VALUES ($1, $2, $3, 'duel', $4, NOW(), NOW() + INTERVAL '${duelRules.invitation_expiry_minutes || 4320} minutes', 'pending')
         RETURNING invitation_id
-      `, [creator_id, new_player_contact.type, new_player_contact.value]);
+      `, [creator_id, new_player_contact.type, new_player_contact.value, tempPlayerId]);
       
       newPlayerInviteId = newPlayerInviteResult.rows[0].invitation_id;
 
       // Calculate expires_at for new player duels
       const expiryMinutes = duelRules.invitation_expiry_minutes || 4320; // Default 3 days
       
-      // Create duel with invitation reference
+      // Create duel with temporary player reference
       duelResult = await client.query(`
-        INSERT INTO duels (challenger_id, challengee_id, status, rules, created_at, expires_at)
-        VALUES ($1, NULL, 'pending_new_player', $2, NOW(), NOW() + INTERVAL '${expiryMinutes} minutes')
-        RETURNING duel_id, challenger_id, challengee_id, status, rules, created_at, expires_at
-      `, [creator_id, duelRules]);
+        INSERT INTO duels (duel_creator_id, duel_invited_player_id, status, rules, created_at, expires_at)
+        VALUES ($1, $2, 'pending_new_player', $3, NOW(), NOW() + INTERVAL '${expiryMinutes} minutes')
+        RETURNING duel_id, duel_creator_id, duel_invited_player_id, status, rules, created_at, expires_at
+      `, [creator_id, tempPlayerId, duelRules]);
       
       // Link the invitation to the duel
       await client.query(`
@@ -239,9 +262,9 @@ async function handleCreateDuel(req, res) {
       
       // Regular duel with existing player
       duelResult = await client.query(`
-        INSERT INTO duels (challenger_id, challengee_id, status, rules, created_at, expires_at)
+        INSERT INTO duels (duel_creator_id, duel_invited_player_id, status, rules, created_at, expires_at)
         VALUES ($1, $2, 'pending', $3, NOW(), NOW() + INTERVAL '${expiryMinutes} minutes')
-        RETURNING duel_id, challenger_id, challengee_id, status, rules, created_at, expires_at
+        RETURNING duel_id, duel_creator_id, duel_invited_player_id, status, rules, created_at, expires_at
       `, [creator_id, invited_player_id, duelRules]);
     }
 
@@ -249,8 +272,8 @@ async function handleCreateDuel(req, res) {
 
     // Get player names for response
     const playerIds = [creator_id];
-    if (duel.challengee_id) {
-      playerIds.push(duel.challengee_id);
+    if (duel.duel_invited_player_id) {
+      playerIds.push(duel.duel_invited_player_id);
     }
     
     const playersResult = await client.query(`
@@ -266,10 +289,10 @@ async function handleCreateDuel(req, res) {
       success: true,
       duel: {
         ...duel,
-        creator_id: duel.challenger_id,
-        invited_player_id: duel.challengee_id,
+        creator_id: duel.duel_creator_id,
+        invited_player_id: duel.duel_invited_player_id,
         creator_name: players[creator_id],
-        invited_player_name: duel.challengee_id ? players[duel.challengee_id] : null
+        invited_player_name: duel.duel_invited_player_id ? players[duel.duel_invited_player_id] : null
       }
     };
 

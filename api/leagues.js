@@ -322,6 +322,28 @@ async function handleCreateLeague(req, res, client) {
     
     for (const contact of new_player_contacts) {
       try {
+        // Create a temporary player for the invited contact
+        const tempPlayerResult = await client.query(`
+          INSERT INTO players (
+            name, 
+            email, 
+            is_temporary, 
+            contact_info, 
+            created_at
+          ) VALUES ($1, $2, true, $3, NOW())
+          RETURNING player_id
+        `, [
+          `Invited ${contact.type === 'email' ? 'Email' : 'Phone'}`,
+          contact.type === 'email' ? contact.value : `temp_${Date.now()}@phone.local`,
+          JSON.stringify({
+            type: contact.type,
+            value: contact.value,
+            invited_by: user.playerId
+          })
+        ]);
+        
+        const tempPlayerId = tempPlayerResult.rows[0].player_id;
+        
         // Create player_invitations record for email/phone tracking
         const playerInvitationResult = await client.query(`
           INSERT INTO player_invitations (
@@ -329,23 +351,29 @@ async function handleCreateLeague(req, res, client) {
             contact_type, 
             contact_value, 
             invitation_type, 
+            invited_player_id,
             league_id,
             created_at, 
             expires_at,
             status
-          ) VALUES ($1, $2, $3, 'league', $4, NOW(), NOW() + INTERVAL '7 days', 'pending')
+          ) VALUES ($1, $2, $3, 'league', $4, $5, NOW(), NOW() + INTERVAL '7 days', 'pending')
           RETURNING invitation_id, contact_type, contact_value, status, created_at, expires_at
-        `, [user.playerId, contact.type, contact.value, league.league_id]);
+        `, [user.playerId, contact.type, contact.value, tempPlayerId, league.league_id]);
         
         const playerInvitation = playerInvitationResult.rows[0];
+        playerInvitation.invited_player_id = tempPlayerId; // Add player ID to response
         newPlayerInvitations.push(playerInvitation);
         
-        // Note: league_invitations table requires league_invited_player_id to be NOT NULL
-        // For email invitations, we don't create league_invitations records since there's no player_id yet
-        // Instead, the player_invitations record handles the email invitation tracking
-        // When the email recipient creates an account and accepts, then a league_invitations record is created
+        // Update league to reference the first invited player (for consistency with duels)
+        if (newPlayerInvitations.length === 1) {
+          await client.query(`
+            UPDATE leagues 
+            SET league_creator_id = $1, league_invited_player_id = $2 
+            WHERE league_id = $3
+          `, [user.playerId, tempPlayerId, league.league_id]);
+        }
         
-        console.log(`[DEBUG] Created league invitation for ${contact.type}: ${contact.value}`);
+        console.log(`[DEBUG] Created temporary player ${tempPlayerId} and league invitation for ${contact.type}: ${contact.value}`);
       } catch (inviteError) {
         console.error(`[ERROR] Failed to create invitation for ${contact.type}: ${contact.value}`, inviteError.message);
         // Continue with other invitations even if one fails

@@ -41,7 +41,16 @@ const FundraisingPage = () => {
     try {
       setLoading(true);
       const data = await apiListFundraisers();
-      setFundraisers(data);
+      // Handle null response (404) or extract fundraisers array from response
+      if (data === null) {
+        setFundraisers([]);
+      } else if (data && Array.isArray(data.fundraisers)) {
+        setFundraisers(data.fundraisers);
+      } else if (Array.isArray(data)) {
+        setFundraisers(data);
+      } else {
+        setFundraisers([]);
+      }
     } catch (err) {
       setError('Failed to load fundraising campaigns.');
       console.error(err);

@@ -182,11 +182,14 @@ export default async function handler(req, res) {
         ...rules
       };
       
+      // Calculate expires_at
+      const expiryMinutes = defaultRules.invitation_expiry_minutes || 4320; // Default 3 days
+      
       // Create duel
       const insertResult = await client.query(`
-        INSERT INTO duels (duel_creator_id, duel_invited_player_id, status, rules, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, NOW(), NOW())
-        RETURNING duel_id, created_at
+        INSERT INTO duels (duel_creator_id, duel_invited_player_id, status, rules, created_at, updated_at, expires_at)
+        VALUES ($1, $2, $3, $4, NOW(), NOW(), NOW() + INTERVAL '${expiryMinutes} minutes')
+        RETURNING duel_id, created_at, expires_at
       `, [playerId, invited_player_id, 'pending', JSON.stringify(defaultRules)]);
       
       const duelId = insertResult.rows[0].duel_id;

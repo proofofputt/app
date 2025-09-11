@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Authentication</title>
+</head>
+<body>
+    <h1>Authentication Debug</h1>
+    <div id="results"></div>
+
+    <script>
+        function displayResults(title, data) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML += `<h3>${title}</h3><pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+
+        // Check localStorage for auth tokens
+        const authToken = localStorage.getItem('authToken');
+        const playerData = localStorage.getItem('playerData');
+        
+        displayResults('Auth Token from localStorage', authToken);
+        displayResults('Player Data from localStorage', playerData ? JSON.parse(playerData) : null);
+
+        // Test if we can make authenticated API calls
+        const getHeaders = () => {
+            const headers = { 'Content-Type': 'application/json' };
+            const token = authToken || (playerData ? JSON.parse(playerData)?.token : null);
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            return headers;
+        };
+
+        // Test API call
+        async function testAuthenticatedCall() {
+            try {
+                const response = await fetch('/api/duels?player_id=1', {
+                    headers: getHeaders()
+                });
+                
+                displayResults('Test API Call Response', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries())
+                });
+
+                const data = await response.json();
+                displayResults('Test API Call Data', data);
+            } catch (error) {
+                displayResults('Test API Call Error', error.message);
+            }
+        }
+
+        // Test creating a duel
+        async function testCreateDuel() {
+            try {
+                const response = await fetch('/api/duels', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({
+                        creator_id: 1,
+                        invited_player_id: 2,
+                        settings: { scoring: 'total_makes' }
+                    })
+                });
+                
+                displayResults('Create Duel Response', {
+                    status: response.status,
+                    statusText: response.statusText
+                });
+
+                const data = await response.text();
+                displayResults('Create Duel Data', data);
+            } catch (error) {
+                displayResults('Create Duel Error', error.message);
+            }
+        }
+
+        displayResults('Headers being sent', getHeaders());
+        
+        // Run tests
+        testAuthenticatedCall();
+        testCreateDuel();
+    </script>
+</body>
+</html>
