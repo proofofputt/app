@@ -152,10 +152,13 @@ export default async function handler(req, res) {
         originalFields: Object.keys(statsData).sort()
       });
 
-      // Insert session data into sessions table
+      // Extract putting distance from session data, default to 7.0 feet
+      const puttingDistance = parseFloat(statsData.putting_distance_feet || 7.0);
+      
+      // Insert session data into sessions table with putting distance
       await client.query(
-        'INSERT INTO sessions (session_id, player_id, data, stats_summary, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW()) ON CONFLICT (session_id) DO UPDATE SET data = $3, stats_summary = $4, updated_at = NOW()',
-        [finalSessionId, player_id, JSON.stringify(statsData), JSON.stringify(statsSummary)]
+        'INSERT INTO sessions (session_id, player_id, data, stats_summary, putting_distance_feet, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, NOW(), NOW()) ON CONFLICT (session_id) DO UPDATE SET data = $3, stats_summary = $4, putting_distance_feet = $5, updated_at = NOW()',
+        [finalSessionId, player_id, JSON.stringify(statsData), JSON.stringify(statsSummary), puttingDistance]
       );
 
       // If CSV data is provided, store it in premium_reports table

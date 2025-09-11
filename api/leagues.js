@@ -160,6 +160,22 @@ async function handleCreateLeague(req, res, client) {
     return res.status(400).json({ success: false, message: 'League name is required' });
   }
 
+  // Process and validate league settings
+  const leagueSettings = settings || {};
+  
+  // Ensure putting distance is set, default to 7.0 feet
+  if (!leagueSettings.putting_distance_feet) {
+    leagueSettings.putting_distance_feet = 7.0;
+  }
+  
+  // Validate putting distance range (3.0 - 10.0 feet)
+  if (leagueSettings.putting_distance_feet < 3.0 || leagueSettings.putting_distance_feet > 10.0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Putting distance must be between 3.0 and 10.0 feet'
+    });
+  }
+
   // Validate new player contacts if provided
   if (invite_new_players && (!new_player_contacts || !Array.isArray(new_player_contacts) || new_player_contacts.length === 0)) {
     return res.status(400).json({
@@ -184,7 +200,7 @@ async function handleCreateLeague(req, res, client) {
     return res.status(400).json({ success: false, message: 'Invalid user token - missing playerId' });
   }
 
-  // Create league with default settings
+  // Create league with default settings (including validated putting distance)
   const defaultSettings = {
     privacy: 'public',
     num_rounds: 4,
@@ -194,7 +210,8 @@ async function handleCreateLeague(req, res, client) {
     allow_late_joiners: true,
     allow_player_invites: true,
     allow_catch_up_submissions: true, // Default to allowing catch-up for better continuity
-    ...settings
+    putting_distance_feet: 7.0, // Default putting distance
+    ...leagueSettings // Use validated settings with putting distance
   };
 
   const isIRL = defaultSettings.is_irl || false;

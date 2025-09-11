@@ -107,6 +107,14 @@ async function handleGetDuels(req, res) {
         timeLimit = rules.time_limit;
       }
       
+      // Extract putting distance, default to 7.0 feet if not specified
+      let puttingDistance = 7.0;
+      if (settings.putting_distance_feet) {
+        puttingDistance = parseFloat(settings.putting_distance_feet);
+      } else if (rules.putting_distance_feet) {
+        puttingDistance = parseFloat(rules.putting_distance_feet);
+      }
+      
       // Calculate expiration date from invitation_expiry_minutes if expires_at is null
       let expiresAt = duel.expires_at;
       if (!expiresAt && (settings.invitation_expiry_minutes || rules.invitation_expiry_minutes)) {
@@ -142,6 +150,7 @@ async function handleGetDuels(req, res) {
         expires_at: expiresAt,
         winner_id: duel.winner_id,
         time_limit_minutes: timeLimit, // Extract time limit for frontend
+        putting_distance_feet: puttingDistance, // Extract putting distance for frontend
         creator_score: duel.duel_creator_score,
         invited_player_score: duel.duel_invited_player_score,
         creator_submitted_session_id: duel.duel_creator_session_id,
@@ -193,6 +202,19 @@ async function handleCreateDuel(req, res) {
 
   // Use settings or rules for the duel configuration
   const duelRules = settings || rules || {};
+  
+  // Ensure putting distance is set, default to 7.0 feet
+  if (!duelRules.putting_distance_feet) {
+    duelRules.putting_distance_feet = 7.0;
+  }
+  
+  // Validate putting distance range (3.0 - 10.0 feet)
+  if (duelRules.putting_distance_feet < 3.0 || duelRules.putting_distance_feet > 10.0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Putting distance must be between 3.0 and 10.0 feet'
+    });
+  }
   
   if (!creator_id || (!invited_player_id && !invite_new_player)) {
     return res.status(400).json({ 
