@@ -116,12 +116,25 @@ async function handleGetDuels(req, res) {
       }
       
       
+      // Check if this is a new player invite with contact info
+      const originalContact = duel.rules?.original_invite_contact;
+      let displayInvitedPlayerName = duel.invited_player_name;
+      
+      // If this is a new player invite, format the display name nicely
+      if (originalContact) {
+        if (originalContact.type === 'email') {
+          displayInvitedPlayerName = originalContact.value; // Show email directly
+        } else if (originalContact.type === 'phone') {
+          displayInvitedPlayerName = originalContact.value; // Show phone directly
+        }
+      }
+      
       return {
         duel_id: duel.duel_id,
         creator_id: duel.duel_creator_id,
         invited_player_id: duel.duel_invited_player_id,
         creator_name: duel.creator_name,
-        invited_player_name: duel.invited_player_name,
+        invited_player_name: displayInvitedPlayerName,
         status: duel.status,
         settings: duel.settings,
         rules: duel.rules,
@@ -142,7 +155,10 @@ async function handleGetDuels(req, res) {
           ...duel.duel_invited_player_session_data
         } : null,
         is_creator: parseInt(player_id) === duel.duel_creator_id,
-        is_invited_player: parseInt(player_id) === duel.duel_invited_player_id
+        is_invited_player: parseInt(player_id) === duel.duel_invited_player_id,
+        // Add invite info for new player invites
+        invite_type: originalContact ? 'new_player' : 'existing_player',
+        contact_info: originalContact || null
       };
     });
 
@@ -202,13 +218,14 @@ async function handleCreateDuel(req, res) {
 
     if (invite_new_player && new_player_contact) {
       // Create a temporary player for the invited contact
-      // Create temporary player with required fields including password_hash
+      // Create temporary player with contact info as display name
+      const displayName = new_player_contact.value; // Use the actual email or phone as the display name
       const tempPlayerResult = await client.query(`
         INSERT INTO players (name, email, password_hash, created_at)
         VALUES ($1, $2, $3, NOW())
         RETURNING player_id
       `, [
-        `Invited ${new_player_contact.type === 'email' ? 'Email' : 'Phone'} (${new_player_contact.value})`,
+        displayName,
         new_player_contact.type === 'email' ? new_player_contact.value : `temp_${Date.now()}@phone.local`,
         'temp_password_hash_for_invited_player' // Temporary hash for invited players who haven't registered yet
       ]);
@@ -218,12 +235,21 @@ async function handleCreateDuel(req, res) {
       // Calculate expires_at for new player duels
       const expiryMinutes = duelRules.invitation_expiry_minutes || 4320; // Default 3 days
       
+      // Store original contact info in the duel rules for future reference
+      const enhancedRules = {
+        ...duelRules,
+        original_invite_contact: {
+          type: new_player_contact.type,
+          value: new_player_contact.value
+        }
+      };
+      
       // Create duel with temporary player reference
       duelResult = await client.query(`
         INSERT INTO duels (duel_creator_id, duel_invited_player_id, status, rules, created_at, expires_at)
         VALUES ($1, $2, 'pending_new_player', $3, NOW(), NOW() + INTERVAL '${expiryMinutes} minutes')
         RETURNING duel_id, duel_creator_id, duel_invited_player_id, status, rules, created_at, expires_at
-      `, [creator_id, tempPlayerId, duelRules]);
+      `, [creator_id, tempPlayerId, enhancedRules]);
 
     } else {
       // Calculate expires_at for regular duels
