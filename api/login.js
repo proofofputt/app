@@ -25,11 +25,11 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
+import { setCORSHeaders } from '../utils/cors.js';
+
 export default async function handler(req, res) {
-  // Set CORS headers for cross-origin requests (e.g., from desktop app)
-  res.setHeader('Access-Control-Allow-Origin', '*'); // More restrictive in production if possible
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  // Set secure CORS headers
+  setCORSHeaders(req, res);
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();

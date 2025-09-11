@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 import emailService from './services/email.js';
+import { setCORSHeaders } from '../utils/cors.js';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -105,10 +106,7 @@ async function createInAppNotification(client, userId, invitation, challengerNam
 }
 
 export default async function handler(req, res) {
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  setCORSHeaders(req, res);
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();

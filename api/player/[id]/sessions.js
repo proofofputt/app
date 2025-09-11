@@ -1,4 +1,5 @@
 import { Pool } from 'pg';
+import { setCORSHeaders } from '../../../utils/cors.js';
 
 let pool = null;
 if (process.env.DATABASE_URL) {
@@ -49,9 +50,7 @@ function formatDuration(seconds) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  setCORSHeaders(req, res);
   
   if (req.method === 'OPTIONS') {
     return res.status(200).end();

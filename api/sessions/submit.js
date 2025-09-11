@@ -1,4 +1,5 @@
 import { Pool } from 'pg';
+import { setCORSHeaders } from '../../utils/cors.js';
 
 let pool = null;
 if (process.env.DATABASE_URL) {
@@ -11,9 +12,7 @@ if (process.env.DATABASE_URL) {
 
 export default async function handler(req, res) {
   // Set CORS headers for cross-origin requests (e.g., from desktop app)
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  setCORSHeaders(req, res);
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();

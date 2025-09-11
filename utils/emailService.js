@@ -7,7 +7,7 @@ if (process.env.SENDGRID_API_KEY) {
   console.warn('SENDGRID_API_KEY environment variable not set');
 }
 
-const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@proofofputt.com';
+const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'noreply@proofofputt.com';
 const APP_NAME = 'Proof of Putt';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://app.proofofputt.com';
 
