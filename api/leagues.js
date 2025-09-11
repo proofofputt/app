@@ -316,12 +316,14 @@ async function handleCreateLeague(req, res, client) {
 
   // Create email/phone invitations for new players
   let newPlayerInvitations = [];
+  
   if (invite_new_players && new_player_contacts && new_player_contacts.length > 0) {
     console.log(`[DEBUG] Creating ${new_player_contacts.length} new player invitations for league ${league.league_id}`);
     
     for (const contact of new_player_contacts) {
       try {
-        const invitationResult = await client.query(`
+        // Create player_invitations record for email/phone tracking
+        const playerInvitationResult = await client.query(`
           INSERT INTO player_invitations (
             inviter_id, 
             contact_type, 
@@ -335,7 +337,14 @@ async function handleCreateLeague(req, res, client) {
           RETURNING invitation_id, contact_type, contact_value, status, created_at, expires_at
         `, [user.playerId, contact.type, contact.value, league.league_id]);
         
-        newPlayerInvitations.push(invitationResult.rows[0]);
+        const playerInvitation = playerInvitationResult.rows[0];
+        newPlayerInvitations.push(playerInvitation);
+        
+        // Note: league_invitations table requires league_invited_player_id to be NOT NULL
+        // For email invitations, we don't create league_invitations records since there's no player_id yet
+        // Instead, the player_invitations record handles the email invitation tracking
+        // When the email recipient creates an account and accepts, then a league_invitations record is created
+        
         console.log(`[DEBUG] Created league invitation for ${contact.type}: ${contact.value}`);
       } catch (inviteError) {
         console.error(`[ERROR] Failed to create invitation for ${contact.type}: ${contact.value}`, inviteError.message);
