@@ -314,7 +314,8 @@ async function handleCreateDuel(req, res) {
     return res.status(500).json({
       success: false,
       message: 'Failed to create duel',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: error.message, // Always show error for debugging
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   } finally {
     if (client) client.release();
