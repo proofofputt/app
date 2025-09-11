@@ -155,10 +155,29 @@ async function handleCreateLeague(req, res, client) {
     return res.status(401).json({ success: false, message: 'Authentication required' });
   }
 
-  const { name, description, settings } = req.body;
+  const { name, description, settings, invite_new_players, new_player_contacts } = req.body;
 
   if (!name) {
     return res.status(400).json({ success: false, message: 'League name is required' });
+  }
+
+  // Validate new player contacts if provided
+  if (invite_new_players && (!new_player_contacts || !Array.isArray(new_player_contacts) || new_player_contacts.length === 0)) {
+    return res.status(400).json({
+      success: false,
+      message: 'new_player_contacts array is required when invite_new_players is true'
+    });
+  }
+
+  if (invite_new_players) {
+    for (const contact of new_player_contacts) {
+      if (!contact.type || !contact.value || !['email', 'phone'].includes(contact.type)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Each new_player_contact must have type (email/phone) and value'
+        });
+      }
+    }
   }
 
   // Validate playerId exists
@@ -295,9 +314,47 @@ async function handleCreateLeague(req, res, client) {
     temporaryPlayers = tempPlayersResult.rows;
   }
 
+  // Create email/phone invitations for new players
+  let newPlayerInvitations = [];
+  if (invite_new_players && new_player_contacts && new_player_contacts.length > 0) {
+    console.log(`[DEBUG] Creating ${new_player_contacts.length} new player invitations for league ${league.league_id}`);
+    
+    for (const contact of new_player_contacts) {
+      try {
+        const invitationResult = await client.query(`
+          INSERT INTO player_invitations (
+            inviter_id, 
+            contact_type, 
+            contact_value, 
+            invitation_type, 
+            league_id,
+            created_at, 
+            expires_at,
+            status
+          ) VALUES ($1, $2, $3, 'league', $4, NOW(), NOW() + INTERVAL '7 days', 'pending')
+          RETURNING invitation_id, contact_type, contact_value, status, created_at, expires_at
+        `, [user.playerId, contact.type, contact.value, league.league_id]);
+        
+        newPlayerInvitations.push(invitationResult.rows[0]);
+        console.log(`[DEBUG] Created league invitation for ${contact.type}: ${contact.value}`);
+      } catch (inviteError) {
+        console.error(`[ERROR] Failed to create invitation for ${contact.type}: ${contact.value}`, inviteError.message);
+        // Continue with other invitations even if one fails
+      }
+    }
+  }
+
+  // Prepare success message based on features used
+  let successMessage = 'League created successfully';
+  if (isIRL) {
+    successMessage = 'IRL League created successfully';
+  } else if (newPlayerInvitations.length > 0) {
+    successMessage = `League created successfully with ${newPlayerInvitations.length} invitation(s) sent`;
+  }
+
   return res.status(201).json({
     success: true,
-    message: isIRL ? 'IRL League created successfully' : 'League created successfully',
+    message: successMessage,
     league: {
       league_id: league.league_id,
       name: league.name,
@@ -306,7 +363,8 @@ async function handleCreateLeague(req, res, client) {
       status: 'setup',
       creator_id: league.created_by,
       is_irl: isIRL,
-      temporary_players: temporaryPlayers
+      temporary_players: temporaryPlayers,
+      new_player_invitations: newPlayerInvitations.length > 0 ? newPlayerInvitations : undefined
     }
   });
 }
