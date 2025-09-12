@@ -60,16 +60,18 @@ const ProfileDropdown = () => {
           <NavLink to="/contacts" className="dropdown-item" onClick={() => setIsOpen(false)}>
             Contacts
           </NavLink>
-          <NavLink 
-            to="/coach" 
-            className="dropdown-item" 
-            onClick={(e) => {
-              handleProtectedLinkClick(e);
-              setIsOpen(false);
-            }}
-          >
-            Coach
-          </NavLink>
+          {import.meta.env.DEV && (
+            <NavLink 
+              to="/coach" 
+              className="dropdown-item" 
+              onClick={(e) => {
+                handleProtectedLinkClick(e);
+                setIsOpen(false);
+              }}
+            >
+              Coach
+            </NavLink>
+          )}
           <div className="dropdown-divider"></div>
           <NavLink to="/notifications" className={`dropdown-item ${unreadCount > 0 ? 'unread' : ''}`} onClick={() => setIsOpen(false)}>
             Notifications {unreadCount > 0 && `(${unreadCount})`}
