@@ -19,7 +19,7 @@ const ContactsPage = () => {
   return (
     <div className="contacts-page">
       <div className="contacts-header">
-        <h1>Friends & Contacts</h1>
+        <h1>Contacts</h1>
         <p>Connect with friends and family to share your putting progress</p>
       </div>
 
@@ -92,55 +92,76 @@ const FriendsSection = ({ searchTerm, setSearchTerm, handleSearch }) => {
 const ImportContactsButton = () => {
   const { showTemporaryNotification: showNotification } = useNotification();
   const [showImportModal, setShowImportModal] = useState(false);
-  const [contacts, setContacts] = useState([]);
-  const [selectedContacts, setSelectedContacts] = useState(new Set());
 
-  const handleImportContacts = async () => {
+  const handleImportContacts = () => {
+    setShowImportModal(true);
+  };
+
+  const copyToClipboard = async (text, type) => {
     try {
-      // Request contacts access using the Contacts API (if supported)
-      if ('contacts' in navigator && 'ContactsManager' in window) {
-        const props = ['name', 'email', 'tel'];
-        const opts = { multiple: true };
-        
-        const contactList = await navigator.contacts.select(props, opts);
-        setContacts(contactList);
-        setShowImportModal(true);
-      } else {
-        // Fallback for browsers that don't support the Contacts API
-        showNotification('Contact import not supported on this device. Please add friends manually using the search above.', true);
-      }
+      await navigator.clipboard.writeText(text);
+      showNotification(`✅ ${type} copied to clipboard!`, false);
     } catch (error) {
-      console.error('Failed to import contacts:', error);
-      if (error.name === 'InvalidStateError') {
-        showNotification('Contact access was cancelled.', true);
-      } else {
-        showNotification('Contact import not available on this device. Please add friends manually.', true);
-      }
+      showNotification(`❌ Failed to copy ${type}. Please copy manually.`, true);
     }
   };
 
-  const handleSelectContact = (contact, index) => {
-    const newSelected = new Set(selectedContacts);
-    if (newSelected.has(index)) {
-      newSelected.delete(index);
-    } else {
-      newSelected.add(index);
+  const platformGuides = {
+    ios: {
+      title: "📱 iPhone/iPad Contacts",
+      description: "Select up to 5 close friends to check if they're on Proof of Putt",
+      steps: [
+        "Open Settings > [Your Name] > iCloud",
+        "Make sure Contacts is turned on",
+        "Go to icloud.com on your computer",
+        "Sign in and click Contacts",
+        "Select up to 5 close friends (hold Cmd/Ctrl to multi-select)",
+        "Click the gear icon and choose 'Export vCard'",
+        "Download and open the file to get their email addresses"
+      ],
+      note: "💡 Focus on friends who might already enjoy golf or competitive games. Quality over quantity!"
+    },
+    android: {
+      title: "🤖 Android Contacts",
+      description: "Find up to 5 friends through Google Contacts",
+      steps: [
+        "Open Google Contacts (contacts.google.com)",
+        "Sign in with your Google account",
+        "Browse your contacts list",
+        "Select up to 5 close friends (use checkboxes)",
+        "Click 'Export' and choose 'Google CSV' format",
+        "Download and open the CSV file to get email addresses"
+      ],
+      note: "💡 Look for friends who might already be interested in golf or sports apps."
+    },
+    gmail: {
+      title: "📧 Gmail Contacts",
+      description: "Browse contacts to find existing Proof of Putt players",
+      steps: [
+        "Go to contacts.google.com",
+        "Sign in with your Gmail account",
+        "Browse your contacts list",
+        "Pick up to 5 friends who might be golfers",
+        "Note their email addresses",
+        "Use the search box above to look them up one by one"
+      ],
+      link: "https://contacts.google.com",
+      linkText: "Open Gmail Contacts"
+    },
+    outlook: {
+      title: "📬 Outlook Contacts",
+      description: "Select a few friends to check if they're already players",
+      steps: [
+        "Go to outlook.live.com and sign in",
+        "Click the People icon (contacts)",
+        "Browse your contacts list",
+        "Select up to 5 friends who might enjoy golf",
+        "Note their email addresses or phone numbers",
+        "Use the search box above to find them on Proof of Putt"
+      ],
+      link: "https://outlook.live.com/people",
+      linkText: "Open Outlook Contacts"
     }
-    setSelectedContacts(newSelected);
-  };
-
-  const handleSendInvites = () => {
-    const selectedContactsList = contacts.filter((_, index) => selectedContacts.has(index));
-    
-    if (selectedContactsList.length === 0) {
-      showNotification('Please select contacts to invite.', true);
-      return;
-    }
-
-    // For now, just show a success message
-    showNotification(`Invites sent to ${selectedContactsList.length} contact${selectedContactsList.length > 1 ? 's' : ''}! They'll receive an invitation to join Proof of Putt.`);
-    setShowImportModal(false);
-    setSelectedContacts(new Set());
   };
 
   return (
@@ -149,55 +170,90 @@ const ImportContactsButton = () => {
         onClick={handleImportContacts}
         className="btn btn-secondary import-contacts-btn"
       >
-        📱 Import Contacts
+        🔍 Find Friends on Platform
       </button>
       
       {showImportModal && (
         <div className="modal-overlay" onClick={() => setShowImportModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>Import Contacts</h3>
-            <p>Select contacts to invite to Proof of Putt:</p>
+          <div className="modal-content contact-import-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>🔍 Find Friends Already on Proof of Putt</h3>
+              <p>Choose your platform to check if your friends are already players. We recommend starting with <strong>5 contacts maximum</strong> to focus on quality connections:</p>
+            </div>
             
-            <div className="contacts-list">
-              {contacts.map((contact, index) => (
-                <div
-                  key={index}
-                  className={`contact-item ${selectedContacts.has(index) ? 'selected' : ''}`}
-                  onClick={() => handleSelectContact(contact, index)}
-                >
-                  <div className="contact-info">
-                    <div className="contact-name">{contact.name?.[0] || 'Unknown'}</div>
-                    <div className="contact-details">
-                      {contact.email?.[0] && <span>{contact.email[0]}</span>}
-                      {contact.tel?.[0] && <span>{contact.tel[0]}</span>}
-                    </div>
+            <div className="platform-guides">
+              {Object.entries(platformGuides).map(([key, guide]) => (
+                <div key={key} className="platform-guide">
+                  <div className="platform-header">
+                    <h4>{guide.title}</h4>
+                    <p>{guide.description}</p>
                   </div>
-                  <div className="contact-checkbox">
-                    {selectedContacts.has(index) ? '✓' : '○'}
+                  
+                  <div className="platform-steps">
+                    <ol>
+                      {guide.steps.map((step, index) => (
+                        <li key={index}>{step}</li>
+                      ))}
+                    </ol>
+                  </div>
+                  
+                  {guide.link && (
+                    <div className="platform-action">
+                      <a 
+                        href={guide.link} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="btn btn-primary btn-sm"
+                      >
+                        {guide.linkText}
+                      </a>
+                    </div>
+                  )}
+                  
+                  <div className="platform-note">
+                    <span className="note-icon">💡</span>
+                    <span>{guide.note}</span>
                   </div>
                 </div>
               ))}
             </div>
             
-            {contacts.length === 0 && (
-              <div className="empty-state">
-                <p>No contacts available to import.</p>
+            <div className="import-help">
+              <div className="help-section">
+                <h4>🔍 Friend Discovery Process</h4>
+                <p>The contact import helps you <strong>find existing players</strong> who are already on Proof of Putt:</p>
+                <ul>
+                  <li>📧 Export up to <strong>5 contacts at a time</strong> from your chosen platform</li>
+                  <li>🔍 Use the search box above to look up their email addresses or phone numbers</li>
+                  <li>✅ Connect with friends who are already playing</li>
+                  <li>🎯 Optionally invite close friends who aren't on the platform yet</li>
+                </ul>
               </div>
-            )}
+              
+              <div className="help-section">
+                <h4>📱 Responsible Contact Usage</h4>
+                <p><strong>Why the 5-contact limit?</strong> We encourage finding existing players rather than mass invitations:</p>
+                <ul>
+                  <li>🎯 Focus on connecting with friends who already enjoy putting</li>
+                  <li>🚫 Prevents spam and respects privacy</li>
+                  <li>📊 Better success rate with targeted friend searches</li>
+                  <li>🤝 Builds a quality community of engaged players</li>
+                </ul>
+                <button 
+                  onClick={() => copyToClipboard('https://app.proofofputt.com', 'App link')}
+                  className="btn btn-secondary btn-sm copy-link-btn"
+                >
+                  📋 Copy App Link to Share Manually
+                </button>
+              </div>
+            </div>
             
             <div className="modal-actions">
               <button
                 onClick={() => setShowImportModal(false)}
-                className="btn btn-tertiary"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSendInvites}
                 className="btn btn-primary"
-                disabled={selectedContacts.size === 0}
               >
-                Send Invites ({selectedContacts.size})
+                Got it, thanks!
               </button>
             </div>
           </div>

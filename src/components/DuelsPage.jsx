@@ -7,9 +7,10 @@ import CreateDuelModal from './CreateDuelModal';
 import DuelResults from './DuelResults';
 import SortButton from './SortButton';
 import Pagination from './Pagination';
+import { tryOpenAppWithParameters } from '../../utils/appLauncher.js';
 import './DuelsPage.css';
 
-const DuelRow = ({ duel, onRespond, onSubmitSession, onRematch, onCancel, currentUserId, isActiveSection, isCompletedSection }) => {
+const DuelRow = ({ duel, onRespond, onSubmitSession, onRematch, onCancel, currentUserId, isActiveSection, isCompletedSection, showNotification }) => {
     const isCreator = duel.creator_id === currentUserId;
     const opponentName = isCreator ? duel.invited_player_name : duel.creator_name;
     const opponentId = isCreator ? duel.invited_player_id : duel.creator_id;
@@ -32,6 +33,18 @@ const DuelRow = ({ duel, onRespond, onSubmitSession, onRematch, onCancel, curren
             case 'expired': return '#9ca3af';
             default: return '#6b7280';
         }
+    };
+
+    const handleOpenApp = (duel) => {
+        // Generate parameter string for the app
+        const parameters = [
+            `duel=${duel.duel_id}`,
+            duel.time_limit_minutes ? `time_limit=${duel.time_limit_minutes}` : null,
+            'scoring=total_makes'
+        ].filter(Boolean).join(',');
+        
+        // Try to open the app with parameters
+        tryOpenAppWithParameters(parameters, showNotification);
     };
 
     const renderActions = () => {
@@ -83,13 +96,22 @@ const DuelRow = ({ duel, onRespond, onSubmitSession, onRematch, onCancel, curren
         
         if (duel.status === 'active') {
             return (
-                <button 
-                    onClick={() => onSubmitSession(duel)} 
-                    className="btn btn-sm btn-primary"
-                    title="Copy parameters to paste into desktop app"
-                >
-                    Copy Parameters
-                </button>
+                <div className="duel-actions">
+                    <button 
+                        onClick={() => onSubmitSession(duel)} 
+                        className="btn btn-sm btn-secondary"
+                        title="Copy parameters to paste into desktop app"
+                    >
+                        Copy Parameters
+                    </button>
+                    <button 
+                        onClick={() => handleOpenApp(duel)} 
+                        className="btn btn-sm btn-primary"
+                        title="Try to open desktop app directly"
+                    >
+                        Open App
+                    </button>
+                </div>
             );
         }
         
@@ -472,6 +494,7 @@ const DuelsPage = () => {
                                     currentUserId={playerData.player_id}
                                     isActiveSection={title === 'Active Duels'}
                                     isCompletedSection={title === 'Completed Duels'}
+                                    showNotification={showNotification}
                                 />
                             ))}
                         </tbody>

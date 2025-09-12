@@ -6,6 +6,7 @@ import { apiGetLeagueDetails, apiJoinLeague, apiInviteToLeague, apiStartSession 
 import EditLeagueModal from './EditLeagueModal.jsx';
 import CountdownTimer from './CountdownTimer.jsx';
 import InlineInviteForm from './InlineInviteForm.jsx';
+import { tryOpenAppWithParameters } from '../../utils/appLauncher.js';
 import '../pages/Leagues.css'; // Reusing the same CSS file
 
 const LeagueDetailPage = () => {
@@ -126,6 +127,18 @@ const LeagueDetailPage = () => {
       showNotification('❌ Failed to generate parameters. Please try again.', true);
     }
   }, [playerData, showNotification, league]);
+
+  const handleOpenLeagueApp = useCallback((round) => {
+    // Generate parameter string for the app
+    const parameters = [
+      `league_round=${round.round_number}`,
+      league?.league_id ? `league_id=${league.league_id}` : null,
+      league?.settings?.time_limit_minutes ? `time_limit=${league.settings.time_limit_minutes}` : null
+    ].filter(Boolean).join(',');
+    
+    // Try to open the app with parameters
+    tryOpenAppWithParameters(parameters, showNotification);
+  }, [league, showNotification]);
 
   const handleInvitePlayer = useCallback(async (inviteeId, newPlayerData = null) => {
     try {
@@ -465,7 +478,10 @@ const LeagueDetailPage = () => {
                               {displayStatus === 'active' && <CountdownTimer endTime={round.end_time} />}
                               {isMember ? (
                                 canParticipate ? (
-                                  <button onClick={() => handleStartLeagueSession(round)} className="btn btn-small" title="Copy parameters to paste into desktop app">Copy Parameters</button>
+                                  <div className="league-round-actions">
+                                    <button onClick={() => handleStartLeagueSession(round)} className="btn btn-small btn-secondary" title="Copy parameters to paste into desktop app">Copy Parameters</button>
+                                    <button onClick={() => handleOpenLeagueApp(round)} className="btn btn-small btn-primary" title="Try to open desktop app directly">Open App</button>
+                                  </div>
                                 ) : hasSubmitted ? (
                                   <span className="status-badge status-completed">Submitted</span>
                                 ) : !isRoundStarted ? (

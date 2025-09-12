@@ -11,10 +11,7 @@ import LeaguesPage from './pages/LeaguesPage';
 import SessionHistoryPage from './components/SessionHistoryPage';
 import PlayerCareerPage from './pages/PlayerCareerPage';
 import CoachPage from './components/CoachPage';
-import FundraisingPage from './components/FundraisingPage';
-import FundraiserCreatePage from './pages/FundraiserCreatePage';
 import PlayerVsPlayerPage from './pages/PlayerVsPlayerPage';
-import FundraiserDetailPage from './components/FundraiserDetailPage';
 import NotificationsPage from './pages/NotificationsPage';
 import ContactsPage from './pages/ContactsPage';
 import Header from './components/Header';
@@ -53,9 +50,6 @@ const AppContent = () => {
           <Route path="/coach" element={<ProtectedRoute><CoachPage /></ProtectedRoute>} />
           <Route path="/coach/:conversationId" element={<ProtectedRoute><CoachPage /></ProtectedRoute>} />
           <Route path="/players/:player1Id/vs/:player2Id" element={<ProtectedRoute><PlayerVsPlayerPage /></ProtectedRoute>} />
-          <Route path="/fundraisers" element={<ProtectedRoute><FundraisingPage /></ProtectedRoute>} />
-          <Route path="/fundraisers/new" element={<ProtectedRoute><FundraiserCreatePage /></ProtectedRoute>} />
-          <Route path="/fundraisers/:fundraiserId" element={<ProtectedRoute><FundraiserDetailPage /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
           <Route path="/contacts" element={<ProtectedRoute><ContactsPage /></ProtectedRoute>} />
         </Routes>

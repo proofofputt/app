@@ -7,6 +7,19 @@
   box-sizing: border-box;
 }
 
+/* Button groups for league round actions */
+.league-round-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.league-round-actions .btn {
+  margin: 0;
+  white-space: nowrap;
+}
+
 .leagues-page .page-header {
   display: flex;
   justify-content: space-between;

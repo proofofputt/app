@@ -11,7 +11,7 @@ const ContactsModal = ({ isOpen, onClose }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Friends & Contacts</h2>
+          <h2>Contacts</h2>
           <div className="modal-header-actions">
             <Link to="/friends" className="btn btn-small" onClick={onClose}>
               Open Full Friends Page

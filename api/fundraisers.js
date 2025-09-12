@@ -32,6 +32,14 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
+  // Restrict fundraiser access - feature temporarily disabled
+  return res.status(403).json({ 
+    success: false, 
+    message: 'Fundraising feature is currently unavailable' 
+  });
+
+  // Legacy code preserved for future re-enabling
+  /*
   if (req.method === 'GET') {
     return handleGetFundraisers(req, res);
   } else if (req.method === 'POST') {
@@ -39,6 +47,7 @@ export default async function handler(req, res) {
   } else {
     return res.status(405).json({ success: false, message: 'Method Not Allowed' });
   }
+  */
 }
 
 async function handleGetFundraisers(req, res) {

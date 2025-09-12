@@ -66,13 +66,14 @@
 .slider-labels {
   display: flex;
   justify-content: space-between;
-  font-size: 0.85em;
-  color: #666;
-  margin-top: 5px;
+  font-size: 1rem;
+  color: white !important;
+  margin-top: 8px;
 }
 
 .slider-labels span {
-  font-weight: 500;
+  font-weight: bold;
+  color: white !important;
 }
 
 .search-results {
@@ -214,6 +215,29 @@
   margin: 0;
   font-size: 0.95rem;
   line-height: 1.4;
+}
+
+/* Override form labels to be white and bold with larger text - High Specificity */
+.modal-overlay .modal-content .form-group label,
+.modal-overlay .modal-content label,
+.modal-overlay .modal-content .form-label,
+.modal-overlay .modal-content .label-base,
+div.modal-content.modal-content .form-group label,
+div.modal-content.modal-content label {
+  color: white !important;
+  font-weight: bold !important;
+  font-size: 1.1rem !important;
+}
+
+/* Force slider labels to be white - Maximum Specificity */
+.modal-overlay .modal-content .slider-labels,
+.modal-overlay .modal-content .slider-labels span,
+.modal-overlay .modal-content .distance-slider + .slider-labels,
+.modal-overlay .modal-content .distance-slider + .slider-labels span,
+div.modal-content.modal-content .slider-labels,
+div.modal-content.modal-content .slider-labels span {
+  color: white !important;
+  font-weight: bold !important;
 }
 
 .modal-actions {

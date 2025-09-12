@@ -6,6 +6,19 @@
   width: 78%; /* Restrict content width (100% - 42%) */
 }
 
+/* Button groups for action buttons */
+.duel-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.duel-actions .btn {
+  margin: 0;
+  white-space: nowrap;
+}
+
 .duels-page {
   display: flex;
   flex-direction: column;

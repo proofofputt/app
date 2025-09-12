@@ -52,6 +52,7 @@ async function handleGetActiveCompetitions(req, res) {
     const duelsQuery = `
       SELECT 
         d.duel_id,
+        d.status,
         d.settings,
         d.rules,
         d.expires_at,
@@ -73,7 +74,15 @@ async function handleGetActiveCompetitions(req, res) {
       LEFT JOIN players invited_player ON d.duel_invited_player_id = invited_player.player_id
       WHERE 
         (d.duel_creator_id = $1 OR d.duel_invited_player_id = $1)
-      ORDER BY d.expires_at ASC
+        AND d.status IN ('pending', 'accepted', 'in_progress', 'active')  -- Only truly active statuses
+        AND (d.expires_at IS NULL OR d.expires_at > NOW())      -- Not expired
+        AND (
+          CASE 
+            WHEN d.duel_creator_id = $1 THEN d.duel_creator_session_id IS NULL
+            ELSE d.duel_invited_player_session_id IS NULL
+          END
+        ) -- Player hasn't submitted session yet
+      ORDER BY d.expires_at ASC NULLS LAST
     `;
 
     // Get active league rounds where player needs to submit a session
@@ -85,8 +94,10 @@ async function handleGetActiveCompetitions(req, res) {
         lr.end_time,
         l.league_id,
         l.name as league_name,
+        l.status as league_status,
         l.rules,
         lm.player_id as member_player_id,
+        lm.is_active as membership_active,
         -- Check if player has already submitted for this round
         lrs.session_id as submitted_session_id
       FROM league_rounds lr
@@ -95,21 +106,22 @@ async function handleGetActiveCompetitions(req, res) {
       LEFT JOIN league_round_sessions lrs ON lr.round_id = lrs.round_id AND lrs.player_id = $1
       WHERE 
         lm.player_id = $1 
-        AND lm.is_active = true
-        AND lr.start_time <= NOW()
-        AND lr.end_time > NOW()
-        AND lrs.session_id IS NULL  -- Player hasn't submitted yet
+        AND lm.is_active = true                         -- Player is active member
+        AND l.status IN ('active', 'in_progress')       -- League is active
+        AND lr.start_time <= NOW()                      -- Round has started
+        AND lr.end_time > NOW()                         -- Round hasn't ended
+        AND lrs.session_id IS NULL                      -- Player hasn't submitted yet
       ORDER BY lr.end_time ASC
     `;
 
-    // Get active duels and leagues
-    console.log('🔍 Querying duels for player_id:', player_id);
+    // Get active duels and leagues with proper filtering
+    console.log('🔍 Querying ACTIVE duels for player_id:', player_id);
     const duelsResult = await client.query(duelsQuery, [player_id]);
-    console.log('🔍 Raw duels result:', duelsResult.rows);
+    console.log(`✅ Found ${duelsResult.rows.length} active duels:`, duelsResult.rows.map(d => ({ id: d.duel_id, status: d.status, opponent: d.opponent_name, expires: d.expires_at })));
     
-    console.log('🔍 Querying leagues for player_id:', player_id);
+    console.log('🔍 Querying ACTIVE league rounds for player_id:', player_id);
     const leaguesResult = await client.query(leaguesQuery, [player_id]);
-    console.log('🔍 Raw leagues result:', leaguesResult.rows);
+    console.log(`✅ Found ${leaguesResult.rows.length} active league rounds:`, leaguesResult.rows.map(l => ({ id: l.round_id, league: l.league_name, round: l.round_number, status: l.league_status })));
 
     // Format duels for desktop UI
     const activeDuels = duelsResult.rows.map(duel => {

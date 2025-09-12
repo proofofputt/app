@@ -213,6 +213,157 @@
 }
 
 
+/* Contact Import Modal */
+.contact-import-modal {
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
+}
+
+.modal-header h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.8rem;
+  color: var(--primary-color);
+}
+
+.modal-header p {
+  margin: 0;
+  color: var(--text-color-secondary);
+  font-size: 1.1rem;
+}
+
+.platform-guides {
+  display: grid;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.platform-guide {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  background: var(--background-color);
+  transition: all 0.3s ease;
+}
+
+.platform-guide:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.platform-header h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.3rem;
+  color: var(--primary-color);
+}
+
+.platform-header p {
+  margin: 0 0 1rem 0;
+  color: var(--text-color-secondary);
+  font-style: italic;
+}
+
+.platform-steps ol {
+  margin: 0 0 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.platform-steps li {
+  margin: 0.5rem 0;
+  color: var(--text-color);
+  line-height: 1.5;
+}
+
+.platform-action {
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.platform-action .btn {
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+}
+
+.platform-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--text-color);
+}
+
+.note-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.import-help {
+  background: var(--surface-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid var(--border-color);
+}
+
+.help-section {
+  margin-bottom: 1.5rem;
+}
+
+.help-section:last-child {
+  margin-bottom: 0;
+}
+
+.help-section h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.2rem;
+  color: var(--primary-color);
+}
+
+.help-section p {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-color);
+  line-height: 1.5;
+}
+
+.help-section ul {
+  margin: 0.5rem 0 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.help-section li {
+  margin: 0.3rem 0;
+  color: var(--text-color);
+}
+
+.copy-link-btn {
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.modal-actions {
+  text-align: center;
+  border-top: 1px solid var(--border-color);
+  padding-top: 1.5rem;
+}
+
+.modal-actions .btn {
+  min-width: 140px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .contacts-page {
@@ -223,7 +374,6 @@
     font-size: 2rem;
   }
   
-  
   .search-header {
     flex-direction: column;
     text-align: center;
@@ -231,5 +381,30 @@
   
   .search-box {
     flex-direction: column;
+  }
+
+  .contact-import-modal {
+    max-width: 95vw;
+    margin: 1rem;
+  }
+
+  .platform-guides {
+    gap: 1rem;
+  }
+
+  .platform-guide {
+    padding: 1rem;
+  }
+
+  .modal-header h3 {
+    font-size: 1.5rem;
+  }
+
+  .platform-header h4 {
+    font-size: 1.1rem;
+  }
+
+  .help-section h4 {
+    font-size: 1.1rem;
   }
 }
