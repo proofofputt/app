@@ -33,18 +33,21 @@ export default async function handler(req, res) {
   const client = await pool.connect();
   
   try {
+    // Check if the search term is a complete email address
+    const isCompleteEmail = term.includes('@') && term.includes('.') && term.indexOf('@') < term.lastIndexOf('.');
+    
     let query = `
       SELECT 
         player_id,
+        name,
         email,
-        email AS name,
         membership_tier
       FROM players 
-      WHERE (email ILIKE $1 OR email ILIKE $2)
+      WHERE (name ILIKE $1 OR name ILIKE $2 OR email ILIKE $3 OR email ILIKE $4)
     `;
     
-    let params = [`%${term}%`, `${term}%`];
-    let paramIndex = 3;
+    let params = [`%${term}%`, `${term}%`, `%${term}%`, `${term}%`];
+    let paramIndex = 5;
 
     // Exclude specific player if provided (e.g., don't show self in results)
     if (exclude_player_id) {
@@ -56,24 +59,32 @@ export default async function handler(req, res) {
     // Limit results to prevent performance issues
     query += ` ORDER BY 
       CASE 
-        WHEN email = $${paramIndex} THEN 1  -- Exact match first
-        WHEN email ILIKE $${paramIndex + 1} THEN 2  -- Starts with term
-        ELSE 3  -- Contains term
+        WHEN name = $${paramIndex} THEN 1  -- Exact name match first
+        WHEN email = $${paramIndex + 1} THEN 2  -- Exact email match
+        WHEN name ILIKE $${paramIndex + 2} THEN 3  -- Name starts with term
+        WHEN email ILIKE $${paramIndex + 3} THEN 4  -- Email starts with term
+        ELSE 5  -- Contains term
       END
       LIMIT 10`;
     
-    params.push(term, `${term}%`);
+    params.push(term, term, `${term}%`, `${term}%`);
 
-    console.log(`[players/search] Searching for term: "${term}", exclude: ${exclude_player_id}`);
+    console.log(`[players/search] Searching for term: "${term}", exclude: ${exclude_player_id}, isCompleteEmail: ${isCompleteEmail}`);
     const result = await client.query(query, params);
 
     // Format results for frontend
-    const players = result.rows.map(row => ({
-      player_id: row.player_id,
-      name: row.email.split('@')[0], // Use email prefix as display name
-      email: row.email,
-      membership_tier: row.membership_tier || 'free'
-    }));
+    const players = result.rows.map(row => {
+      // Only show email if the search term was a complete email address
+      const displayName = row.name || row.email.split('@')[0];
+      const shouldShowEmail = isCompleteEmail;
+      
+      return {
+        player_id: row.player_id,
+        name: displayName,
+        email: shouldShowEmail ? row.email : undefined,
+        membership_tier: row.membership_tier || 'free'
+      };
+    });
 
     console.log(`[players/search] Found ${players.length} players`);
     
