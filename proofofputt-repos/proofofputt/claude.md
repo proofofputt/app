@@ -10,9 +10,20 @@
 
 Proof of Putt is a sophisticated competitive sports technology platform that transforms golf putting practice into verifiable performance data through computer vision tracking, web-based analytics, and social competition features. The platform serves as a complete ecosystem for skill development and competitive play, ready for scaling to 10,000+ concurrent users.
 
-**Current Status:** Production Ready+ (Battle-Tested) - September 2025
+**Current Status:** Production Ready+ - September 2025
+
+Lead Dev Claude rules
+1. First think through the problem, read the codebase for relevant files, and write a plan to tasks/todo.md.
+2. The plan should have a list of todo items that you can check off as you complete them
+3. Before you begin working, check in with me and I will verify the plan.
+4. Then, begin working on the todo items, marking them as complete as you go.
+5. Please every step of the way just give me a high level explanation of what changes you made
+6. Make every task and code change you do as simple as possible. We want to avoid making any massive or complex changes. Every change should impact as little code as possible. Everything is about simplicity.
+7. Finally, add a review section to the [todo.md]. file with a summary of the changes you made and any other relevant information.
 
 ### 🚀 **Recent Critical Achievements (September 2025)**
+- **✅ Community Fundraising System**: Complete fundraising platform with database schema, API endpoints, and frontend integration for community equipment and tournament funding
+- **✅ IRL Mode for Leagues**: Complete In Real Life tournament system with temporary player management, localStorage persistence, and session isolation to protect personal statistics
 - **✅ Dashboard UI Modernization**: Streamlined dashboard with contacts moved to header navigation, removed redundant sync buttons, improved stat display hierarchy
 - **✅ Active Competitions Integration**: Eliminated manual parameter copying with automatic competition fetching for desktop app
 - **✅ Contacts Page Implementation**: Full-page contacts experience replacing modal, focused on friends and family connections
@@ -40,6 +51,7 @@ Proof of Putt is a sophisticated competitive sports technology platform that tra
 
 ### 🏆 **Advanced Feature Set**
 - **Computer Vision Engine**: Real-time putt detection using Python + OpenCV + YOLO models
+- **IRL Tournament System**: In Real Life league competitions with temporary player management, localStorage persistence, and session isolation
 - **Manual Parameter Entry System**: Robust copy-paste workflow replacing unreliable deeplinks for competitive session setup
 - **Fair-Play Timer System**: Competitive integrity - timer starts only on first putt attempt for fair timed sessions
 - **Enhanced Active Duels Display**: Dynamic score tracking with Your Score/Opponent's Score columns and proper expiry management
@@ -60,7 +72,14 @@ Proof of Putt is a sophisticated competitive sports technology platform that tra
 | **API Backend** | [app.proofofputt.com/api](https://app.proofofputt.com/api) | Serverless functions and data management |
 | **Landing Page** | [proofofputt.com](https://proofofputt.com) | Marketing and user acquisition |
 | **Development** | localhost:3000 | Local development server |
-| **Repository** | [github.com/proofofputt/app](https://github.com/proofofputt/app) | Main monorepo |
+
+## Repository Structure
+
+| Repository | URL | Purpose |
+|------------|-----|---------|
+| **Web App** | [github.com/proofofputt/app](https://github.com/proofofputt/app) | Main web application and API |
+| **Desktop App** | [github.com/proofofputt/proofofputt-desktop](https://github.com/proofofputt/proofofputt-desktop) | Tauri desktop application with CV tracking |
+| **Landing Page** | [github.com/proofofputt/proofofputt-website](https://github.com/proofofputt/proofofputt-website) | Next.js marketing website |
 
 ### Development Credentials
 - **Email**: [REDACTED - See secure credential management]
@@ -235,115 +254,57 @@ function formatDuration(seconds) {
 
 ## Project Structure Overview
 
+**Proof of Putt uses a multi-repository architecture with separate codebases for each component:**
+
+### Web Application Repository (`github.com/proofofputt/app`)
 ```
-proofofputt/
-├── 📱 app/                     # React Web Application (Production)
-│   ├── src/                    # React components and logic
-│   ├── api/                    # Serverless API functions
-│   ├── public/                 # Static assets and branding
-│   └── database/               # SQL schemas and migrations
-├── 🖥️  desktop/                # Tauri Desktop Application
-│   ├── src/                    # React frontend for desktop
-│   ├── src-tauri/             # Rust backend and system integration
-│   └── python/                # Computer vision tracking engine
-├── 🌐 proofofputt-website/     # Next.js Landing Page
-│   ├── src/app/               # Next.js 14 app router structure
-│   └── public/                # Landing page assets
-├── 🗃️  webapp-clean/           # Legacy Web Components (Reference)
-├── 📋 Handover-Reports/        # Technical Documentation
-└── 💾 POP Backups/             # Historical Snapshots (Read-Only)
+app/
+├── src/                        # React components and logic
+├── api/                        # Serverless API functions  
+├── public/                     # Static assets and branding
+└── database/                   # SQL schemas and migrations
+```
+
+### Desktop Application Repository (`github.com/proofofputt/proofofputt-desktop`)
+```
+desktop/
+├── src/                        # React frontend for desktop
+├── src-tauri/                  # Rust backend and system integration
+└── python/                     # Computer vision tracking engine
+```
+
+### Landing Page Repository (`github.com/proofofputt/proofofputt-website`)
+```
+proofofputt-website/
+├── src/app/                    # Next.js 14 app router structure
+└── public/                     # Landing page assets
 ```
 
 ---
 
-## Comprehensive File Directory & User Interaction Mapping
+## Key File Directory
 
-| File Path | Description | Role in User Interaction |
-|-----------|-------------|-------------------------|
-| **🌐 Landing Page & Marketing (`proofofputt-website/`)** |
-| `proofofputt-website/src/app/page.tsx` | Main landing page component | **First user touchpoint**: Feature presentation, "Launch App" and "Download Desktop" CTAs for conversion |
-| `proofofputt-website/src/app/layout.tsx` | SEO and metadata structure | **Discovery optimization**: Search engine visibility and social sharing |
-| `proofofputt-website/src/app/globals.css` | Masters-inspired theme (dark green/gold) | **Brand consistency**: Golf-authentic visual identity across user journey |
-| `proofofputt-website/package.json` | Next.js dependencies and build scripts | **Performance**: Optimized static site generation for fast loading |
-| `proofofputt-website/next.config.ts` | Build optimization and routing | **User experience**: Fast page loads and smooth navigation |
-| `proofofputt-website/README.md` | Setup and deployment instructions | **Development workflow**: Landing page maintenance and updates |
-| **📱 Web Application Core (`app/`)** |
-| `app/src/main.jsx` | React application entry point | **App initialization**: Routing setup and context providers for authenticated experience |
-| `app/src/App.css` | Global styles with standardized margins | **Visual consistency**: 10.5% margins across all pages for professional layout |
-| `app/src/Header.jsx` | Navigation and user status | **Navigation hub**: User authentication status, menu access, and page navigation |
-| `app/src/components/LoginPage.jsx` | Authentication interface | **Gateway component**: User login form, credential validation, session establishment |
-| `app/src/components/ProtectedRoute.jsx` | Authentication guard | **Security layer**: Ensures authenticated access to premium features |
-| `app/src/components/LeaderboardCard.jsx` | Performance rankings display | **Competition engagement**: Real-time rankings, performance comparison, motivation driver |
-| `app/src/context/NotificationContext.jsx` | System messaging | **User engagement**: Real-time alerts, competition updates, social interactions |
-| `app/package.json` | Dependencies and build configuration | **Platform foundation**: React 19, Vite 7, modern toolchain for responsive UI |
-| `app/vite.config.js` | Build optimization | **Performance**: Fast development and optimized production builds |
-| `app/vercel.json` | Deployment and routing | **Production reliability**: API routing, serverless function deployment |
-| `app/index.html` | HTML template and meta tags | **App entry point**: Initial load, PWA configuration, branding |
-| `app/public/POP.Proof_Of_Putt.Log.576.png` | Brand logo asset | **Brand recognition**: Consistent visual identity across platform |
-| **🔒 Authentication & User Management (`app/api/`)** |
-| `app/api/login.js` | User authentication endpoint | **Session establishment**: Credential validation, JWT token generation, user session start |
-| `app/api/register.js` | New user registration | **Onboarding**: Account creation, profile initialization, welcome flow |
-| `app/api/player/[id]/data.js` | Player profile API | **Profile management**: User data retrieval, settings, preferences |
-| `app/api/forgot-password.js` | Password recovery | **Account recovery**: Email-based password reset flow |
-| `app/api/reset-password.js` | Password reset confirmation | **Security**: Secure password update with token validation |
-| **📊 Performance & Analytics (`app/api/`)** |
-| `app/api/sessions.js` | Session history and data | **Performance tracking**: Historical data, progress visualization, improvement insights |
-| `app/api/start-session.js` | Training session initiation | **Practice mode**: Session tracking, performance capture, real-time feedback |
-| `app/api/career-stats.js` | Aggregated performance metrics | **Progress analytics**: Long-term performance trends, achievement tracking |
-| `app/api/leaderboards-v2.js` | Advanced leaderboard system | **Competition rankings**: Context-driven leaderboards (global, friends, leagues, custom) |
-| `app/api/upload-session.js` | Desktop session upload handler | **Data synchronization**: CV-tracked session import from desktop to web platform |
-| **🏆 Competition & Social (`app/api/`)** |
-| `app/api/create-duel.js` | 1v1 competition creation | **Competitive engagement**: Head-to-head challenges, skill-based matchmaking |
-| `app/api/respond-duel.js` | Duel participation | **Competition interaction**: Accept/decline challenges, competitive gameplay |
-| `app/api/create-league.js` | Group competition setup | **Community building**: Tournament creation, group competitions, league management |
-| `app/api/join-league.js` | League participation | **Social competition**: Team play, tournament brackets, group rankings |
-| `app/api/notifications.js` | System alerts and messaging | **Engagement**: Challenge notifications, achievement alerts, social updates |
-| `app/api/redeem-coupon.js` | Promotional code system | **Access management**: Early access codes (EARLY/BETA/POP123), premium feature unlock |
-| **🖥️ Desktop Application (`desktop/`)** |
-| `desktop/src/App.jsx` | Desktop UI controller | **Desktop experience**: Session management, CV controls, upload status, local analytics |
-| `desktop/src/components/ParameterInput.jsx` | Manual parameter entry system | **Competition workflow**: Real-time parameter parsing, duel/league session setup, copy-paste integration |
-| `desktop/src/AuthContext.jsx` | Desktop authentication | **Seamless login**: Shared authentication with web app, session persistence |
-| `desktop/src/DesktopSession.jsx` | Training session interface | **Practice control**: Start/stop sessions, real-time CV feedback, performance tracking |
-| `desktop/src/DesktopAnalytics.jsx` | Local performance dashboard | **Immediate feedback**: Session results, local performance history, improvement metrics |
-| `desktop/src/websocket-client.js` | Real-time communication | **Live updates**: Session synchronization, real-time performance streaming |
-| `desktop/package.json` | Desktop app dependencies | **Cross-platform**: Tauri 2.8, React integration, system-level permissions |
-| **🤖 Computer Vision Engine (`desktop/python/cv_tracker/`)** |
-| `desktop/python/cv_tracker/video_processor.py` | Main CV processing engine | **Core tracking**: Real-time video analysis, putt detection, performance measurement |
-| `desktop/python/cv_tracker/run_tracker.py` | Session tracking with fair-play timer | **Competition integrity**: Timer starts only on first putt (mat→ramp transition) for fair timed sessions |
-| `desktop/python/cv_tracker/calibration.py` | Camera setup and ROI | **Setup process**: Camera calibration, region of interest configuration, accuracy optimization |
-| `desktop/python/cv_tracker/putt_classifier.py` | Make/miss determination | **Performance measurement**: ML-based putt outcome classification, accuracy scoring |
-| `desktop/python/cv_tracker/data_manager.py` | Session data handling | **Data export**: CSV/JSON report generation, session summarization |
-| `desktop/python/cv_tracker/models/best.pt` | YOLO detection weights | **Object detection**: Pre-trained golf ball detection model for accurate tracking |
-| `desktop/python/cv_tracker/requirements.txt` | Python dependencies | **Environment setup**: OpenCV, ML libraries, CV processing requirements |
-| **⚙️ System Integration (`desktop/src-tauri/`)** |
-| `desktop/src-tauri/src/main.rs` | Rust application core | **System integration**: Window management, file system access, native capabilities |
-| `desktop/src-tauri/src/api_client.rs` | API communication | **Data sync**: Session upload, authentication, web platform integration |
-| `desktop/src-tauri/src/session_manager.rs` | Session lifecycle | **State management**: Session start/stop, data collection, error handling |
-| `desktop/src-tauri/src/session_data.rs` | Data structures | **Data modeling**: Session format, performance metrics, export schemas |
-| `desktop/src-tauri/tauri.conf.json` | App configuration | **Desktop setup**: Permissions, build settings, security configuration |
-| `desktop/src-tauri/Cargo.toml` | Rust dependencies | **Native compilation**: System integration libraries, performance optimization |
-| **💾 Database & Schema (`app/database/`)** |
-| `app/database/neondb_schema.sql` | Core database schema | **Data foundation**: User profiles, sessions, performance metrics, relationships |
-| `app/database/neondb_leaderboards_system.sql` | V2 leaderboard tables | **Advanced analytics**: Context-driven rankings, flexible competition structures |
-| `app/database/neondb_leaderboard_calculations.sql` | Stored procedures | **Performance optimization**: Complex calculations, caching logic, data aggregation |
-| **📋 Technical Documentation (`Handover-Reports/`)** |
-| `Handover-Reports/COMPREHENSIVE_PROJECT_ANALYSIS_V2.md` | Complete system overview | **Technical reference**: Architecture analysis, feature documentation, scalability assessment |
-| `Handover-Reports/END_TO_END_DATA_FLOW_DOCUMENTATION.md` | Complete data flow guide | **Data pipeline**: Session capture, API upload, database storage, web display integration |
-| `Handover-Reports/LEADERBOARD_API_USAGE.md` | V2 leaderboard implementation | **Integration guide**: API usage examples, database management, performance optimization |
-| `Handover-Reports/Console.Logs.For.Review` | Error logs and diagnostics | **Troubleshooting**: Known issues, debugging information, resolution procedures |
-| `Handover-Reports/DEV_SETUP.md` | Development environment | **Onboarding**: Setup procedures, environment configuration, development workflow |
-| `Handover-Reports/DESKTOP_LOGIN_IMPLEMENTATION.md` | Desktop authentication guide | **Technical support**: Auth flow documentation, troubleshooting procedures |
-| **🗃️ Legacy & Reference (`webapp-clean/`)** |
-| `webapp-clean/src/components/` | Legacy React components | **Migration reference**: Previous implementations, pattern examples, upgrade guidance |
-| `webapp-clean/api/` | Legacy API endpoints | **Compatibility**: Old endpoint implementations, migration patterns |
-| `webapp-clean/README.md` | Legacy documentation | **Historical context**: Previous architecture, migration notes |
-| **🔧 Development & Configuration** |
-| `test-auth.js` | Authentication testing utility | **Development tool**: API endpoint testing, credential validation |
-| `test-webapp-login.html` | Login functionality test | **QA tool**: Frontend authentication testing, UI validation |
-| `contacts.js` | Contact management utilities | **Social features**: Friend connections, contact import, social graph building |
-| `sendgrid.js` | Email service integration | **Communication**: Notifications, password resets, system alerts |
-| `FriendsDashboard.jsx` | Social networking interface | **Community features**: Friend management, social competition, networking |
-| `.gitignore` | Version control exclusions | **Development workflow**: Clean repository, security (exclude secrets) |
+### Core Application Files
+```
+proofofputt/
+├── 📱 app/                     # React Web Application (Production)
+│   ├── src/                    # Core components (LoginPage, Header, ProtectedRoute)
+│   ├── api/                    # 45+ Serverless API functions
+│   └── database/               # PostgreSQL schemas and stored procedures
+├── 🖥️  desktop/                # Tauri Desktop Application
+│   ├── src/                    # Desktop UI and ParameterInput system
+│   ├── src-tauri/             # Rust backend with API client
+│   └── python/cv_tracker/     # Computer vision engine (YOLO + OpenCV)
+├── 🌐 proofofputt-website/     # Next.js Landing Page
+└── 📋 Handover-Reports/        # Technical Documentation
+```
+
+### Critical System Components
+- **Authentication**: `app/api/login.js`, `app/api/register.js`, desktop auth context
+- **Competition**: Duel/league APIs, leaderboards-v2, manual parameter entry
+- **CV Processing**: `run_tracker.py` (fair-play timer), `video_processor.py`, YOLO models  
+- **Data Flow**: Session upload, career stats, unified player data API
+- **IRL System**: Temporary player creation, session isolation for leagues
 
 ---
 
@@ -375,12 +336,19 @@ GET  /api/player/[id]/data   // Unified player data with embedded stats and sess
 ```javascript
 POST /api/create-duel        // 1v1 competition setup and challenge system
 POST /api/respond-duel       // Challenge response and competitive gameplay
-POST /api/create-league      // Group tournament creation and management
+POST /api/create-league      // Group tournament creation and management (includes IRL mode)
 POST /api/join-league        // Tournament participation and team formation
 GET  /api/leagues            // League data with member counts and active rounds
 GET  /api/notifications      // Real-time alerts and social engagement
 GET  /api/leaderboards       // Legacy ranking system (deprecated)
 ```
+
+#### 🏟️ IRL (In Real Life) Tournament System
+In-person multiplayer competition system for leagues with temporary player management:
+
+- **Frontend**: IRL toggle in `CreateLeagueModal.jsx`, 2-16 player input fields with localStorage persistence
+- **Backend**: Auto-creates temporary players (`temp_player_*@irl.local`), isolates sessions from personal stats
+- **Benefits**: Fair competition (creator stats protected), player name persistence, complete scoring system
 
 #### 📈 Advanced Leaderboards (V2 System)
 ```javascript
@@ -431,6 +399,8 @@ session_contexts     -- Session-to-competition mapping for context filtering
 
 -- Commerce & Access
 coupons              -- Promotional codes and early access management
+fundraisers          -- Community fundraising campaigns and equipment funding
+donations            -- Individual donation tracking with donor information
 ```
 
 ### **Performance Optimization Features**
@@ -443,66 +413,11 @@ coupons              -- Promotional codes and early access management
 
 ## Manual Parameter Entry System
 
-### **Cross-Platform Competition Workflow**
-Replacing unreliable deeplink protocol with robust manual parameter entry for competitive sessions:
+**Cross-Platform Competition Integration**: Robust copy-paste workflow replacing unreliable deeplinks.
 
-#### **Web Application (Copy Parameters)**
-**Duels & Leagues → "Copy Parameters" Button:**
-```javascript
-// Generated parameter string format
-"duel=22,time_limit=300,scoring=total_makes"
-"league_round=5,league=Weekly Tournament,time_limit=600,target=50_putts"
-```
-
-**Clipboard Integration:**
-- Primary: `navigator.clipboard.writeText()` for modern browsers
-- Fallback: Temporary textarea with `document.execCommand('copy')` for compatibility
-- User feedback: Success notification with parameter preview
-
-#### **Desktop Application (Manual Entry)**
-**ParameterInput Component (`/desktop/src/components/ParameterInput.jsx`):**
-- **Real-time Parsing**: Validates parameters as user types
-- **Context Preview**: Visual confirmation of session type, scoring, time limits
-- **Secure Routing**: Direct session start without intermediate confirmation dialogs
-- **Error Handling**: Clear feedback for invalid parameter formats
-
-**Supported Parameter Types:**
-```javascript
-// Duel Sessions
-parseParameters("duel=22,time_limit=300,scoring=total_makes")
-→ { type: 'duel', duelId: 22, timeLimit: 300, scoring: 'total_makes', autoUpload: true }
-
-// League Sessions  
-parseParameters("league_round=5,league=Weekly Tournament,time_limit=600,target=50_putts")
-→ { type: 'league', leagueRoundId: 5, league: 'Weekly Tournament', timeLimit: 600, target: '50_putts', autoUpload: true }
-```
-
-### **Enhanced Active Duels Display**
-**Dynamic Table Columns by Section:**
-
-**Active Duels Table:**
-| Opponent | Your Score | Opponent's Score | Expires | Time Limit | Actions |
-|----------|------------|------------------|---------|------------|---------|
-| Player123 | 15 | 12 | Oct 15 | 5 min | Copy Parameters |
-
-**Pending/Completed Tables:**
-| Opponent | Status | Date Created | Expires | Time Limit | Actions |
-|----------|---------|-------------|---------|------------|---------|
-| Player456 | Pending | Oct 10 | Oct 15 | 5 min | Accept/Decline |
-
-**Score Calculation Logic:**
-```javascript
-// User-perspective score display
-const yourScore = isCreator ? duel.creator_score : duel.invited_player_score;
-const opponentScore = isCreator ? duel.invited_player_score : duel.creator_score;
-```
-
-### **Benefits & Reliability**
-- **✅ Cross-Platform Compatibility**: Works on all operating systems and browsers
-- **✅ Reliable Data Transfer**: No protocol registration or system permission requirements
-- **✅ User Control**: Clear visibility of what parameters are being transferred
-- **✅ Error Recovery**: Graceful handling of malformed parameters with user feedback
-- **✅ Security**: No automatic execution - user confirms before session start
+**Web App**: "Copy Parameters" button generates strings like `"duel=22,time_limit=300,scoring=total_makes"`  
+**Desktop App**: `ParameterInput.jsx` component provides real-time parsing, context preview, and secure routing  
+**Benefits**: Cross-platform compatible, no permissions required, user-controlled, error recovery
 
 ---
 
@@ -594,34 +509,12 @@ cd proofofputt-website && npm install && npm run dev    # http://localhost:3000
   - **Impact**: Enhanced real-time competition experience
   - **Priority**: Future enhancement
 
-### ⚖️ **Fair-Play Timer System - Technical Implementation**
+### ⚖️ **Fair-Play Timer System**
 
-**Critical Competitive Integrity Feature**: The fair-play timer ensures that timed sessions (duels and league rounds) start timing only when the first putt attempt is detected, giving players adequate time to move from their computer to the putting mat.
+**Competitive Integrity**: Timer starts only on first putt attempt (mat→ramp transition), ensuring fair time for players to move from computer to putting mat.
 
-#### **Technical Implementation Details**
-```python
-# Fair-play timer logic in desktop/python/cv_tracker/run_tracker.py
-session_start_time_local = None  # Starts as None, not immediate time.time()
-
-# Timer starts only on first putt detection (mat → ramp transition)
-if session_start_time_local is None and ball_in_ramp and putt_classifier.current_state.name == "PUTT_IN_PROGRESS":
-    session_start_time_local = time.time()
-    current_session_time = 0.0  # This is the moment timing begins
-    logging.info("First putt detected in ramp. Session timer started.")
-    logging.info("Fair-play timer ensures players have time to get from computer to putting mat.")
-```
-
-#### **Integration with Competitive Sessions**
-- **Duels**: Timer starts on first putt, not session creation
-- **League Rounds**: Time limits begin fairly when play actually starts  
-- **Deep Link Integration**: Desktop receives session time limits via `proofofputt://start-session` URLs
-- **Competitive Integrity**: Eliminates unfair advantage for players closer to their putting setup
-
-#### **Ball Transition Detection**
-- **ROI Tracking**: Monitors ball position across calibrated regions of interest
-- **State Machine**: Uses `PuttClassifier` to detect `WAITING` → `PUTT_IN_PROGRESS` transitions
-- **Mat to Ramp Detection**: Specifically tracks ball moving from `PUTTING_MAT_ROI` to `RAMP_ROI`
-- **Prototype Consistency**: Matches original fair-play logic from early prototypes
+**Implementation**: `run_tracker.py` sets `session_start_time_local = None` initially, begins timing when `PuttClassifier` detects ball transition from `PUTTING_MAT_ROI` to `RAMP_ROI`  
+**Integration**: Applied to duels and league rounds, eliminates setup-time advantage
 
 ### 🏥 Support & Resolution Priorities
 1. **Critical (0-24h)**: Auth failures, data loss, security issues
@@ -633,19 +526,20 @@ if session_start_time_local is None and ball_in_ramp and putt_classifier.current
 
 ## Related Repositories & Resources
 
-### **Monorepo Structure**
-- **Primary Repository**: [github.com/proofofputt/app](https://github.com/proofofputt/app)
-- **Documentation**: Handover-Reports/ directory with comprehensive guides
-- **Legacy Reference**: webapp-clean/ for migration patterns and historical context
+### **Repository Architecture**
+- **Web Application**: [github.com/proofofputt/app](https://github.com/proofofputt/app) - Main React web app and API
+- **Desktop Application**: [github.com/proofofputt/proofofputt-desktop](https://github.com/proofofputt/proofofputt-desktop) - Tauri desktop app with CV tracking
+- **Landing Page**: [github.com/proofofputt/proofofputt-website](https://github.com/proofofputt/proofofputt-website) - Next.js marketing site
 
-### **Read-Only Backup Directories**
-⚠️ **Important**: Do not modify these historical snapshots:
-- `POP Backups/proofofputt.prototype/` - Development history and evolution
-- `POP Backups/proofofputt-backup/` - System backups and recovery snapshots
+### **Development Workflow**
+- **Web App Development**: Clone `app` repository for web platform work
+- **Desktop Development**: Clone `proofofputt-desktop` repository for CV tracking features  
+- **Landing Page**: Clone `proofofputt-website` repository for marketing updates
+- **Separate Deployments**: Each repository has independent CI/CD pipeline
 
 ### **Integration Points**
-- **Vercel Deployment**: Automated builds and serverless function deployment
-- **NeonDB**: PostgreSQL database with branching and automated backups
+- **Vercel Deployment**: Automated builds and serverless function deployment (web app)
+- **NeonDB**: PostgreSQL database shared across web and desktop platforms
 - **SendGrid**: Email service for notifications and account management
 
 ---
