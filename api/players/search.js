@@ -36,23 +36,18 @@ export default async function handler(req, res) {
     // Check if the search term is a complete email address
     const isCompleteEmail = term.includes('@') && term.includes('.') && term.indexOf('@') < term.lastIndexOf('.');
     
-    // Check if the search term looks like a phone number (contains only digits, spaces, +, -, (, ))
-    const phoneRegex = /^[\d\s\+\-\(\)]+$/;
-    const isPhoneSearch = phoneRegex.test(term) && term.replace(/[\D]/g, '').length >= 10;
-    
     let query = `
       SELECT 
         player_id,
         name,
         email,
-        phone,
         membership_tier
       FROM players 
-      WHERE (name ILIKE $1 OR name ILIKE $2 OR email ILIKE $3 OR email ILIKE $4 OR phone ILIKE $5 OR phone ILIKE $6)
+      WHERE (name ILIKE $1 OR name ILIKE $2 OR email ILIKE $3 OR email ILIKE $4)
     `;
     
-    let params = [`%${term}%`, `${term}%`, `%${term}%`, `${term}%`, `%${term}%`, `${term}%`];
-    let paramIndex = 7;
+    let params = [`%${term}%`, `${term}%`, `%${term}%`, `${term}%`];
+    let paramIndex = 5;
 
     // Exclude specific player if provided (e.g., don't show self in results)
     if (exclude_player_id) {
@@ -66,33 +61,32 @@ export default async function handler(req, res) {
       CASE 
         WHEN name = $${paramIndex} THEN 1  -- Exact name match first
         WHEN email = $${paramIndex + 1} THEN 2  -- Exact email match
-        WHEN phone = $${paramIndex + 2} THEN 3  -- Exact phone match
-        WHEN name ILIKE $${paramIndex + 3} THEN 4  -- Name starts with term
-        WHEN email ILIKE $${paramIndex + 4} THEN 5  -- Email starts with term
-        WHEN phone ILIKE $${paramIndex + 5} THEN 6  -- Phone starts with term
-        ELSE 7  -- Contains term
+        WHEN name ILIKE $${paramIndex + 2} THEN 3  -- Name starts with term
+        WHEN email ILIKE $${paramIndex + 3} THEN 4  -- Email starts with term
+        ELSE 5  -- Contains term
       END
       LIMIT 10`;
     
-    params.push(term, term, term, `${term}%`, `${term}%`, `${term}%`);
+    params.push(term, term, `${term}%`, `${term}%`);
 
-    console.log(`[players/search] Searching for term: "${term}", exclude: ${exclude_player_id}, isCompleteEmail: ${isCompleteEmail}, isPhoneSearch: ${isPhoneSearch}`);
+    console.log(`[players/search] Searching for term: "${term}", exclude: ${exclude_player_id}, isCompleteEmail: ${isCompleteEmail}`);
     const result = await client.query(query, params);
 
     // Format results for frontend
     const players = result.rows.map(row => {
-      // Only show email if the search term was a complete email address
+      // Always use the actual name from the database, fallback to email username if no name
       const displayName = row.name || row.email.split('@')[0];
-      const shouldShowEmail = isCompleteEmail;
       
-      // Only show phone if there's an exact match with the phone number
-      const shouldShowPhone = row.phone && row.phone === term;
+      // Show email in two cases:
+      // 1. When search term is a complete email (user is searching by email)
+      // 2. When the player's email matches the search term (exact match found)
+      const shouldShowEmail = isCompleteEmail || 
+                            (row.email && row.email.toLowerCase() === term.toLowerCase());
       
       return {
         player_id: row.player_id,
         name: displayName,
         email: shouldShowEmail ? row.email : undefined,
-        phone: shouldShowPhone ? row.phone : undefined,
         membership_tier: row.membership_tier || 'free'
       };
     });

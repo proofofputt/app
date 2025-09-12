@@ -9,27 +9,9 @@ const isValidEmail = (email) => {
   return emailRegex.test(email);
 };
 
-// Phone number validation utility (supports various formats)
-const isValidPhoneNumber = (phone) => {
-  // Remove all non-digit characters for validation
-  const cleanPhone = phone.replace(/\D/g, '');
-  // Valid phone number should have 10-15 digits
-  return cleanPhone.length >= 10 && cleanPhone.length <= 15;
-};
-
-// Format phone number for display
-const formatPhoneNumber = (phone) => {
-  const cleanPhone = phone.replace(/\D/g, '');
-  if (cleanPhone.length === 10) {
-    return `(${cleanPhone.slice(0, 3)}) ${cleanPhone.slice(3, 6)}-${cleanPhone.slice(6)}`;
-  }
-  return phone; // Return as-is if not 10 digits
-};
-
-// Detect input type (username, email, or phone)
+// Detect input type (username or email)
 const detectInputType = (input) => {
   if (isValidEmail(input)) return 'email';
-  if (isValidPhoneNumber(input)) return 'phone';
   return 'username';
 };
 
@@ -65,15 +47,16 @@ const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
         player.email?.toLowerCase() === searchTerm.toLowerCase()
       );
       
-      // Show new player option for valid emails/phones or if no exact username match
-      setShowNewPlayerOption((inputType === 'email' || inputType === 'phone') || 
-        (inputType === 'username' && !hasExactMatch));
+      // Only show new player option if:
+      // 1. No exact match was found AND
+      // 2. The search term is a valid email
+      setShowNewPlayerOption(!hasExactMatch && inputType === 'email');
       
     } catch (err) {
       setError(err.message || 'Failed to search for players.');
-      // Still show new player option for valid emails/phones even if search fails
+      // Still show new player option for valid emails even if search fails
       const inputType = detectInputType(searchTerm);
-      setShowNewPlayerOption(inputType === 'email' || inputType === 'phone');
+      setShowNewPlayerOption(inputType === 'email');
     } finally {
       setIsLoading(false);
     }
@@ -85,8 +68,7 @@ const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
       isNewPlayer: true,
       inputType,
       contact: searchTerm,
-      displayName: inputType === 'email' ? searchTerm : 
-                   inputType === 'phone' ? formatPhoneNumber(searchTerm) : searchTerm
+      displayName: searchTerm
     };
     setSelectedNewPlayer(newPlayerData);
     setSelectedPlayer(null);
@@ -168,7 +150,7 @@ const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Invite by username, email, or phone number"
+                  placeholder="Invite by username or email"
                 />
                 <button type="submit" disabled={isLoading}>
                   {isLoading ? 'Searching...' : 'Search'}
@@ -200,9 +182,7 @@ const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
                     <div className="new-player-info">
                       <span className="new-player-label">📧 New Player Invite</span>
                       <span className="new-player-contact">
-                        {detectInputType(searchTerm) === 'email' ? `Email: ${searchTerm}` :
-                         detectInputType(searchTerm) === 'phone' ? `Phone: ${formatPhoneNumber(searchTerm)}` :
-                         `Username: ${searchTerm}`}
+                        {detectInputType(searchTerm) === 'email' ? `Email: ${searchTerm}` : `Username: ${searchTerm}`}
                       </span>
                     </div>
                   </li>
@@ -221,8 +201,7 @@ const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
               <div className="selection-info new-player-selection">
                 <p><strong>New Player Invite:</strong> {selectedNewPlayer.displayName}</p>
                 <p className="invite-method">
-                  Will be invited via {selectedNewPlayer.inputType === 'email' ? 'email' : 
-                                     selectedNewPlayer.inputType === 'phone' ? 'SMS' : 'username lookup'}
+                  Will be invited via {selectedNewPlayer.inputType === 'email' ? 'email' : 'username lookup'}
                 </p>
               </div>
             )}
