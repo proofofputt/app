@@ -10,12 +10,14 @@ const SettingsPage = () => {
   const { playerData, refreshData } = useAuth();
   const { showTemporaryNotification: showNotification } = useNotification();
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [timezone, setTimezone] = useState('');
   const [availableTimezones, setAvailableTimezones] = useState([]);
   const [socials, setSocials] = useState({
     x_url: '',
     tiktok_url: '',
     website_url: '',
+    telegram_url: '',
   });
   const [couponCode, setCouponCode] = useState('');
   const [notificationPreferences, setNotificationPreferences] = useState({
@@ -30,11 +32,13 @@ const SettingsPage = () => {
   useEffect(() => {
     if (playerData) {
       setName(playerData.name || '');
+      setPhone(playerData.phone || '');
       setTimezone(playerData.timezone || 'UTC');
       setSocials({
         x_url: playerData.x_url || '',
         tiktok_url: playerData.tiktok_url || '',
         website_url: playerData.website_url || '',
+        telegram_url: playerData.telegram_url || '',
       });
       if (playerData.notification_preferences) {
         try {
@@ -63,7 +67,7 @@ const SettingsPage = () => {
   const handleInfoSubmit = async (e) => {
     e.preventDefault();
     try {
-      await apiUpdatePlayer(playerData.player_id, { name, timezone });
+      await apiUpdatePlayer(playerData.player_id, { name, phone, timezone });
       showNotification('Account info updated successfully!');
       await refreshData();
     } catch (err) {
@@ -160,6 +164,10 @@ const SettingsPage = () => {
               <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="form-group">
+              <label>Phone Number</label>
+              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 (555) 123-4567" />
+            </div>
+            <div className="form-group">
               <label>Timezone</label>
               <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className="form-control">
                 {availableTimezones.map(tz => (
@@ -177,6 +185,7 @@ const SettingsPage = () => {
           <form onSubmit={handleSocialsSubmit}>
             <div className="form-group"><label>X (Twitter)</label><input type="url" name="x_url" value={socials.x_url} onChange={handleSocialsChange} placeholder="https://x.com/yourprofile" /></div>
             <div className="form-group"><label>TikTok</label><input type="url" name="tiktok_url" value={socials.tiktok_url} onChange={handleSocialsChange} placeholder="https://tiktok.com/@yourprofile" /></div>
+            <div className="form-group"><label>Telegram</label><input type="url" name="telegram_url" value={socials.telegram_url} onChange={handleSocialsChange} placeholder="https://t.me/yourusername" /></div>
             <div className="form-group"><label>Website</label><input type="url" name="website_url" value={socials.website_url} onChange={handleSocialsChange} placeholder="https://yourwebsite.com" /></div>
             <button type="submit" className="btn">Save Social Links</button>
           </form>
