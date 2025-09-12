@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { handleReferralTracking, getReferralContext, clearStoredReferralSession } from '../utils/referrals';
+import { apiRegister } from '../api';
 import './RegisterPage.css';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const { login } = useAuth();
 
   // Extract parameters from URL
   const inviteType = searchParams.get('invite'); // 'duel' or 'league'
   const prefilledEmail = searchParams.get('email');
   const prefilledPhone = searchParams.get('phone');
-  const referrerId = searchParams.get('referrer_id');
+  const referrerId = searchParams.get('referrer_id'); // Legacy support
   const leagueName = searchParams.get('league');
 
   // Form state
@@ -25,6 +28,16 @@ const RegisterPage = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [referrerInfo, setReferrerInfo] = useState(null);
+  const [referralContext, setReferralContext] = useState({ hasReferral: false });
+
+  // Handle referral tracking on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    
+    // Handle referral tracking first
+    handleReferralTracking(urlParams);
+    setReferralContext(getReferralContext(urlParams));
+  }, [location]);
 
   // Fetch referrer information
   useEffect(() => {
@@ -80,45 +93,42 @@ const RegisterPage = () => {
     }
 
     try {
-      const response = await fetch('/api/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          referrer_id: referrerId
-        }),
-      });
+      // Use the enhanced referral system first, fall back to legacy
+      const result = await apiRegister(
+        formData.name,
+        formData.email,
+        formData.password,
+        referralContext.sessionId || null,
+        true // consent_contact_info - default to true for email registration
+      );
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (result) {
+        // Clear referral session after successful registration
+        clearStoredReferralSession();
+        
         // Registration successful
-        console.log('Registration successful:', data);
+        console.log('Registration successful:', result);
         
         // Auto-login the user
-        if (data.token) {
-          localStorage.setItem('authToken', data.token);
-          await login(data.token);
+        if (result.token) {
+          localStorage.setItem('authToken', result.token);
+          await login(result.token);
           
           // Show success message if they were referred
-          if (data.referral) {
+          if (result.referral) {
             // Could show a welcome modal or notification here
-            console.log(`Welcome! You were referred by ${data.referral.referred_by}`);
+            console.log(`Welcome! You were referred by ${result.referral.referred_by}`);
           }
           
           // Redirect to dashboard
           navigate('/', { replace: true });
         }
       } else {
-        setError(data.error || 'Registration failed');
+        setError('Registration failed. Please try again.');
       }
     } catch (error) {
       console.error('Registration error:', error);
-      setError('Network error. Please try again.');
+      setError(error.message || 'Network error. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -145,10 +155,17 @@ const RegisterPage = () => {
             </div>
           )}
           
-          {!inviteType && (
+          {!inviteType && !referralContext.hasReferral && (
             <p className="welcome-text">
               AI-powered golf training with computer vision tracking
             </p>
+          )}
+          
+          {referralContext.hasReferral && !inviteType && (
+            <div className="invitation-context referral-invitation">
+              <p>🎯 You're joining via a referral link!</p>
+              <p className="invitation-subtitle">You'll be connected with your referrer after registration</p>
+            </div>
           )}
         </div>
 

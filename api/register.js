@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { email, password, name, referrer_id } = req.body;
+  const { email, password, name, referrer_id, referral_session_id, consent_contact_info = true } = req.body;
 
   if (!email || !password || !name) {
     return res.status(400).json({ error: 'Email, name, and password are required' });
@@ -98,10 +98,35 @@ export default async function handler(req, res) {
       [player.player_id]
     );
 
-    // Handle referral if provided
+    // Handle referral using enhanced referral system
     let referrerInfo = null;
-    if (referrer_id && !isNaN(referrer_id)) {
-      try {
+    try {
+      let referralData = null;
+      
+      // Check if we have a referral session ID (new system)
+      if (referral_session_id) {
+        console.log(`[Referral] Processing referral session: ${referral_session_id}`);
+        
+        // Use assign_referral function for direct session assignment
+        const sessionResult = await client.query(
+          `SELECT assign_referral($1, $2, $3, $4, $5, $6, $7) as result`,
+          [
+            player.player_id,
+            referral_session_id,
+            consent_contact_info ? email : null,
+            null, // phone - not collected in registration
+            name,
+            'email', // signup method
+            consent_contact_info
+          ]
+        );
+        
+        referralData = sessionResult.rows[0].result;
+      } 
+      // Fall back to old referrer_id system for backward compatibility
+      else if (referrer_id && !isNaN(referrer_id)) {
+        console.log(`[Referral] Processing legacy referrer ID: ${referrer_id}`);
+        
         // Verify referrer exists
         const referrerResult = await client.query(
           'SELECT player_id, name, email FROM players WHERE player_id = $1',
@@ -110,9 +135,8 @@ export default async function handler(req, res) {
         
         if (referrerResult.rows.length > 0) {
           const referrer = referrerResult.rows[0];
-          referrerInfo = referrer;
           
-          // Create referral record
+          // Create referral record using old system
           await client.query(
             `INSERT INTO player_referrals (
               referrer_id, 
@@ -147,12 +171,52 @@ export default async function handler(req, res) {
             [player.player_id, referrer.player_id]
           );
           
-          console.log(`✅ Referral recorded: ${referrer.name} (${referrer.player_id}) referred ${player.name} (${player.player_id})`);
+          referralData = { success: true, referrer_id: referrer.player_id };
+          referrerInfo = referrer;
+          
+          console.log(`✅ Legacy referral recorded: ${referrer.name} (${referrer.player_id}) referred ${player.name} (${player.player_id})`);
         }
-      } catch (referralError) {
-        console.error('Failed to process referral:', referralError);
-        // Don't fail registration if referral processing fails
       }
+      // Try auto-matching for flexible referral assignment
+      else {
+        console.log(`[Referral] Attempting auto-match for player ${player.player_id}`);
+        
+        const autoMatchResult = await client.query(
+          `SELECT auto_match_referral($1, $2, $3, $4, $5, $6) as result`,
+          [
+            player.player_id,
+            consent_contact_info ? email : null,
+            null, // phone
+            name,
+            'email', // signup method
+            consent_contact_info
+          ]
+        );
+        
+        referralData = autoMatchResult.rows[0].result;
+      }
+      
+      // Process referral results
+      if (referralData && referralData.success) {
+        if (!referrerInfo) {
+          // Get referrer info for response
+          const referrerResult = await client.query(
+            'SELECT player_id, name, email FROM players WHERE player_id = $1',
+            [referralData.referrer_id]
+          );
+          
+          referrerInfo = referrerResult.rows[0] || { 
+            player_id: referralData.referrer_id,
+            name: 'Unknown Player'
+          };
+        }
+        
+        console.log(`✅ Enhanced referral processed: ${referrerInfo.name} (${referralData.referrer_id}) referred ${player.name} (${player.player_id})`);
+      }
+      
+    } catch (referralError) {
+      console.error('Failed to process enhanced referral:', referralError);
+      // Don't fail registration if referral processing fails
     }
 
     // Generate JWT token (matching login.js format)

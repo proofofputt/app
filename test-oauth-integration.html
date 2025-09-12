@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth Integration Test - Proof of Putt</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 2rem 0;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-result {
+            margin: 1rem 0;
+            padding: 0.5rem;
+            border-radius: 4px;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0.5rem;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        pre { background: #f8f9fa; padding: 1rem; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>OAuth Integration Test - Proof of Putt</h1>
+    <p>This page tests the OAuth integration for Google, LinkedIn, and Nostr authentication.</p>
+
+    <div class="test-section">
+        <h2>Environment Check</h2>
+        <div id="env-results"></div>
+        <button onclick="checkEnvironment()">Check Environment</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Google OAuth</h2>
+        <div id="google-results"></div>
+        <button onclick="testGoogleInit()">Test Google Init</button>
+        <button onclick="testGoogleCallback()">Test Google Callback</button>
+    </div>
+
+    <div class="test-section">
+        <h2>LinkedIn OAuth</h2>
+        <div id="linkedin-results"></div>
+        <button onclick="testLinkedInInit()">Test LinkedIn Init</button>
+        <button onclick="testLinkedInCallback()">Test LinkedIn Callback</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Nostr Authentication</h2>
+        <div id="nostr-results"></div>
+        <button onclick="testNostrAvailability()">Check Nostr Extension</button>
+        <button onclick="testNostrAuth()">Test Nostr Auth</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Database Schema</h2>
+        <div id="db-results"></div>
+        <button onclick="testDatabaseSchema()">Test Database Schema</button>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin + '/api';
+
+        function addResult(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            container.appendChild(div);
+        }
+
+        function clearResults(containerId) {
+            document.getElementById(containerId).innerHTML = '';
+        }
+
+        async function checkEnvironment() {
+            clearResults('env-results');
+            
+            // Check if we're running in development
+            const isDev = window.location.hostname === 'localhost';
+            addResult('env-results', `Environment: ${isDev ? 'Development' : 'Production'}`, 'info');
+            
+            // Check API availability
+            try {
+                const response = await fetch(`${API_BASE}/auth/google/init`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.status === 500) {
+                    addResult('env-results', 'Google OAuth endpoints exist but may need environment variables', 'info');
+                } else if (response.ok) {
+                    addResult('env-results', 'Google OAuth endpoints are fully configured', 'success');
+                } else {
+                    addResult('env-results', `Google OAuth endpoint returned: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                addResult('env-results', `API connection failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGoogleInit() {
+            clearResults('google-results');
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/google/init`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addResult('google-results', '✅ Google OAuth init successful', 'success');
+                    addResult('google-results', `Session ID: ${data.sessionId}`, 'info');
+                    addResult('google-results', `Auth URL: ${data.authUrl.substring(0, 100)}...`, 'info');
+                } else {
+                    addResult('google-results', `❌ Google OAuth init failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                addResult('google-results', `❌ Request failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGoogleCallback() {
+            addResult('google-results', 'ℹ️ Google callback testing requires actual OAuth flow', 'info');
+        }
+
+        async function testLinkedInInit() {
+            clearResults('linkedin-results');
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/linkedin/init`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addResult('linkedin-results', '✅ LinkedIn OAuth init successful', 'success');
+                    addResult('linkedin-results', `Session ID: ${data.sessionId}`, 'info');
+                    addResult('linkedin-results', `Auth URL: ${data.authUrl.substring(0, 100)}...`, 'info');
+                } else {
+                    addResult('linkedin-results', `❌ LinkedIn OAuth init failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                addResult('linkedin-results', `❌ Request failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLinkedInCallback() {
+            addResult('linkedin-results', 'ℹ️ LinkedIn callback testing requires actual OAuth flow', 'info');
+        }
+
+        async function testNostrAvailability() {
+            clearResults('nostr-results');
+            
+            if (typeof window.nostr === 'undefined') {
+                addResult('nostr-results', '❌ No Nostr extension detected', 'error');
+                addResult('nostr-results', 'Install Alby, nos2x, or another Nostr extension to test', 'info');
+                return;
+            }
+            
+            addResult('nostr-results', '✅ Nostr extension detected', 'success');
+            
+            try {
+                const pubkey = await window.nostr.getPublicKey();
+                addResult('nostr-results', `Public key: ${pubkey.substring(0, 16)}...`, 'info');
+            } catch (error) {
+                addResult('nostr-results', `❌ Failed to get public key: ${error.message}`, 'error');
+            }
+        }
+
+        async function testNostrAuth() {
+            clearResults('nostr-results');
+            
+            if (typeof window.nostr === 'undefined') {
+                addResult('nostr-results', '❌ No Nostr extension detected', 'error');
+                return;
+            }
+            
+            try {
+                // This would require importing the actual nostr utilities
+                addResult('nostr-results', 'ℹ️ Full Nostr auth testing requires the actual app context', 'info');
+                addResult('nostr-results', 'Use the login page to test Nostr authentication', 'info');
+            } catch (error) {
+                addResult('nostr-results', `❌ Nostr auth test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDatabaseSchema() {
+            clearResults('db-results');
+            
+            addResult('db-results', 'ℹ️ Database schema testing requires backend access', 'info');
+            addResult('db-results', 'Schema files created:', 'info');
+            addResult('db-results', '• /app/database/add_oauth_support.sql', 'info');
+            addResult('db-results', 'Run the SQL migration to add OAuth support to your database', 'info');
+        }
+
+        // Auto-run environment check on load
+        window.addEventListener('load', checkEnvironment);
+    </script>
+</body>
+</html>

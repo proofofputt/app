@@ -1,15 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useNotification } from '../context/NotificationContext.jsx';
 import { usePersistentNotifications } from '../context/PersistentNotificationContext.jsx';
 import './ProfileDropdown.css';
 
 const ProfileDropdown = () => {
   const { playerData, logout } = useAuth();
+  const { showTemporaryNotification: showNotification } = useNotification();
   const { unreadCount } = usePersistentNotifications();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const isSubscribed = playerData?.membership_tier === 'premium' || playerData?.membership_tier === 'regular';
 
   if (!playerData) return null;
 
@@ -29,6 +32,14 @@ const ProfileDropdown = () => {
     logout();
   };
 
+  const handleProtectedLinkClick = (e) => {
+    if (!isSubscribed) {
+      e.preventDefault();
+      showNotification("This feature requires a full subscription. Please upgrade to continue.", true);
+      navigate('/settings');
+    }
+  };
+
   return (
     <div className="profile-dropdown" ref={dropdownRef}>
       <button className="profile-button" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle user menu">
@@ -39,11 +50,25 @@ const ProfileDropdown = () => {
       </button>
       {isOpen && (
         <div className="dropdown-menu">
+          <NavLink to="/settings" className="dropdown-item" onClick={() => setIsOpen(false)}>
+            Settings
+          </NavLink>
           <NavLink to={`/player/${playerData?.player_id}/stats`} className="dropdown-item" onClick={() => setIsOpen(false)}>
             My Stats
           </NavLink>
-          <NavLink to="/settings" className="dropdown-item" onClick={() => setIsOpen(false)}>
-            Settings
+          <div className="dropdown-divider"></div>
+          <NavLink to="/contacts" className="dropdown-item" onClick={() => setIsOpen(false)}>
+            Contacts
+          </NavLink>
+          <NavLink 
+            to="/coach" 
+            className="dropdown-item" 
+            onClick={(e) => {
+              handleProtectedLinkClick(e);
+              setIsOpen(false);
+            }}
+          >
+            Coach
           </NavLink>
           <div className="dropdown-divider"></div>
           <NavLink to="/notifications" className={`dropdown-item ${unreadCount > 0 ? 'unread' : ''}`} onClick={() => setIsOpen(false)}>

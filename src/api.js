@@ -54,8 +54,18 @@ const getHeaders = () => {
 export const apiLogin = (email, password) => 
   fetch(`${API_BASE_URL}/login`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ email, password }) }).then(handleResponse);
 
-export const apiRegister = (name, email, password) => 
-  fetch(`${API_BASE_URL}/register`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ name, email, password }) }).then(handleResponse);
+export const apiRegister = (name, email, password, referralSessionId = null, consentContactInfo = true) => 
+  fetch(`${API_BASE_URL}/register`, { 
+    method: 'POST', 
+    headers: getHeaders(), 
+    body: JSON.stringify({ 
+      name, 
+      email, 
+      password, 
+      referral_session_id: referralSessionId,
+      consent_contact_info: consentContactInfo
+    }) 
+  }).then(handleResponse);
 
 export const apiForgotPassword = (email) => 
   fetch(`${API_BASE_URL}/forgot-password`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ email }) }).then(handleResponse);

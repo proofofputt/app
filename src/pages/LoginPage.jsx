@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { apiRegister, apiForgotPassword } from '../api';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { handleOAuthCallback } from '../utils/oauth';
+import { handleReferralTracking, getReferralContext, clearStoredReferralSession } from '../utils/referrals';
+import OAuthButton from '../components/OAuthButton';
 import './LoginPage.css';
 
 const LoginPage = () => {
@@ -12,7 +16,43 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [referralContext, setReferralContext] = useState({ hasReferral: false });
   const { login } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Handle OAuth callback and referral tracking on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    
+    // Handle referral tracking first
+    handleReferralTracking(urlParams);
+    setReferralContext(getReferralContext(urlParams));
+    
+    // Then handle OAuth callback
+    const oauthResult = handleOAuthCallback(urlParams);
+    
+    if (oauthResult.success && oauthResult.token) {
+      // OAuth login successful
+      localStorage.setItem('authToken', oauthResult.token);
+      setSuccess(`Successfully logged in with ${oauthResult.provider}!`);
+      
+      // Clear stored referral since OAuth login doesn't need it
+      clearStoredReferralSession();
+      
+      // Navigate to dashboard after a brief delay
+      setTimeout(() => {
+        navigate('/');
+      }, 1500);
+      
+    } else if (oauthResult.error) {
+      // OAuth login failed
+      setError(`OAuth login failed: ${oauthResult.error}`);
+      
+      // Clean up URL parameters
+      navigate('/login', { replace: true });
+    }
+  }, [location, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -28,6 +68,19 @@ const LoginPage = () => {
     setIsLoading(false);
   };
 
+  const handleOAuthSuccess = ({ token, provider }) => {
+    setSuccess(`Successfully logged in with ${provider}!`);
+    // The token is already stored in localStorage by OAuthButton
+    // Navigate to dashboard
+    setTimeout(() => {
+      navigate('/');
+    }, 1500);
+  };
+
+  const handleOAuthError = (errorMessage) => {
+    setError(errorMessage);
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -41,10 +94,25 @@ const LoginPage = () => {
     }
 
     try {
-      const result = await apiRegister(name, email, password);
+      // Pass referral session ID if available
+      const result = await apiRegister(
+        name, 
+        email, 
+        password, 
+        referralContext.sessionId,
+        true // consent_contact_info - default to true for email registration
+      );
       
       if (result) {
-        setSuccess('Registration successful! Please sign in.');
+        // Clear referral session after successful registration
+        clearStoredReferralSession();
+        
+        if (result.referral) {
+          setSuccess(`Registration successful! You were referred by ${result.referral.referred_by}. Please sign in.`);
+        } else {
+          setSuccess('Registration successful! Please sign in.');
+        }
+        
         setMode('login');
         setPassword('');
         setConfirmPassword('');
@@ -132,6 +200,31 @@ const LoginPage = () => {
               {isLoading ? 'Signing in...' : 'Sign In'}
             </button>
 
+            <div className="oauth-divider">
+              <span className="oauth-divider-text">or</span>
+            </div>
+
+            <div className="oauth-buttons">
+              <OAuthButton 
+                provider="google"
+                onSuccess={handleOAuthSuccess}
+                onError={handleOAuthError}
+                disabled={isLoading}
+              />
+              <OAuthButton 
+                provider="linkedin"
+                onSuccess={handleOAuthSuccess}
+                onError={handleOAuthError}
+                disabled={isLoading}
+              />
+              <OAuthButton 
+                provider="nostr"
+                onSuccess={handleOAuthSuccess}
+                onError={handleOAuthError}
+                disabled={isLoading}
+              />
+            </div>
+
             <div className="login-links">
               <button 
                 type="button" 
@@ -155,6 +248,11 @@ const LoginPage = () => {
         {mode === 'register' && (
           <form onSubmit={handleRegister} className="login-form">
             {error && <div className="error-message">{error}</div>}
+            {referralContext.hasReferral && (
+              <div className="success-message">
+                🎯 You're joining via a referral link! You'll be connected with your referrer after registration.
+              </div>
+            )}
             
             <div className="form-group">
               <label htmlFor="name">Name</label>
