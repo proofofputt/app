@@ -1,12 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
+import { apiGetLeaderboard } from '../api';
+import LeaderboardCard from '../components/LeaderboardCard';
 import './ContactsPage.css';
 
 const ContactsPage = () => {
   const { playerData } = useAuth();
   const { showTemporaryNotification: showNotification } = useNotification();
   const [searchTerm, setSearchTerm] = useState('');
+  const [friendsLeaderboardData, setFriendsLeaderboardData] = useState(null);
+
+  // Load friends leaderboard data
+  useEffect(() => {
+    const fetchFriendsLeaderboards = async () => {
+      if (!playerData?.player_id) return;
+      
+      try {
+        const results = await Promise.allSettled([
+          apiGetLeaderboard({ metric: 'total_makes', context_type: 'friends', player_id: playerData.player_id }),
+          apiGetLeaderboard({ metric: 'best_streak', context_type: 'friends', player_id: playerData.player_id }),
+          apiGetLeaderboard({ metric: 'makes_per_minute', context_type: 'friends', player_id: playerData.player_id }),
+          apiGetLeaderboard({ metric: 'fastest_21_makes_seconds', context_type: 'friends', player_id: playerData.player_id }),
+        ]);
+
+        const [topMakesResult, topStreaksResult, topMpmResult, fastest21Result] = results;
+
+        const newFriendsLeaderboardData = {
+          top_makes: topMakesResult.status === 'fulfilled' ? topMakesResult.value?.leaderboard ?? [] : [],
+          top_streaks: topStreaksResult.status === 'fulfilled' ? topStreaksResult.value?.leaderboard ?? [] : [],
+          top_makes_per_minute: topMpmResult.status === 'fulfilled' ? topMpmResult.value?.leaderboard ?? [] : [],
+          fastest_21: fastest21Result.status === 'fulfilled' ? fastest21Result.value?.leaderboard ?? [] : [],
+        };
+        setFriendsLeaderboardData(newFriendsLeaderboardData);
+      } catch (error) {
+        console.error("Could not fetch friends leaderboard data:", error);
+      }
+    };
+
+    fetchFriendsLeaderboards();
+  }, [playerData?.player_id]);
 
   const handleSearch = () => {
     if (!searchTerm.trim()) {
@@ -24,6 +57,22 @@ const ContactsPage = () => {
       </div>
 
       <div className="contacts-content">
+        {/* Friends Leaderboard Section */}
+        {friendsLeaderboardData && (
+          <div className="friends-leaderboard-container">
+            <div className="leaderboard-summary-bar">
+              <h2>Friends Leaderboard</h2>
+              <p>All-time high scores comparison with your friends</p>
+            </div>
+            <div className="leaderboard-grid">
+              <LeaderboardCard title="Most Makes" leaders={friendsLeaderboardData?.top_makes} />
+              <LeaderboardCard title="Best Streak" leaders={friendsLeaderboardData?.top_streaks} />
+              <LeaderboardCard title="Makes/Min" leaders={friendsLeaderboardData?.top_makes_per_minute} />
+              <LeaderboardCard title="Fastest 21" leaders={friendsLeaderboardData?.fastest_21} />
+            </div>
+          </div>
+        )}
+
         <FriendsSection 
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}

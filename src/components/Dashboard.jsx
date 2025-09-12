@@ -2,9 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
-import { apiGetLeaderboard } from '../api';
 import SessionRow from './SessionRow';
-import LeaderboardCard from './LeaderboardCard';
 import './Dashboard.css';
 
 const StatCard = ({ title, value }) => (
@@ -19,7 +17,6 @@ function Dashboard() {
   const { showTemporaryNotification: showNotification } = useNotification();
   const [actionError, setActionError] = useState('');
   const [expandedSessionId, setExpandedSessionId] = useState(null);
-  const [leaderboardData, setLeaderboardData] = useState(null);
   const tableWrapperRef = useRef(null);
 
   // This effect manages the height of the session table container
@@ -46,33 +43,6 @@ function Dashboard() {
     setExpandedSessionId(prevId => (prevId === sessionId ? null : sessionId));
   };
 
-  // Load leaderboard data
-  useEffect(() => {
-    const fetchLeaderboards = async () => {
-      try {
-        const results = await Promise.allSettled([
-          apiGetLeaderboard({ metric: 'total_makes' }),
-          apiGetLeaderboard({ metric: 'best_streak' }),
-          apiGetLeaderboard({ metric: 'makes_per_minute' }),
-          apiGetLeaderboard({ metric: 'fastest_21_makes_seconds' }),
-        ]);
-
-        const [topMakesResult, topStreaksResult, topMpmResult, fastest21Result] = results;
-
-        const newLeaderboardData = {
-          top_makes: topMakesResult.status === 'fulfilled' ? topMakesResult.value?.leaderboard ?? [] : [],
-          top_streaks: topStreaksResult.status === 'fulfilled' ? topStreaksResult.value?.leaderboard ?? [] : [],
-          top_makes_per_minute: topMpmResult.status === 'fulfilled' ? topMpmResult.value?.leaderboard ?? [] : [],
-          fastest_21: fastest21Result.status === 'fulfilled' ? fastest21Result.value?.leaderboard ?? [] : [],
-        };
-        setLeaderboardData(newLeaderboardData);
-      } catch (error) {
-        console.error("Could not fetch leaderboard data:", error);
-      }
-    };
-
-    fetchLeaderboards();
-  }, []); // Run once on mount
 
   const handleRefreshClick = () => {
     setActionError('');
@@ -169,17 +139,6 @@ function Dashboard() {
           </div>
         </div>
 
-        <div className="leaderboard-container">
-          <div className="leaderboard-summary-bar">
-              <h2>Leaderboard</h2>
-          </div>
-          <div className="leaderboard-grid">
-              <LeaderboardCard title="Most Makes" leaders={leaderboardData?.top_makes} />
-              <LeaderboardCard title="Best Streak" leaders={leaderboardData?.top_streaks} />
-              <LeaderboardCard title="Makes/Min" leaders={leaderboardData?.top_makes_per_minute} />
-              <LeaderboardCard title="Fastest 21" leaders={leaderboardData?.fastest_21} />
-          </div>
-        </div>
       </main>
 
     </>

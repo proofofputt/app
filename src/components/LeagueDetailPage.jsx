@@ -2,10 +2,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNotification } from '../context/NotificationContext.jsx';
-import { apiGetLeagueDetails, apiJoinLeague, apiInviteToLeague, apiStartSession } from '../api.js';
+import { apiGetLeagueDetails, apiJoinLeague, apiInviteToLeague, apiStartSession, apiGetLeaderboard } from '../api.js';
 import EditLeagueModal from './EditLeagueModal.jsx';
 import CountdownTimer from './CountdownTimer.jsx';
 import InlineInviteForm from './InlineInviteForm.jsx';
+import LeaderboardCard from './LeaderboardCard.jsx';
 import { tryOpenAppWithParameters } from '../../utils/appLauncher.js';
 import '../pages/Leagues.css'; // Reusing the same CSS file
 
@@ -19,6 +20,7 @@ const LeagueDetailPage = () => {
   const [sortOrder, setSortOrder] = useState({ type: 'default', id: null });
   const [isJoining, setIsJoining] = useState(false);
   const [error, setError] = useState('');
+  const [leagueLeaderboardData, setLeagueLeaderboardData] = useState(null);
 
   const fetchLeagueDetails = useCallback(async () => {
     if (!playerData?.player_id) {
@@ -49,6 +51,36 @@ const LeagueDetailPage = () => {
   useEffect(() => {
     fetchLeagueDetails();
   }, [fetchLeagueDetails]);
+
+  // Fetch league participants leaderboard data
+  useEffect(() => {
+    const fetchLeagueLeaderboards = async () => {
+      if (!leagueId || !playerData?.player_id) return;
+      
+      try {
+        const results = await Promise.allSettled([
+          apiGetLeaderboard({ metric: 'total_makes', context_type: 'leagues', context_id: leagueId }),
+          apiGetLeaderboard({ metric: 'best_streak', context_type: 'leagues', context_id: leagueId }),
+          apiGetLeaderboard({ metric: 'makes_per_minute', context_type: 'leagues', context_id: leagueId }),
+          apiGetLeaderboard({ metric: 'fastest_21_makes_seconds', context_type: 'leagues', context_id: leagueId }),
+        ]);
+
+        const [topMakesResult, topStreaksResult, topMpmResult, fastest21Result] = results;
+
+        const newLeagueLeaderboardData = {
+          top_makes: topMakesResult.status === 'fulfilled' ? topMakesResult.value?.leaderboard ?? [] : [],
+          top_streaks: topStreaksResult.status === 'fulfilled' ? topStreaksResult.value?.leaderboard ?? [] : [],
+          top_makes_per_minute: topMpmResult.status === 'fulfilled' ? topMpmResult.value?.leaderboard ?? [] : [],
+          fastest_21: fastest21Result.status === 'fulfilled' ? fastest21Result.value?.leaderboard ?? [] : [],
+        };
+        setLeagueLeaderboardData(newLeagueLeaderboardData);
+      } catch (error) {
+        console.error("Could not fetch league participants leaderboard data:", error);
+      }
+    };
+
+    fetchLeagueLeaderboards();
+  }, [leagueId, playerData?.player_id]);
 
   const handleLeagueUpdated = useCallback(async () => {
     setShowEditModal(false);
@@ -522,6 +554,22 @@ const LeagueDetailPage = () => {
           </table>
         </div>
       </div>
+
+      {/* League Participants Leaderboard Section */}
+      {leagueLeaderboardData && (
+        <div className="card league-leaderboard-container">
+          <div className="section-header">
+            <h3>League Leaderboard</h3>
+            <p>All-time high scores comparison among league participants</p>
+          </div>
+          <div className="leaderboard-grid">
+            <LeaderboardCard title="Most Makes" leaders={leagueLeaderboardData?.top_makes} />
+            <LeaderboardCard title="Best Streak" leaders={leagueLeaderboardData?.top_streaks} />
+            <LeaderboardCard title="Makes/Min" leaders={leagueLeaderboardData?.top_makes_per_minute} />
+            <LeaderboardCard title="Fastest 21" leaders={leagueLeaderboardData?.fastest_21} />
+          </div>
+        </div>
+      )}
 
       <div className="league-members-section">
         <div className="card">
