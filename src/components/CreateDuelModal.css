@@ -91,19 +91,27 @@
   padding: 0.75rem;
   cursor: pointer;
   border-bottom: 1px solid var(--border-color);
+  background-color: #f4f1e8; /* Sandy/beige background for all players */
+  border: 2px solid #2d5016; /* Dark green border */
+  color: #2d5016; /* Dark green text */
+  font-weight: 500;
+  margin-bottom: 2px;
 }
 
 .search-results li:last-child {
   border-bottom: none;
+  margin-bottom: 0;
 }
 
 .search-results li:hover {
-  background-color: var(--masters-green-light);
+  background-color: #ede8db; /* Slightly darker sandy on hover */
+  border-color: #1a3009; /* Darker green border on hover */
 }
 
 .search-results li.selected {
-  background-color: var(--masters-green);
-  color: white;
+  background-color: #e6dfc8; /* Selected sandy background */
+  border-color: #1a3009;
+  color: #1a3009;
 }
 
 /* New Player Invite Styling */
@@ -149,13 +157,14 @@
 }
 
 .player-name {
-  font-weight: 500;
+  font-weight: 600;
+  color: #2d5016;
 }
 
 .player-email {
   font-size: 0.85rem;
-  color: var(--text-muted);
-  opacity: 0.8;
+  color: #4a6b2a;
+  opacity: 0.9;
 }
 
 /* Selection info styling */
