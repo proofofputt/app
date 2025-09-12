@@ -596,10 +596,12 @@
 }
 
 .leagues-table th {
-  color: var(--text-color-secondary);
+  background-color: var(--primary-color);
+  color: var(--masters-green-dark);
   text-transform: uppercase;
   font-size: 0.95rem;
   letter-spacing: 0.5px;
+  font-weight: bold;
 }
 
 .leagues-table tbody tr:hover {

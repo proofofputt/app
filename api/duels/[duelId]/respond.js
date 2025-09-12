@@ -114,44 +114,44 @@ export default async function handler(req, res) {
       });
     }
 
-    // Update the duel status
-    const newStatus = response === 'accepted' ? 'active' : 'declined';
-    
-    // Use separate queries to avoid parameter type issues with CASE statement
-    let updateResult;
+    // Handle response: accept or delete
+    let result;
     if (response === 'accepted') {
-      updateResult = await client.query(`
+      result = await client.query(`
         UPDATE duels 
         SET 
-          status = $1,
+          status = 'active',
           accepted_at = NOW(),
           updated_at = NOW()
-        WHERE duel_id = $2
+        WHERE duel_id = $1
         RETURNING duel_id, status, accepted_at
-      `, [newStatus, duelIdInt]);
+      `, [duelIdInt]);
+
+      const updatedDuel = result.rows[0];
+      return res.status(200).json({
+        success: true,
+        message: `Duel invitation ${response}`,
+        duel: {
+          duel_id: updatedDuel.duel_id,
+          status: updatedDuel.status,
+          accepted_at: updatedDuel.accepted_at
+        }
+      });
     } else {
-      updateResult = await client.query(`
-        UPDATE duels 
-        SET 
-          status = $1,
-          accepted_at = NULL,
-          updated_at = NOW()
-        WHERE duel_id = $2
-        RETURNING duel_id, status, accepted_at
-      `, [newStatus, duelIdInt]);
+      // For declined duels, delete them completely instead of marking as declined
+      result = await client.query(`
+        DELETE FROM duels 
+        WHERE duel_id = $1
+        RETURNING duel_id
+      `, [duelIdInt]);
+
+      return res.status(200).json({
+        success: true,
+        message: `Duel invitation ${response} and removed`,
+        deleted: true,
+        duel_id: duelIdInt
+      });
     }
-
-    const updatedDuel = updateResult.rows[0];
-
-    return res.status(200).json({
-      success: true,
-      message: `Duel invitation ${response}`,
-      duel: {
-        duel_id: updatedDuel.duel_id,
-        status: updatedDuel.status,
-        accepted_at: updatedDuel.accepted_at
-      }
-    });
 
   } catch (error) {
     console.error('Duel respond error details:', {
