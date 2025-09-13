@@ -1,54 +1,27 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { debounce } from 'lodash'; // You may need to add lodash: npm install lodash
+import { useParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { apiGetLeaderboard } from '../api';
+import LeaderboardCard from '../components/LeaderboardCard';
 import './PlayerVsPlayerPage.css';
 
 const PlayerVsPlayerPage = () => {
-  const [player1Query, setPlayer1Query] = useState('');
-  const [player2Query, setPlayer2Query] = useState('');
-  
-  const [player1Results, setPlayer1Results] = useState([]);
-  const [player2Results, setPlayer2Results] = useState([]);
-
-  const [selectedPlayer1, setSelectedPlayer1] = useState(null);
-  const [selectedPlayer2, setSelectedPlayer2] = useState(null);
-
+  const { player1Id, player2Id } = useParams();
+  const { playerData } = useAuth();
   const [comparisonData, setComparisonData] = useState(null);
+  const [duelsLeaderboardData, setDuelsLeaderboardData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const searchPlayers = async (query, playerSetter) => {
-    if (query.length < 2) {
-      playerSetter([]);
-      return;
-    }
-    try {
-      const response = await fetch(`/api/players/search?q=${query}`);
-      if (!response.ok) throw new Error('Search failed');
-      const data = await response.json();
-      playerSetter(data);
-    } catch (err) {
-      console.error('Player search error:', err);
-    }
-  };
-
-  const debouncedSearch = useCallback(debounce(searchPlayers, 300), []);
-
-  useEffect(() => {
-    debouncedSearch(player1Query, setPlayer1Results);
-  }, [player1Query, debouncedSearch]);
-
-  useEffect(() => {
-    debouncedSearch(player2Query, setPlayer2Results);
-  }, [player2Query, debouncedSearch]);
-
+  // Fetch comparison data based on URL parameters
   useEffect(() => {
     const fetchComparison = async () => {
-      if (selectedPlayer1 && selectedPlayer2) {
+      if (player1Id && player2Id) {
         setLoading(true);
         setError('');
         setComparisonData(null);
         try {
-          const response = await fetch(`/api/compare?player1_id=${selectedPlayer1.player_id}&player2_id=${selectedPlayer2.player_id}`);
+          const response = await fetch(`/api/compare?player1_id=${player1Id}&player2_id=${player2Id}`);
           if (!response.ok) throw new Error('Failed to fetch comparison data.');
           const data = await response.json();
           setComparisonData(data);
@@ -60,18 +33,80 @@ const PlayerVsPlayerPage = () => {
       }
     };
     fetchComparison();
-  }, [selectedPlayer1, selectedPlayer2]);
+  }, [player1Id, player2Id]);
 
-  const handleSelectPlayer = (player, playerNumber) => {
-    if (playerNumber === 1) {
-      setSelectedPlayer1(player);
-      setPlayer1Query(player.name);
-      setPlayer1Results([]);
+  // Fetch duels-only leaderboard between these two players
+  useEffect(() => {
+    const fetchDuelsLeaderboard = async () => {
+      if (!player1Id || !player2Id) return;
+      
+      try {
+        const results = await Promise.allSettled([
+          apiGetLeaderboard({ 
+            metric: 'total_makes', 
+            context_type: 'custom', 
+            player_ids: [parseInt(player1Id), parseInt(player2Id)]
+          }),
+          apiGetLeaderboard({ 
+            metric: 'best_streak', 
+            context_type: 'custom', 
+            player_ids: [parseInt(player1Id), parseInt(player2Id)]
+          }),
+          apiGetLeaderboard({ 
+            metric: 'makes_per_minute', 
+            context_type: 'custom', 
+            player_ids: [parseInt(player1Id), parseInt(player2Id)]
+          }),
+          apiGetLeaderboard({ 
+            metric: 'fastest_21_makes_seconds', 
+            context_type: 'custom', 
+            player_ids: [parseInt(player1Id), parseInt(player2Id)]
+          }),
+        ]);
+
+        const [topMakesResult, topStreaksResult, topMpmResult, fastest21Result] = results;
+
+        const newDuelsLeaderboardData = {
+          top_makes: topMakesResult.status === 'fulfilled' ? topMakesResult.value?.leaderboard ?? [] : [],
+          top_streaks: topStreaksResult.status === 'fulfilled' ? topStreaksResult.value?.leaderboard ?? [] : [],
+          top_makes_per_minute: topMpmResult.status === 'fulfilled' ? topMpmResult.value?.leaderboard ?? [] : [],
+          fastest_21: fastest21Result.status === 'fulfilled' ? fastest21Result.value?.leaderboard ?? [] : [],
+        };
+        setDuelsLeaderboardData(newDuelsLeaderboardData);
+      } catch (error) {
+        console.error("Could not fetch duels leaderboard data:", error);
+      }
+    };
+
+    fetchDuelsLeaderboard();
+  }, [player1Id, player2Id]);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Intl.DateTimeFormat(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    }).format(new Date(dateString));
+  };
+
+  const getDuelResult = (duel, playerId) => {
+    if (duel.status !== 'completed') return '-';
+    if (duel.creator_id === parseInt(playerId)) {
+      return duel.creator_score || 0;
     } else {
-      setSelectedPlayer2(player);
-      setPlayer2Query(player.name);
-      setPlayer2Results([]);
+      return duel.invited_player_score || 0;
     }
+  };
+
+  const getDuelStatus = (duel) => {
+    if (duel.status === 'completed') return 'Completed';
+    if (duel.status === 'active') return 'Active';
+    if (duel.status === 'pending') return 'Pending';
+    if (duel.status === 'expired') return 'Expired';
+    return duel.status;
   };
 
   const renderPlayerCard = (playerStats) => (
@@ -96,68 +131,99 @@ const PlayerVsPlayerPage = () => {
     </div>
   );
 
+  if (loading) {
+    return <div className="pvp-page"><div className="pvp-loading">Loading player comparison...</div></div>;
+  }
+
+  if (error) {
+    return <div className="pvp-page"><div className="pvp-error">{error}</div></div>;
+  }
+
+  if (!comparisonData) {
+    return <div className="pvp-page"><div className="pvp-loading">Loading...</div></div>;
+  }
+
   return (
     <div className="pvp-page">
-      <h2>Player vs. Player Comparison</h2>
-      <div className="player-selection-area">
-        <div className="player-search-container">
-          <label htmlFor="player1">Player 1</label>
-          <input 
-            type="text"
-            id="player1"
-            value={player1Query}
-            onChange={(e) => setPlayer1Query(e.target.value)}
-            placeholder="Search for a player..."
-            autoComplete="off"
-          />
-          {player1Results.length > 0 && (
-            <div className="search-results">
-              {player1Results.map(p => (
-                <div key={p.player_id} className="search-result-item" onClick={() => handleSelectPlayer(p, 1)}>
-                  {p.name}
-                </div>
-              ))}
-            </div>
-          )}
+      <h2>{comparisonData.player1_stats.player_name} vs {comparisonData.player2_stats.player_name}</h2>
+      
+      {/* Player Comparison Cards */}
+      <div className="comparison-area">
+        {renderPlayerCard(comparisonData.player1_stats)}
+        <div className="h2h-results">
+          <h4>Head-to-Head</h4>
+          <div className="h2h-score">
+            <span>{comparisonData.h2h.player1_wins} - {comparisonData.h2h.player2_wins}</span>
+          </div>
+          <span>({comparisonData.h2h.total_completed_duels} Completed Duels)</span>
         </div>
-        <div className="player-search-container">
-          <label htmlFor="player2">Player 2</label>
-          <input 
-            type="text"
-            id="player2"
-            value={player2Query}
-            onChange={(e) => setPlayer2Query(e.target.value)}
-            placeholder="Search for a player..."
-            autoComplete="off"
-          />
-          {player2Results.length > 0 && (
-            <div className="search-results">
-              {player2Results.map(p => (
-                <div key={p.player_id} className="search-result-item" onClick={() => handleSelectPlayer(p, 2)}>
-                  {p.name}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        {renderPlayerCard(comparisonData.player2_stats)}
       </div>
 
-      {loading && <div className="pvp-loading">Loading Comparison...</div>}
-      {error && <div className="pvp-error">{error}</div>}
-
-      {comparisonData && (
-        <div className="comparison-area">
-          {renderPlayerCard(comparisonData.player1_stats)}
-          <div className="h2h-results">
-            <h4>Head-to-Head</h4>
-            <div className="h2h-score">
-              <span>{comparisonData.h2h.player1_wins} - {comparisonData.h2h.player2_wins}</span>
-            </div>
-            <span>({comparisonData.h2h.total_completed_duels} Duels)</span>
+      {/* Duels-Only Leaderboard */}
+      {duelsLeaderboardData && (
+        <div className="duels-leaderboard-container">
+          <h3>Head-to-Head Leaderboard</h3>
+          <p>All-time high scores comparison between these two players</p>
+          <div className="leaderboard-grid">
+            <LeaderboardCard title="Most Makes" leaders={duelsLeaderboardData?.top_makes} />
+            <LeaderboardCard title="Best Streak" leaders={duelsLeaderboardData?.top_streaks} />
+            <LeaderboardCard title="Makes/Min" leaders={duelsLeaderboardData?.top_makes_per_minute} />
+            <LeaderboardCard title="Fastest 21" leaders={duelsLeaderboardData?.fastest_21} />
           </div>
-          {renderPlayerCard(comparisonData.player2_stats)}
         </div>
       )}
+
+      {/* Duel History Table */}
+      <div className="duel-history-container">
+        <h3>Duel History</h3>
+        <div className="duel-table-wrapper">
+          <table className="duel-history-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>{comparisonData.player1_stats.player_name}</th>
+                <th>{comparisonData.player2_stats.player_name}</th>
+                <th>Status</th>
+                <th>Winner</th>
+              </tr>
+            </thead>
+            <tbody>
+              {comparisonData.duel_history && comparisonData.duel_history.length > 0 ? (
+                comparisonData.duel_history.map((duel) => {
+                  const player1Score = getDuelResult(duel, player1Id);
+                  const player2Score = getDuelResult(duel, player2Id);
+                  const winnerName = duel.winner_id === parseInt(player1Id) 
+                    ? comparisonData.player1_stats.player_name
+                    : duel.winner_id === parseInt(player2Id)
+                    ? comparisonData.player2_stats.player_name
+                    : '-';
+                  
+                  return (
+                    <tr key={duel.duel_id}>
+                      <td>{formatDate(duel.created_at)}</td>
+                      <td className="score-cell">{player1Score}</td>
+                      <td className="score-cell">{player2Score}</td>
+                      <td>
+                        <span className={`status-badge status-${duel.status}`}>
+                          {getDuelStatus(duel)}
+                        </span>
+                      </td>
+                      <td className="winner-cell">{winnerName}</td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan="5" className="empty-state">
+                    No duels found between these players
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };
