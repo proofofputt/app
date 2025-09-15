@@ -36,9 +36,16 @@ function Dashboard() {
       const detailsRow = wrapper.querySelector('.session-table .session-details-row');
 
       if (header && parentRow && detailsRow) {
-        const requiredHeight = header.offsetHeight + parentRow.offsetHeight + detailsRow.offsetHeight + 2;
-        wrapper.style.maxHeight = `${requiredHeight}px`;
-        wrapper.scrollTop = parentRow.offsetTop - header.offsetHeight;
+        // Calculate available space in the wrapper and use most of it for the expanded view
+        const wrapperHeight = wrapper.clientHeight;
+        const headerHeight = header.offsetHeight;
+        const parentRowHeight = parentRow.offsetHeight;
+        const bottomMargin = 40; // Leave some margin at the bottom
+
+        // Set a generous height that uses most of the available space
+        const expandedHeight = wrapperHeight - bottomMargin;
+        wrapper.style.maxHeight = `${expandedHeight}px`;
+        wrapper.scrollTop = parentRow.offsetTop - headerHeight;
       }
     } else {
       wrapper.style.maxHeight = null;
