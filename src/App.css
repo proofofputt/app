@@ -241,15 +241,40 @@ main {
   display: flex; /* Make it a flex container */
   flex-direction: column; /* Stack children vertically */
   position: relative; /* For absolute positioning of the button */
+  flex-grow: 1; /* Allow to grow and fill remaining space */
+  min-height: 0; /* Important for flex children to shrink */
 }
 
 .session-table-wrapper {
-  /* Set max-height to roughly show 5 data rows + 1 header row.
-     (1rem font + 1.5rem padding) * 6 rows = 15rem. Add a bit for borders. */
-  max-height: 16rem;
+  flex-grow: 1; /* Grow to fill remaining space */
   overflow-y: auto;
   margin-top: 1rem; /* Moved from .session-table to here */
   transition: max-height 0.4s ease-in-out;
+  background-color: var(--surface-color);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  min-height: 300px; /* Minimum height for usability */
+  position: relative;
+}
+
+/* Add subtle grey background pattern for empty table space */
+.session-table-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.02);
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(255, 255, 255, 0.01) 10px,
+    rgba(255, 255, 255, 0.01) 20px
+  );
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* The height of the wrapper when a session is expanded is now controlled
@@ -257,6 +282,8 @@ main {
 .session-table {
   width: 100%;
   border-collapse: collapse;
+  position: relative;
+  z-index: 1;
   /* margin-top: 1rem; Replaced by margin-top on .session-table-wrapper */
 }
 

@@ -77,8 +77,12 @@
 
 .dashboard-main {
   width: 100%;
-  padding: 40px 10.5%;
+  padding: 40px 10.5% 20px 10.5%; /* Reduced bottom padding for more table space */
   box-sizing: border-box;
+  height: calc(100vh - 68px); /* Account for header height */
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .dashboard-grid {
