@@ -169,7 +169,7 @@
 
 .duels-table {
   width: 100%; /* Ensure table uses full container width */
-  min-width: 600px; /* Reduced minimum width to fit within page margins */
+  min-width: 500px; /* Further reduced to prevent horizontal overflow */
   table-layout: fixed; /* Fixed layout for consistent column sizing */
   border-collapse: collapse; /* Clean borders */
 }
