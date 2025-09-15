@@ -284,6 +284,7 @@ main {
   border-collapse: collapse;
   position: relative;
   z-index: 1;
+  background-color: var(--masters-green-light); /* Use hover color as default row background */
   /* margin-top: 1rem; Replaced by margin-top on .session-table-wrapper */
 }
 
@@ -427,6 +428,8 @@ main {
   flex-grow: 1; /* Allow grid to expand to fill available space */
   align-content: start; /* Align content to the top */
   justify-content: center; /* Center the grid horizontally */
+  text-align: center; /* Center-align all content within the grid */
+  margin-bottom: 2rem; /* Add margin at bottom of session details */
 }
 
 /* Removed the extra margin on first column */
@@ -439,6 +442,7 @@ main {
   font-weight: 600;
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 0.5rem;
+  text-align: center; /* Center-align section headers */
 }
 
 .details-section h5 {
@@ -447,12 +451,14 @@ main {
   font-size: 1.1rem; /* Slightly smaller than category but bigger than default */
   color: var(--text-white);
   font-weight: 500;
+  text-align: center; /* Center-align subsection headers */
 }
 
 .details-section ul {
   list-style-type: none;
   padding: 0;
   margin: 0;
+  text-align: center; /* Center-align list items */
 }
 
 .details-section ul.putt-list {
