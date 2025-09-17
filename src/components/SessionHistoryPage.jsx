@@ -98,13 +98,14 @@ const SessionHistoryPage = () => {
             <tbody>
               {sessionsToShow.length > 0 ? (
                 sessionsToShow.map((session, index) => (
-                  <SessionRow 
-                    key={session.session_id} 
-                    session={session} 
-                    playerTimezone={playerData.timezone} 
+                  <SessionRow
+                    key={session.session_id}
+                    session={session}
+                    playerTimezone={playerData.timezone}
                     isLocked={!isSubscribed && !(currentPage === 1 && index === 0)}
                     isExpanded={expandedSessionId === session.session_id}
                     onToggleExpand={handleToggleExpand}
+                    sessionIndex={(currentPage - 1) * 20 + index + 1}
                   />
                 ))
               ) : (

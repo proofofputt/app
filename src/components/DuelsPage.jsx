@@ -96,22 +96,13 @@ const DuelRow = ({ duel, onRespond, onSubmitSession, onRematch, onCancel, curren
         
         if (duel.status === 'active') {
             return (
-                <div className="duel-actions">
-                    <button 
-                        onClick={() => onSubmitSession(duel)} 
-                        className="btn btn-sm btn-secondary"
-                        title="Copy parameters to paste into desktop app"
-                    >
-                        Copy Parameters
-                    </button>
-                    <button 
-                        onClick={() => handleOpenApp(duel)} 
-                        className="btn btn-sm btn-primary"
-                        title="Try to open desktop app directly"
-                    >
-                        Open App
-                    </button>
-                </div>
+                <button
+                    onClick={() => onSubmitSession(duel)}
+                    className="btn btn-sm btn-secondary"
+                    title="Copy parameters to paste into desktop app"
+                >
+                    Details
+                </button>
             );
         }
         
@@ -145,9 +136,6 @@ const DuelRow = ({ duel, onRespond, onSubmitSession, onRematch, onCancel, curren
                 <>
                     <td className="score-cell">
                         <span className="score-badge your-score">{yourScore}</span>
-                    </td>
-                    <td className="score-cell">
-                        <span className="score-badge opponent-score">{opponentScore}</span>
                     </td>
                     <td>
                         {duel.expires_at ? (
@@ -436,7 +424,6 @@ const DuelsPage = () => {
                                 {title === 'Active Duels' ? (
                                     <>
                                         <th data-col="your-score">Your Score</th>
-                                        <th data-col="opponent-score">Opponent Score</th>
                                         <th>Expires</th>
                                         <th>Time Limit</th>
                                         <th data-col="actions">Actions</th>

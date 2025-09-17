@@ -172,6 +172,7 @@ function Dashboard() {
                       isLocked={false}
                       isExpanded={expandedSessionId === session.session_id}
                       onToggleExpand={handleToggleExpand}
+                      sessionIndex={paginatedSessions.totalSessions - (paginatedSessions.currentPage - 1) * paginatedSessions.pageSize - index}
                     />
                   ))
                 ) : (

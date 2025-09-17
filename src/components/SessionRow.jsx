@@ -90,7 +90,7 @@ const ConsecutiveCategory = ({ consecutiveData }) => {
   );
 };
 
-const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExpand }) => {
+const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExpand, sessionIndex }) => {
   // Safely parse JSON data from the session
   const parseJsonData = (jsonString) => {
     if (!jsonString) return null;
@@ -107,7 +107,9 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
     if (isNaN(date)) {
         return 'N/A';
     }
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    const dateFormatted = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const sessionNumber = sessionIndex !== undefined ? sessionIndex + 1 : '';
+    return sessionNumber ? `${dateFormatted} #${sessionNumber}` : dateFormatted;
   };
 
   const formatDuration = (seconds) => {
