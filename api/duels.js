@@ -10,15 +10,22 @@ const pool = new Pool({
 function verifyToken(req) {
   return new Promise((resolve) => {
     const authHeader = req.headers.authorization;
+    console.log('[verifyToken] Auth header:', authHeader ? 'present' : 'missing');
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('[verifyToken] Invalid or missing Bearer token');
       return resolve(null);
     }
 
     const token = authHeader.split(' ')[1];
+    console.log('[verifyToken] Token extracted, length:', token ? token.length : 0);
+
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
       if (err) {
+        console.log('[verifyToken] JWT verification failed:', err.message);
         return resolve(null);
       }
+      console.log('[verifyToken] JWT verification successful for user:', decoded.player_id);
       resolve(decoded);
     });
   });

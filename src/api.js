@@ -31,8 +31,10 @@ const getAuthToken = () => {
   try {
     // Always get the authToken from localStorage (this is where it's actually stored)
     const token = localStorage.getItem('authToken');
+    console.log('[getAuthToken] Token retrieved:', token ? 'present' : 'missing');
     return token;
-  } catch {
+  } catch (error) {
+    console.error('[getAuthToken] Error retrieving token:', error);
     return null;
   }
 };
@@ -42,6 +44,9 @@ const getHeaders = () => {
   const token = getAuthToken();
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
+    console.log('[getHeaders] Authorization header set with token');
+  } else {
+    console.warn('[getHeaders] No token available - request will be unauthenticated');
   }
   return headers;
 };
@@ -175,8 +180,16 @@ export const apiGetPlayerVsPlayerDuels = (player1Id, player2Id) =>
 export const apiGetPlayerVsPlayerLeaderboard = (player1Id, player2Id) => 
   fetch(`${API_BASE_URL}/players/${player1Id}/vs/${player2Id}/leaderboard`, { headers: getHeaders() }).then(handleResponse);
 
-export const apiCreateDuel = (duelData) => 
-  fetch(`${API_BASE_URL}/duels`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(duelData) }).then(handleResponse);
+export const apiCreateDuel = (duelData) => {
+  console.log('[apiCreateDuel] Creating duel with data:', duelData);
+  const headers = getHeaders();
+  console.log('[apiCreateDuel] Request headers:', headers);
+  return fetch(`${API_BASE_URL}/duels`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(duelData)
+  }).then(handleResponse);
+};
 
 export const apiRespondToDuel = (duelId, playerId, response) => {
   console.log('[apiRespondToDuel] Request:', { duelId, playerId, response, url: `${API_BASE_URL}/duels/${duelId}/respond` });
