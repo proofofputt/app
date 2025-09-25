@@ -2,6 +2,7 @@ import { Pool } from 'pg';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { setCORSHeaders } from '../utils/cors.js';
+// import { detectAchievements } from '../utils/achievement-detector.js'; // DISABLED FOR TESTING
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -369,9 +370,21 @@ export default async function handler(req, res) {
         console.log(`[upload-session] Skipping player stats update for IRL league session - not counting towards player ${player_id}'s history`);
       }
 
-      const response = { 
-        success: true, 
-        message: 'Session uploaded successfully', 
+      // Detect achievements after successful session upload (skip for IRL league sessions) - DISABLED FOR TESTING
+      let detectedAchievements = [];
+      /* if (!isIRLLeague) {
+        try {
+          detectedAchievements = await detectAchievements(client, player_id, statsData, finalSessionId, duel_id, league_round_id);
+          console.log(`[upload-session] Achievement detection completed: ${detectedAchievements.length} new achievements found`);
+        } catch (achievementError) {
+          console.error('[upload-session] Error during achievement detection (non-blocking):', achievementError);
+          // Achievement detection errors don't block session upload
+        }
+      } */
+
+      const response = {
+        success: true,
+        message: 'Session uploaded successfully',
         session_id: finalSessionId,
         uploaded_at: new Date().toISOString()
       };
@@ -387,7 +400,19 @@ export default async function handler(req, res) {
         response.league_round_id = league_round_id;
         response.league_linked = true;
       }
-      
+
+      // Add achievement information to response if any were detected - DISABLED FOR TESTING
+      /* if (detectedAchievements.length > 0) {
+        response.achievements = detectedAchievements.map(achievement => ({
+          type: achievement.type,
+          value: achievement.value,
+          rarity: achievement.data.rarity_tier,
+          description: achievement.data.description,
+          queue_id: achievement.queue_id
+        }));
+        response.achievement_count = detectedAchievements.length;
+      } */
+
       return res.status(200).json(response);
     } finally {
       client.release();

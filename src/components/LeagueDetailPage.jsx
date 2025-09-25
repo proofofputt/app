@@ -7,6 +7,7 @@ import EditLeagueModal from './EditLeagueModal.jsx';
 import CountdownTimer from './CountdownTimer.jsx';
 import InlineInviteForm from './InlineInviteForm.jsx';
 import LeaderboardCard from './LeaderboardCard.jsx';
+// import LeagueAchievement from './LeagueAchievement.jsx'; // DISABLED FOR TESTING
 import { tryOpenAppWithParameters } from '../../utils/appLauncher.js';
 import '../pages/Leagues.css'; // Reusing the same CSS file
 
@@ -570,6 +571,15 @@ const LeagueDetailPage = () => {
           </div>
         </div>
       )}
+
+      {/* Player's League Performance Summary - DISABLED FOR TESTING */}
+      {/* {isMember && playerData?.player_id && (
+        <LeagueAchievement
+          playerId={playerData.player_id}
+          leagueId={leagueId}
+          leagueData={league}
+        />
+      )} */}
 
       <div className="league-members-section">
         <div className="card">
