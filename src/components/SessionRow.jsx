@@ -188,7 +188,7 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
         <tr className="session-details-row">
           <td colSpan="10">
             <div className="session-details">
-              <h3>Session Details</h3>
+              <h3 className="session-details-header">Session Details</h3>
               {hasDetailedData ? (
                 <div className="details-grid">
                   <DetailCategory

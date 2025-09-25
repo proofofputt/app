@@ -127,6 +127,19 @@
   margin-left: 2rem;
 }
 
+/* Session Details Header Styling */
+.session-history-page .session-details-header {
+  text-align: center;
+  color: var(--primary-color);
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin: 0.4rem 0; /* Reduced by 80% from default 2rem to 0.4rem */
+  padding-bottom: 0.5rem;
+  border-bottom: 3px solid var(--masters-green-medium);
+  width: 100%;
+  position: relative;
+}
+
 .upgrade-prompt-sessions {
   background-color: var(--surface-color);
   border: 1px solid var(--primary-color);
