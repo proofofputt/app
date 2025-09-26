@@ -8,5 +8,11 @@
       "source": "/((?!api/|assets/|_next/|favicon.ico|logo.svg|logo.png|POP.Proof_Of_Putt.Log.576.png).*)",
       "destination": "/index.html"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/process-certificates",
+      "schedule": "0 21 * * 0"
+    }
   ]
 }

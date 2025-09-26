@@ -109,6 +109,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
   margin-top: 1.5rem;
+  align-items: start; /* Align tables at the start to match the upper section */
 }
 
 .summary-table-container {
@@ -116,6 +117,13 @@
   border-radius: 12px;
   padding: 1rem 1.5rem;
   border: 1px solid var(--border-color);
+  width: 100%; /* Ensure full width utilization */
+  box-sizing: border-box; /* Include padding in width calculation */
+}
+
+.summary-table-container .career-stats-table {
+  width: 100%; /* Ensure table takes full container width */
+  margin: 0; /* Remove any default margins */
 }
 
 .summary-table-container h3 {

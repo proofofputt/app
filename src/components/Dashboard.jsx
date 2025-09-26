@@ -70,6 +70,32 @@ function Dashboard() {
     setSessionsLoading(true);
     try {
       const sessionData = await apiGetPlayerSessions(playerData.player_id, page, sessionsPerPage);
+
+      // Calculate daily session numbers for privacy-friendly display
+      if (sessionData && sessionData.sessions) {
+        const calculateDailySessionNumbers = (sessions) => {
+          const dailyCounters = {};
+          const sessionDayNumbers = {};
+
+          // Sort sessions by date (newest first, same as display order)
+          const sortedSessions = [...sessions].sort((a, b) => new Date(b.created_at || b.start_time) - new Date(a.created_at || a.start_time));
+
+          sortedSessions.forEach(session => {
+            const sessionDate = session.created_at || session.start_time;
+            if (sessionDate) {
+              const dateKey = new Date(sessionDate).toDateString(); // "Wed Sep 25 2024"
+              dailyCounters[dateKey] = (dailyCounters[dateKey] || 0) + 1;
+              sessionDayNumbers[session.session_id] = dailyCounters[dateKey];
+            }
+          });
+
+          return sessionDayNumbers;
+        };
+
+        const dailySessionNumbers = calculateDailySessionNumbers(sessionData.sessions);
+        sessionData.dailySessionNumbers = dailySessionNumbers;
+      }
+
       setPaginatedSessions(sessionData);
     } catch (error) {
       console.error('Failed to load paginated sessions:', error);
@@ -172,7 +198,7 @@ function Dashboard() {
                       isLocked={false}
                       isExpanded={expandedSessionId === session.session_id}
                       onToggleExpand={handleToggleExpand}
-                      sessionIndex={paginatedSessions.totalSessions - (paginatedSessions.currentPage - 1) * paginatedSessions.pageSize - index}
+                      dailySessionNumber={paginatedSessions.dailySessionNumbers?.[session.session_id]}
                     />
                   ))
                 ) : (

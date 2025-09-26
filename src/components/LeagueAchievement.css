@@ -1,0 +1,193 @@
+/* League Performance Summary Styling */
+.league-achievement {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.performance-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.performance-header h4 {
+  margin: 0;
+  color: var(--primary-color);
+  font-size: 1.2rem;
+}
+
+.rounds-completed {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.performance-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.stat-group {
+  background-color: var(--background-color);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.stat-group h5 {
+  margin: 0 0 1rem 0;
+  color: var(--primary-color);
+  font-size: 1rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding: 0.25rem 0;
+}
+
+.stat-row:last-child {
+  margin-bottom: 0;
+}
+
+.stat-label {
+  font-weight: 500;
+  color: var(--text-color-secondary);
+  font-size: 0.9rem;
+}
+
+.stat-value {
+  font-weight: bold;
+  color: var(--text-color-primary);
+  font-size: 1rem;
+  font-family: monospace;
+}
+
+.performance-note {
+  text-align: center;
+  color: var(--text-color-secondary);
+  font-style: italic;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.performance-note small {
+  font-size: 0.8rem;
+}
+
+/* Loading and Error States */
+.performance-loading,
+.performance-error {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-color-secondary);
+}
+
+.performance-error {
+  color: var(--error-color, #dc3545);
+}
+
+.no-performance-data {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-color-secondary);
+}
+
+.no-performance-data p {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-color-primary);
+}
+
+.no-performance-data small {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .performance-header {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .performance-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .stat-group {
+    padding: 0.75rem;
+  }
+
+  .stat-row {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .stat-row:last-child {
+    border-bottom: none;
+  }
+}
+
+/* Compact version for use in certificate details */
+.league-achievement.compact {
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.league-achievement.compact .performance-header {
+  margin-bottom: 1rem;
+}
+
+.league-achievement.compact .performance-header h4 {
+  font-size: 1rem;
+}
+
+.league-achievement.compact .performance-stats-grid {
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.league-achievement.compact .stat-group {
+  padding: 0.75rem;
+}
+
+.league-achievement.compact .stat-group h5 {
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.league-achievement.compact .stat-row {
+  margin-bottom: 0.5rem;
+}
+
+.league-achievement.compact .stat-label,
+.league-achievement.compact .stat-value {
+  font-size: 0.85rem;
+}
+
+@media (max-width: 480px) {
+  .league-achievement.compact .performance-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

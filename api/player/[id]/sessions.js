@@ -73,8 +73,21 @@ export default async function handler(req, res) {
           );
           totalSessions = parseInt(countResult.rows[0].count);
           
-          // Build query with pagination support
-          let query = 'SELECT session_id, data, stats_summary, created_at FROM sessions WHERE player_id = $1 ORDER BY created_at DESC';
+          // Build query with pagination support - include duel context and prioritize updated_at
+          let query = `
+            SELECT
+              s.session_id,
+              s.data,
+              s.stats_summary,
+              s.created_at,
+              s.updated_at,
+              COALESCE(d1.duel_id, d2.duel_id) as duel_id
+            FROM sessions s
+            LEFT JOIN duels d1 ON s.session_id = d1.duel_creator_session_id
+            LEFT JOIN duels d2 ON s.session_id = d2.duel_invited_player_session_id
+            WHERE s.player_id = $1
+            ORDER BY COALESCE(s.updated_at, s.created_at, NOW()) DESC
+          `;
           const params = [parseInt(playerId)];
           
           // Handle pagination (page parameter takes precedence over simple limit)
@@ -105,11 +118,14 @@ export default async function handler(req, res) {
             const totalMakes = data.total_makes || analyticStats.total_makes || stats.total_makes || 0;
             const totalMisses = data.total_misses || analyticStats.total_misses || stats.total_misses || (totalPutts - totalMakes);
             const sessionDurationSeconds = data.session_duration_seconds || sessionInfo.session_duration_seconds || stats.session_duration || 0;
-            
+
+            // Prioritize updated_at over created_at for proper date display
+            const sessionTimestamp = row.updated_at || row.created_at || new Date().toISOString();
+
             return {
               // Legacy format for compatibility
               id: index + 1,
-              date: row.created_at || new Date().toISOString(),
+              date: sessionTimestamp,
               duration: formatDuration(sessionDurationSeconds), // Use formatted MM:SS duration
               total_putts: totalPutts,
               makes: totalMakes,
@@ -120,8 +136,10 @@ export default async function handler(req, res) {
               
               // New format expected by SessionRow component
               session_id: row.session_id,
-              start_time: row.created_at || new Date().toISOString(),
-              session_date: row.created_at || new Date().toISOString(),
+              start_time: sessionTimestamp,
+              session_date: sessionTimestamp,
+              created_at: sessionTimestamp,
+              duel_id: row.duel_id || null,
               session_duration: sessionDurationSeconds,
               total_makes: totalMakes,
               total_misses: totalMisses,

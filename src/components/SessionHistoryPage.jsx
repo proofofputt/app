@@ -79,6 +79,28 @@ const SessionHistoryPage = () => {
   const sessionsToShow = sessions;
   const shouldShowUpgradePrompt = !isSubscribed && sessions.length > 1;
 
+  // Calculate daily session numbers for privacy-friendly display
+  const calculateDailySessionNumbers = (sessions) => {
+    const dailyCounters = {};
+    const sessionDayNumbers = {};
+
+    // Sort sessions by date (newest first, same as display order)
+    const sortedSessions = [...sessions].sort((a, b) => new Date(b.created_at || b.start_time) - new Date(a.created_at || a.start_time));
+
+    sortedSessions.forEach(session => {
+      const sessionDate = session.created_at || session.start_time;
+      if (sessionDate) {
+        const dateKey = new Date(sessionDate).toDateString(); // "Wed Sep 25 2024"
+        dailyCounters[dateKey] = (dailyCounters[dateKey] || 0) + 1;
+        sessionDayNumbers[session.session_id] = dailyCounters[dateKey];
+      }
+    });
+
+    return sessionDayNumbers;
+  };
+
+  const dailySessionNumbers = calculateDailySessionNumbers(sessionsToShow);
+
   return (
     <div className="session-history-page">
       <div className="page-header">
@@ -105,7 +127,7 @@ const SessionHistoryPage = () => {
                     isLocked={!isSubscribed && !(currentPage === 1 && index === 0)}
                     isExpanded={expandedSessionId === session.session_id}
                     onToggleExpand={handleToggleExpand}
-                    sessionIndex={(currentPage - 1) * 20 + index + 1}
+                    dailySessionNumber={dailySessionNumbers[session.session_id]}
                   />
                 ))
               ) : (

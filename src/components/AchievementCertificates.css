@@ -1,0 +1,296 @@
+/* Achievement Certificates Styling */
+.achievement-certificates {
+  margin-top: 2rem;
+}
+
+.certificates-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.certificates-header h3 {
+  margin: 0;
+  color: var(--primary-color);
+}
+
+.certificates-count {
+  color: var(--text-color-secondary);
+  font-size: 0.9rem;
+}
+
+.certificates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.certificate-card {
+  background-color: var(--surface-color);
+  border: 2px solid;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.2s ease;
+}
+
+.certificate-card:hover {
+  transform: translateY(-2px);
+}
+
+.certificate-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, var(--background-color) 0%, var(--surface-color) 100%);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.achievement-icon {
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+}
+
+.achievement-info {
+  flex: 1;
+}
+
+.achievement-title {
+  margin: 0 0 0.25rem 0;
+  color: var(--primary-color);
+  font-size: 1.1rem;
+}
+
+.achievement-category {
+  margin: 0;
+  color: var(--text-color-secondary);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.rarity-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.certificate-body {
+  padding: 1.5rem;
+}
+
+.achievement-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--primary-color);
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.achievement-description {
+  text-align: center;
+  color: var(--text-color-secondary);
+  margin-bottom: 1.5rem;
+  font-style: italic;
+}
+
+.certificate-dates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: var(--background-color);
+  border-radius: 8px;
+}
+
+.date-item {
+  text-align: center;
+}
+
+.date-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-color-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.25rem;
+}
+
+.date-value {
+  display: block;
+  font-weight: bold;
+  color: var(--text-color-primary);
+}
+
+.blockchain-info {
+  margin-bottom: 1rem;
+}
+
+.blockchain-status {
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.verified {
+  color: var(--success-color, #28a745);
+  font-weight: bold;
+}
+
+.pending {
+  color: var(--warning-color, #ffc107);
+  font-weight: bold;
+}
+
+.blockchain-details {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+}
+
+.block-height {
+  font-family: monospace;
+  background-color: var(--background-color);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.details-toggle {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-color-primary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.details-toggle:hover {
+  background-color: var(--masters-green-light);
+}
+
+.certificate-details {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.detail-item:last-child {
+  margin-bottom: 0;
+}
+
+.detail-label {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+}
+
+.detail-value {
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: var(--text-color-primary);
+}
+
+.cert-id {
+  color: var(--primary-color);
+}
+
+.hash {
+  color: var(--text-color-secondary);
+}
+
+.certificates-footer {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.blockchain-note {
+  color: var(--text-color-secondary);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+/* Empty and upgrade prompt states */
+.certificates-upgrade-prompt,
+.certificates-empty {
+  text-align: center;
+  padding: 2rem;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+}
+
+.certificates-upgrade-prompt h3,
+.certificates-empty h3 {
+  margin-top: 0;
+  color: var(--primary-color);
+}
+
+.upgrade-info {
+  margin: 1.5rem 0;
+  text-align: left;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.upgrade-info ul {
+  list-style-position: inside;
+  padding-left: 0;
+}
+
+.upgrade-info li {
+  margin-bottom: 0.5rem;
+}
+
+.upcoming-achievements {
+  margin: 1.5rem 0;
+  text-align: left;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.upcoming-achievements h4 {
+  color: var(--primary-color);
+  text-align: center;
+}
+
+.upcoming-achievements ul {
+  list-style-position: inside;
+  padding-left: 0;
+}
+
+.upcoming-achievements li {
+  margin-bottom: 0.5rem;
+}
+
+.certificates-loading,
+.certificates-error {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-color-secondary);
+}
+
+.certificates-error {
+  color: var(--error-color, #dc3545);
+}

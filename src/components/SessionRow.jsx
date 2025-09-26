@@ -90,7 +90,7 @@ const ConsecutiveCategory = ({ consecutiveData }) => {
   );
 };
 
-const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExpand, sessionIndex }) => {
+const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExpand, dailySessionNumber }) => {
   // Safely parse JSON data from the session
   const parseJsonData = (jsonString) => {
     if (!jsonString) return null;
@@ -108,8 +108,7 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
         return 'N/A';
     }
     const dateFormatted = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const sessionNumber = sessionIndex !== undefined ? sessionIndex + 1 : '';
-    return sessionNumber ? `${dateFormatted} #${sessionNumber}` : dateFormatted;
+    return dailySessionNumber ? `${dateFormatted} #${dailySessionNumber}` : dateFormatted;
   };
 
   const formatDuration = (seconds) => {
@@ -174,12 +173,12 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
             {isLocked ? '🔒' : (isExpanded ? '▼' : '▶')}
           </button>
         </td>
-        <td>{formatDate(session.created_at)}</td>
+        <td>{formatDate(session.created_at || session.start_time)}</td>
         <td>{formatDuration(session.session_duration ?? session.duration)}</td>
         <td>{session.makes ?? session.total_makes ?? 0}</td>
         <td>{session.misses ?? session.total_misses ?? 0}</td>
         <td>{session.best_streak || 0}</td>
-        <td>{session.fastest_21_makes_seconds ? `${Math.round(session.fastest_21_makes_seconds)}s` : 'N/A'}</td>
+        <td>{session.fastest_21_makes ? `${Math.round(session.fastest_21_makes)}s` : 'N/A'}</td>
         <td>{session.putts_per_minute?.toFixed(1) ?? 'N/A'}</td>
         <td>{session.makes_per_minute?.toFixed(1) ?? 'N/A'}</td>
         <td>{session.most_makes_in_60_seconds || 0}</td>
