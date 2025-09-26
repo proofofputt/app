@@ -108,23 +108,36 @@ export default async function handler(req, res) {
 
           // Calculate daily session numbers for each session
           const calculateDailySessionNumbers = (rows) => {
+            const dailyTotals = {};
             const dailyCounters = {};
             const sessionNumbers = {};
 
-            // Process rows in chronological order (newest first, same as display order)
+            // First pass: count total sessions per day
             rows.forEach((row) => {
               const timestamp = row.updated_at || row.created_at || new Date().toISOString();
               const date = new Date(timestamp);
               const dateKey = date.toDateString(); // "Thu Sep 26 2024"
 
-              // Increment counter for this date
-              if (!dailyCounters[dateKey]) {
-                dailyCounters[dateKey] = 0;
+              if (!dailyTotals[dateKey]) {
+                dailyTotals[dateKey] = 0;
               }
-              dailyCounters[dateKey] += 1;
+              dailyTotals[dateKey] += 1;
+            });
 
-              // Store session number for this session
+            // Second pass: assign numbers in reverse (newest = highest number)
+            rows.forEach((row) => {
+              const timestamp = row.updated_at || row.created_at || new Date().toISOString();
+              const date = new Date(timestamp);
+              const dateKey = date.toDateString(); // "Thu Sep 26 2024"
+
+              // Initialize counter for this date if not exists
+              if (!dailyCounters[dateKey]) {
+                dailyCounters[dateKey] = dailyTotals[dateKey]; // Start from total count
+              }
+
+              // Store session number for this session (decrements so newest = highest)
               sessionNumbers[row.session_id] = dailyCounters[dateKey];
+              dailyCounters[dateKey] -= 1; // Decrement for next session
             });
 
             return sessionNumbers;
