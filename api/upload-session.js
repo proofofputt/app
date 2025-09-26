@@ -269,16 +269,15 @@ export default async function handler(req, res) {
         
         // Check if league round exists and player is a member of the league
         const roundResult = await client.query(`
-          SELECT 
-            lr.round_id, 
-            lr.league_id, 
+          SELECT
+            lr.round_id,
+            lr.league_id,
             lr.status as round_status,
             lr.start_time,
             lr.end_time,
             l.name as league_name,
             l.rules,
-            lm.membership_id,
-            lm.is_active as member_active
+            lm.player_id
           FROM league_rounds lr
           JOIN leagues l ON lr.league_id = l.league_id
           LEFT JOIN league_memberships lm ON (l.league_id = lm.league_id AND lm.player_id = $2)
@@ -297,7 +296,7 @@ export default async function handler(req, res) {
           }
           
           // Check if player is a member of the league
-          if (!roundInfo.membership_id || !roundInfo.member_active) {
+          if (!roundInfo.player_id) {
             console.log(`[upload-session] Warning: Player ${player_id} is not an active member of league for round ${league_round_id}`);
           } else {
             // Check if round is active (sessions can be submitted during active rounds)
