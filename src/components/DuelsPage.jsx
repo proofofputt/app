@@ -121,21 +121,9 @@ const DuelRow = ({ duel, onRespond, onSubmitSession, onRematch, onCancel, curren
         return <span className="text-muted">—</span>;
     };
 
-    // Calculate scores based on user perspective and duel status
-    let yourScore, opponentScore;
-
-    if (duel.status === 'active') {
-        // For active duels, show session scores from individual sessions
-        const yourSession = isCreator ? duel.creator_session : duel.invited_player_session;
-        const opponentSession = isCreator ? duel.invited_player_session : duel.creator_session;
-
-        yourScore = yourSession ? (yourSession.total_makes || 0) : 0;
-        opponentScore = opponentSession ? (opponentSession.total_makes || 0) : 0;
-    } else {
-        // For completed duels, use final duel scores
-        yourScore = isCreator ? (duel.creator_score || 0) : (duel.invited_player_score || 0);
-        opponentScore = isCreator ? (duel.invited_player_score || 0) : (duel.creator_score || 0);
-    }
+    // Calculate scores based on user perspective - API now provides calculated scores for both active and completed duels
+    const yourScore = isCreator ? (duel.creator_score || 0) : (duel.invited_player_score || 0);
+    const opponentScore = isCreator ? (duel.invited_player_score || 0) : (duel.creator_score || 0);
 
     return (
         <tr>
