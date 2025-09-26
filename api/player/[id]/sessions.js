@@ -105,7 +105,33 @@ export default async function handler(req, res) {
           }
           
           const result = await dbClient.query(query, params);
-          
+
+          // Calculate daily session numbers for each session
+          const calculateDailySessionNumbers = (rows) => {
+            const dailyCounters = {};
+            const sessionNumbers = {};
+
+            // Process rows in chronological order (newest first, same as display order)
+            rows.forEach((row) => {
+              const timestamp = row.updated_at || row.created_at || new Date().toISOString();
+              const date = new Date(timestamp);
+              const dateKey = date.toDateString(); // "Thu Sep 26 2024"
+
+              // Increment counter for this date
+              if (!dailyCounters[dateKey]) {
+                dailyCounters[dateKey] = 0;
+              }
+              dailyCounters[dateKey] += 1;
+
+              // Store session number for this session
+              sessionNumbers[row.session_id] = dailyCounters[dateKey];
+            });
+
+            return sessionNumbers;
+          };
+
+          const dailySessionNumbers = calculateDailySessionNumbers(result.rows);
+
           sessions = result.rows.map((row, index) => {
             const data = row.data || {};
             const stats = row.stats_summary || {};
@@ -122,6 +148,21 @@ export default async function handler(req, res) {
             // Prioritize updated_at over created_at for proper date display
             const sessionTimestamp = row.updated_at || row.created_at || new Date().toISOString();
 
+            // Format session date as "Sep 26, Session 3" instead of timestamp
+            const formatSessionDate = (timestamp, sessionNumber) => {
+              const date = new Date(timestamp);
+              const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+              const month = monthNames[date.getMonth()];
+              const day = date.getDate();
+
+              return `${month} ${day}, Session ${sessionNumber}`;
+            };
+
+            const sessionNumber = dailySessionNumbers[row.session_id] || 1;
+            const formattedSessionDate = formatSessionDate(sessionTimestamp, sessionNumber);
+
             return {
               // Legacy format for compatibility
               id: index + 1,
@@ -137,7 +178,7 @@ export default async function handler(req, res) {
               // New format expected by SessionRow component
               session_id: row.session_id,
               start_time: sessionTimestamp,
-              session_date: sessionTimestamp,
+              session_date: formattedSessionDate, // Use formatted date like "Sep 26, Session 3"
               created_at: sessionTimestamp,
               duel_id: row.duel_id || null,
               session_duration: sessionDurationSeconds,
