@@ -157,7 +157,7 @@ export default async function handler(req, res) {
               const month = monthNames[date.getMonth()];
               const day = date.getDate();
 
-              return `${month} ${day}, Session ${sessionNumber}`;
+              return `${month} ${day}, #${sessionNumber}`;
             };
 
             const sessionNumber = dailySessionNumbers[row.session_id] || 1;
