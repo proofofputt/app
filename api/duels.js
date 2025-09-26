@@ -63,9 +63,9 @@ async function handleGetDuels(req, res) {
       return res.status(400).json({ success: false, message: 'player_id is required' });
     }
 
-    // Get duels where player is involved (as challenger or challengee)
+    // Get duels where player is involved (as challenger or challengee) with session data
     const duelsResult = await client.query(`
-      SELECT 
+      SELECT
         d.duel_id,
         d.duel_creator_id,
         d.duel_invited_player_id,
@@ -82,10 +82,14 @@ async function handleGetDuels(req, res) {
         d.duel_creator_session_data,
         d.duel_invited_player_session_data,
         d.duel_creator_score,
-        d.duel_invited_player_score
+        d.duel_invited_player_score,
+        cs.data as creator_session_data,
+        ips.data as invited_player_session_data
       FROM duels d
       JOIN players creator ON d.duel_creator_id = creator.player_id
       LEFT JOIN players invited_player ON d.duel_invited_player_id = invited_player.player_id
+      LEFT JOIN sessions cs ON d.duel_creator_session_id = cs.session_id
+      LEFT JOIN sessions ips ON d.duel_invited_player_session_id = ips.session_id
       WHERE d.duel_creator_id = $1 OR d.duel_invited_player_id = $1
       ORDER BY d.created_at DESC
     `, [player_id]);
@@ -143,6 +147,20 @@ async function handleGetDuels(req, res) {
           displayInvitedPlayerName = originalContact.value; // Show phone directly
         }
       }
+
+      // Calculate individual scores from session data if available (for active duels)
+      let calculatedCreatorScore = duel.duel_creator_score;
+      let calculatedInvitedScore = duel.duel_invited_player_score;
+
+      // If duel is still active and we have session data but scores are 0, calculate from session data
+      if (duel.status === 'active') {
+        if (duel.creator_session_data && calculatedCreatorScore === 0) {
+          calculatedCreatorScore = duel.creator_session_data.total_makes || 0;
+        }
+        if (duel.invited_player_session_data && calculatedInvitedScore === 0) {
+          calculatedInvitedScore = duel.invited_player_session_data.total_makes || 0;
+        }
+      }
       
       return {
         duel_id: duel.duel_id,
@@ -158,8 +176,8 @@ async function handleGetDuels(req, res) {
         winner_id: duel.winner_id,
         time_limit_minutes: timeLimit, // Extract time limit for frontend
         putting_distance_feet: puttingDistance, // Extract putting distance for frontend
-        creator_score: duel.duel_creator_score,
-        invited_player_score: duel.duel_invited_player_score,
+        creator_score: calculatedCreatorScore,
+        invited_player_score: calculatedInvitedScore,
         creator_submitted_session_id: duel.duel_creator_session_id,
         invited_player_submitted_session_id: duel.duel_invited_player_session_id,
         creator_session: duel.duel_creator_session_id ? {
