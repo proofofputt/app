@@ -4,10 +4,10 @@
   This file adds container styles, hover effects, and specific header styles.
 */
 
-/* Add 10.5% margins to the entire career stats page content */
+/* Reduced margins for better space utilization */
 .career-stats-page {
-  margin-left: 21%;
-  margin-right: 21%;
+  margin-left: 10%;
+  margin-right: 10%;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -112,6 +112,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
   margin-top: 1.5rem;
+  margin-bottom: 2rem;
   align-items: start; /* Align tables at the start to match the upper section */
 }
 
@@ -234,6 +235,13 @@
 }
 
 /* Responsive adjustments for the full page */
+@media (max-width: 1200px) {
+  .career-stats-page {
+    margin-left: 7%;
+    margin-right: 7%;
+  }
+}
+
 @media (max-width: 1024px) {
   .career-stats-page {
     margin-left: 5%;
