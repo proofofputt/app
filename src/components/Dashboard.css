@@ -87,8 +87,8 @@
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(4, 1fr);  /* Force exactly 4 columns */
+  gap: 16px;  /* Reduced gap */
 }
 
 .dashboard-card {
@@ -187,6 +187,26 @@ p.stat-value {
   }
   
   .dashboard-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);  /* 2 columns on mobile */
+    gap: 12px;  /* Smaller gap on mobile */
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(4, 1fr);  /* Keep 4 columns even on very small screens */
+    gap: 8px;  /* Very small gap */
+  }
+
+  .stats-card {
+    padding: 0.25rem 0.5rem;  /* Even more compact padding */
+  }
+
+  .stats-card h3 {
+    font-size: 0.8rem;  /* Smaller font on very small screens */
+  }
+
+  .stat-value {
+    font-size: 0.9rem;  /* Smaller value font on very small screens */
   }
 }

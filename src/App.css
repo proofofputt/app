@@ -58,7 +58,7 @@ body {
 /* --- Header --- */
 .app-header {
   background-color: var(--surface-color);
-  padding: 2rem 2rem; /* Equal vertical and horizontal padding for balanced spacing */
+  padding: 1.5rem 2rem; /* Reduced vertical padding to accommodate larger logo */
   border-bottom: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
@@ -71,7 +71,7 @@ body {
 }
 
 .logo-img {
-  height: 68px; /* Adjust as needed */
+  height: 84px; /* Increased from 68px to 84px for larger logo */
   width: auto;
 }
 
@@ -91,6 +91,48 @@ body {
 .app-header nav a.btn:hover {
   background-color: #ff8c00; /* Orange background on hover */
   color: #000000; /* Black text on hover for better readability */
+}
+
+/* Responsive header for smaller screens */
+@media (max-width: 768px) {
+  .app-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+  }
+
+  .logo-link {
+    justify-content: center;
+  }
+
+  .app-header nav {
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .app-header nav .btn {
+    width: 100%;
+    text-align: center;
+    padding: 0.75rem;
+  }
+}
+
+/* Medium screen adjustments */
+@media (max-width: 920px) and (min-width: 769px) {
+  .app-header {
+    padding: 1rem 1.5rem;
+  }
+
+  .app-header nav {
+    gap: 0.5rem;
+  }
+
+  .app-header nav .btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
 }
 
 .user-info button {
@@ -210,27 +252,27 @@ main {
 }
 
 .stats-card {
-  padding: 1rem 1.5rem;
+  padding: 0.5rem 0.75rem;  /* Reduced padding */
   text-align: center;
 }
 
 .stats-card h3 {
   margin: 0;
   color: var(--primary-color); /* Changed from secondary text to primary (yellow) */
-  font-size: 1.5rem;
+  font-size: 1rem;  /* Reduced from 1.5rem */
   font-weight: 600;
   border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.5rem;
-  margin-bottom: 0.5rem;
+  padding-bottom: 0.25rem;  /* Reduced padding */
+  margin-bottom: 0.25rem;  /* Reduced margin */
 }
 
 .stat-value {
-  font-size: 1.5rem;
+  font-size: 1.1rem;  /* Reduced from 1.5rem */
   font-weight: bold;
   color: var(--text-white); /* Changed from yellow to white */
   margin: 0; /* p tags have margin by default, ensure it's off */
   background: transparent !important; /* Remove white background */
-  padding: 0.5rem;
+  padding: 0.25rem;  /* Reduced padding */
   border-radius: 6px;
 }
 

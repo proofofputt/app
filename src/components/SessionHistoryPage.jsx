@@ -48,7 +48,19 @@ const SessionHistoryPage = () => {
 
       if (sessionsResult.status === 'fulfilled') {
         const sessionData = sessionsResult.value;
-        setSessions(sessionData.sessions || []);
+        const sessions = sessionData.sessions || [];
+        // Ensure sessions are sorted newest first (highest session_id to lowest)
+        const sortedSessions = sessions.sort((a, b) => {
+          // Primary sort: by created_at/updated_at date (newest first)
+          const dateA = new Date(a.updated_at || a.created_at);
+          const dateB = new Date(b.updated_at || b.created_at);
+          if (dateB.getTime() !== dateA.getTime()) {
+            return dateB.getTime() - dateA.getTime();
+          }
+          // Secondary sort: by session_id (higher numbers first for same date)
+          return (b.session_id || '').localeCompare(a.session_id || '');
+        });
+        setSessions(sortedSessions);
         setTotalPages(sessionData.pagination?.total_pages || sessionData.total_pages || 1);
       } else {
         console.warn('Could not load session history (this is expected for new players):', sessionsResult.reason);
@@ -113,7 +125,7 @@ const SessionHistoryPage = () => {
             <thead>
               <tr>
                 <th style={{ width: '120px' }}>Details</th>
-                <th>Session Date</th><th>Duration</th><th>Makes</th><th>Misses</th>
+                <th>Session</th><th>Duration</th><th>Makes</th><th>Misses</th>
                 <th>Best Streak</th><th>Fastest 21</th><th>PPM</th><th>MPM</th><th>Most in 60s</th>
               </tr>
             </thead>
