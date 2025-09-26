@@ -8,6 +8,9 @@
 .career-stats-page {
   margin-left: 21%;
   margin-right: 21%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .career-stats-page .career-stats-table {
@@ -103,7 +106,7 @@
   margin-top: 0;
 }
 
-/* New styles for the summary tables at the bottom */
+/* New styles for the summary tables at the bottom - match stats-split-grid exactly */
 .summary-tables-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -113,27 +116,26 @@
 }
 
 .summary-table-container {
-  background-color: var(--surface-color);
-  border-radius: 12px;
-  padding: 1rem 1.5rem;
-  border: 1px solid var(--border-color);
-  width: 100%; /* Ensure full width utilization */
-  box-sizing: border-box; /* Include padding in width calculation */
+  /* Remove container styling to match stats tables exactly */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .summary-table-container .career-stats-table {
-  width: 100%; /* Ensure table takes full container width */
-  margin: 0; /* Remove any default margins */
+  /* Tables should inherit the same styling as stats tables */
+  width: 100%;
+  margin-top: 1.5rem;
+  margin-bottom: 0;
 }
 
 .summary-table-container h3 {
   margin-top: 0;
-  margin-bottom: 1rem;
+  margin-bottom: 0;
   color: var(--primary-color);
   text-align: center;
   font-size: 1.2rem;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.75rem;
+  font-weight: bold;
+  padding: 0.75rem 0;
 }
 
 .summary-table-container .career-stats-table a {
@@ -145,4 +147,114 @@
 .summary-table-container .career-stats-table a:hover {
   color: var(--sand-color-hover);
   text-decoration: underline;
+}
+
+/* Ensure consistent table cell alignment in summary tables */
+.summary-table-container .career-stats-table th,
+.summary-table-container .career-stats-table td {
+  text-align: left;
+  vertical-align: middle;
+  padding: 0.75rem 1rem;
+}
+
+.summary-table-container .career-stats-table th:not(:first-child),
+.summary-table-container .career-stats-table td:not(:first-child) {
+  text-align: center; /* Center align numeric/status columns */
+}
+
+/* Status badge styling for better alignment */
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.status-won { background-color: #22C55E; color: white; }
+.status-lost { background-color: #EF4444; color: white; }
+.status-draw { background-color: #6B7280; color: white; }
+.status-pending { background-color: #F59E0B; color: white; }
+.status-active { background-color: #3B82F6; color: white; }
+.status-completed { background-color: #10B981; color: white; }
+
+/* Responsive design for summary tables */
+@media (max-width: 768px) {
+  .summary-tables-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .summary-table-container h3 {
+    font-size: 1.1rem;
+    padding: 0.5rem 0;
+  }
+}
+
+/* Certificate section styling for when it's enabled */
+.certificates-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: var(--surface-color);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.certificates-section h3 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: var(--primary-color);
+  text-align: center;
+  font-size: 1.4rem;
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 0.75rem;
+}
+
+.certificates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.certificate-card {
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.certificate-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive adjustments for the full page */
+@media (max-width: 1024px) {
+  .career-stats-page {
+    margin-left: 5%;
+    margin-right: 5%;
+  }
+
+  .stats-split-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .career-stats-page {
+    margin-left: 2%;
+    margin-right: 2%;
+    gap: 1rem;
+  }
+
+  .certificates-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
 }
