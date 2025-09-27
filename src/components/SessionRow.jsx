@@ -175,21 +175,50 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
         </td>
         <td>{formatDate(session.created_at || session.start_time)}</td>
         <td>{
-          session.competition ? (
-            session.competition.type === 'duel' ? (
-              <span className="competition-badge duel-badge" title={`Duel vs ${session.competition.opponent_name}`}>
-                Duel
-              </span>
-            ) : (
-              <span className="competition-badge league-badge" title={`${session.competition.league_name} Round ${session.competition.round_number}`}>
-                League
-              </span>
-            )
-          ) : (
-            <span className="competition-badge practice-badge">
-              Practice
-            </span>
-          )
+          (() => {
+            // Debug logging to see session structure
+            if (process.env.NODE_ENV === 'development') {
+              console.log('Session object:', session);
+              console.log('Session competition:', session.competition);
+              console.log('Session duel_id:', session.duel_id);
+              console.log('Session league_id:', session.league_id);
+            }
+
+            // Check multiple possible ways duel sessions might be identified
+            if (session.competition) {
+              if (session.competition.type === 'duel') {
+                return (
+                  <span className="competition-badge duel-badge" title={`Duel vs ${session.competition.opponent_name}`}>
+                    Duel
+                  </span>
+                );
+              } else {
+                return (
+                  <span className="competition-badge league-badge" title={`${session.competition.league_name} Round ${session.competition.round_number}`}>
+                    League
+                  </span>
+                );
+              }
+            } else if (session.duel_id) {
+              return (
+                <span className="competition-badge duel-badge">
+                  Duel
+                </span>
+              );
+            } else if (session.league_id) {
+              return (
+                <span className="competition-badge league-badge">
+                  League
+                </span>
+              );
+            } else {
+              return (
+                <span className="competition-badge practice-badge">
+                  Practice
+                </span>
+              );
+            }
+          })()
         }</td>
         <td>{formatDuration(session.session_duration ?? session.duration)}</td>
         <td>{session.makes ?? session.total_makes ?? 0}</td>
