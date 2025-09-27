@@ -174,6 +174,19 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
           </button>
         </td>
         <td>{formatDate(session.created_at || session.start_time)}</td>
+        <td>{
+          session.competition ? (
+            session.competition.type === 'duel' ? (
+              <span className="competition-badge duel-badge" title={`Duel vs ${session.competition.opponent_name}`}>
+                🥊 vs {session.competition.opponent_name}
+              </span>
+            ) : (
+              <span className="competition-badge league-badge" title={`${session.competition.league_name} Round ${session.competition.round_number}`}>
+                🏟️ {session.competition.league_name}
+              </span>
+            )
+          ) : '—'
+        }</td>
         <td>{formatDuration(session.session_duration ?? session.duration)}</td>
         <td>{session.makes ?? session.total_makes ?? 0}</td>
         <td>{session.misses ?? session.total_misses ?? 0}</td>
@@ -185,7 +198,7 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
       </tr>
       {isExpanded && (
         <tr className="session-details-row">
-          <td colSpan="10">
+          <td colSpan="11">
             <div className="session-details">
               <h3 className="session-details-header">Session Details</h3>
               {hasDetailedData ? (

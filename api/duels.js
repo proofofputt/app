@@ -148,16 +148,21 @@ async function handleGetDuels(req, res) {
         }
       }
 
-      // Calculate individual scores from session data if available (for active duels)
+      // Calculate individual scores from session data if available (for all duel statuses)
       let calculatedCreatorScore = duel.duel_creator_score;
       let calculatedInvitedScore = duel.duel_invited_player_score;
 
-      // If duel is still active and we have session data but scores are 0, calculate from session data
-      if (duel.status === 'active') {
-        if (duel.creator_session_data && calculatedCreatorScore === 0) {
+      // Always calculate from session data when available, prioritizing stored scores but falling back to session data
+      // This ensures scores are displayed for both active and completed duels
+      if (duel.creator_session_data) {
+        // Use stored score if available and not null/0, otherwise calculate from session data
+        if (calculatedCreatorScore === null || calculatedCreatorScore === 0) {
           calculatedCreatorScore = duel.creator_session_data.total_makes || 0;
         }
-        if (duel.invited_player_session_data && calculatedInvitedScore === 0) {
+      }
+      if (duel.invited_player_session_data) {
+        // Use stored score if available and not null/0, otherwise calculate from session data
+        if (calculatedInvitedScore === null || calculatedInvitedScore === 0) {
           calculatedInvitedScore = duel.invited_player_session_data.total_makes || 0;
         }
       }

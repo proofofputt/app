@@ -125,6 +125,20 @@ const DuelRow = ({ duel, onRespond, onSubmitSession, onRematch, onCancel, curren
     const yourScore = isCreator ? (duel.creator_score || 0) : (duel.invited_player_score || 0);
     const opponentScore = isCreator ? (duel.invited_player_score || 0) : (duel.creator_score || 0);
 
+    // Debug logging for score display issues
+    if (duel.status === 'completed' && (yourScore === 0 && opponentScore === 0)) {
+      console.log(`[DuelRow] Potential score display issue for duel ${duel.duel_id}:`, {
+        status: duel.status,
+        isCreator,
+        rawCreatorScore: duel.creator_score,
+        rawInvitedScore: duel.invited_player_score,
+        calculatedYourScore: yourScore,
+        calculatedOpponentScore: opponentScore,
+        hasCreatorSession: !!duel.creator_submitted_session_id,
+        hasInvitedSession: !!duel.invited_player_submitted_session_id
+      });
+    }
+
     return (
         <tr>
             <td data-cell="opponent">
