@@ -81,18 +81,27 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // Authentication required for all duel operations
+  // Check if this is a desktop automation request
+  const isDesktopAutomation = req.headers['x-desktop-automation'] === 'true';
+
+  // Authentication required for all duel operations except desktop automation
   const user = await verifyToken(req);
-  if (!user) {
+  if (!user && !isDesktopAutomation) {
     return res.status(401).json({ success: false, message: 'Authentication required' });
   }
 
   const client = await pool.connect();
   
   try {
-    const playerId = parseInt(user.playerId);
+    // Get playerId from auth user (null for desktop automation)
+    const playerId = user ? parseInt(user.playerId) : null;
 
     if (req.method === 'GET') {
+      // GET operations require authentication
+      if (!playerId) {
+        return res.status(401).json({ success: false, message: 'Authentication required for GET operations' });
+      }
+
       const { status, limit = 20, include_history = 'false' } = req.query;
       
       // Get player's duels
@@ -153,6 +162,11 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
+      // POST operations require authentication
+      if (!playerId) {
+        return res.status(401).json({ success: false, message: 'Authentication required for POST operations' });
+      }
+
       const { invited_player_id, rules = {} } = req.body;
       
       if (!invited_player_id) {
@@ -210,6 +224,11 @@ export default async function handler(req, res) {
     if (req.method === 'PUT') {
       const { duelId } = req.query;
       const { action, session_id } = req.body;
+
+      // PUT operations require authentication except for desktop automation expire actions
+      if (!playerId && !(isDesktopAutomation && action === 'expire')) {
+        return res.status(401).json({ success: false, message: 'Authentication required for PUT operations' });
+      }
       
       if (!duelId) {
         return res.status(400).json({ success: false, message: 'duelId is required' });
@@ -230,8 +249,9 @@ export default async function handler(req, res) {
       
       const duel = duelResult.rows[0];
       
-      // Check if player is part of this duel
-      if (duel.duel_creator_id !== playerId && duel.duel_invited_player_id !== playerId) {
+      // Check if player is part of this duel (skip for desktop automation expire actions)
+      if (!isDesktopAutomation && action !== 'expire' &&
+          (duel.duel_creator_id !== playerId && duel.duel_invited_player_id !== playerId)) {
         return res.status(403).json({ success: false, message: 'Not authorized for this duel' });
       }
       
@@ -363,6 +383,11 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'DELETE') {
+      // DELETE operations require authentication
+      if (!playerId) {
+        return res.status(401).json({ success: false, message: 'Authentication required for DELETE operations' });
+      }
+
       const { duelId } = req.query;
       
       if (!duelId) {
