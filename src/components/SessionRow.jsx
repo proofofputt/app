@@ -175,50 +175,21 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
         </td>
         <td>{formatDate(session.created_at || session.start_time)}</td>
         <td>{
-          (() => {
-            // Debug logging to see session structure
-            if (process.env.NODE_ENV === 'development') {
-              console.log('Session object:', session);
-              console.log('Session competition:', session.competition);
-              console.log('Session duel_id:', session.duel_id);
-              console.log('Session league_id:', session.league_id);
-            }
-
-            // Check multiple possible ways duel sessions might be identified
-            if (session.competition) {
-              if (session.competition.type === 'duel') {
-                return (
-                  <span className="competition-badge duel-badge" title={`Duel vs ${session.competition.opponent_name}`}>
-                    Duel
-                  </span>
-                );
-              } else {
-                return (
-                  <span className="competition-badge league-badge" title={`${session.competition.league_name} Round ${session.competition.round_number}`}>
-                    League
-                  </span>
-                );
-              }
-            } else if (session.duel_id) {
-              return (
-                <span className="competition-badge duel-badge">
-                  Duel
-                </span>
-              );
-            } else if (session.league_id) {
-              return (
-                <span className="competition-badge league-badge">
-                  League
-                </span>
-              );
-            } else {
-              return (
-                <span className="competition-badge practice-badge">
-                  Practice
-                </span>
-              );
-            }
-          })()
+          session.competition ? (
+            session.competition.type === 'duel' ? (
+              <span className="competition-badge duel-badge" title={`Duel vs ${session.competition.opponent_name}`}>
+                Duel
+              </span>
+            ) : (
+              <span className="competition-badge league-badge" title={`${session.competition.league_name} Round ${session.competition.round_number}`}>
+                League
+              </span>
+            )
+          ) : (
+            <span className="competition-badge practice-badge">
+              Practice
+            </span>
+          )
         }</td>
         <td>{formatDuration(session.session_duration ?? session.duration)}</td>
         <td>{session.makes ?? session.total_makes ?? 0}</td>
@@ -228,10 +199,48 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
         <td>{session.putts_per_minute?.toFixed(1) ?? 'N/A'}</td>
         <td>{session.makes_per_minute?.toFixed(1) ?? 'N/A'}</td>
         <td>{session.most_makes_in_60_seconds || 0}</td>
+        <td style={{ textAlign: 'center' }}>
+          {session.competition ? (
+            session.competition.type === 'duel' ? (
+              <span style={{
+                padding: '4px 8px',
+                fontSize: '11px',
+                borderRadius: '4px',
+                backgroundColor: 'var(--success-color)',
+                color: 'white',
+                fontWeight: '500'
+              }}>
+                Auto-uploaded
+              </span>
+            ) : (
+              <span style={{
+                padding: '4px 8px',
+                fontSize: '11px',
+                borderRadius: '4px',
+                backgroundColor: 'var(--success-color)',
+                color: 'white',
+                fontWeight: '500'
+              }}>
+                Auto-uploaded
+              </span>
+            )
+          ) : (
+            <span style={{
+              padding: '4px 8px',
+              fontSize: '11px',
+              borderRadius: '4px',
+              backgroundColor: 'var(--info-color)',
+              color: 'white',
+              fontWeight: '500'
+            }}>
+              Manual Upload
+            </span>
+          )}
+        </td>
       </tr>
       {isExpanded && (
         <tr className="session-details-row">
-          <td colSpan="11">
+          <td colSpan="12">
             <div className="session-details">
               <h3 className="session-details-header">Session Details</h3>
               {hasDetailedData ? (
