@@ -125,8 +125,17 @@ const SessionHistoryPage = () => {
             <thead>
               <tr>
                 <th style={{ width: '120px' }}>Details</th>
-                <th>Session #</th><th>Type</th><th>Duration</th><th>Makes</th><th>Misses</th>
-                <th>Best Streak</th><th>Fastest 21</th><th>PPM</th><th>MPM</th><th>Most in 60s</th><th>Actions</th>
+                <th style={{ minWidth: '120px' }}>Session #</th>
+                <th style={{ minWidth: '80px' }}>Type</th>
+                <th style={{ minWidth: '80px' }}>Duration</th>
+                <th style={{ minWidth: '60px' }}>Makes</th>
+                <th style={{ minWidth: '60px' }}>Misses</th>
+                <th style={{ minWidth: '80px' }}>Best Streak</th>
+                <th style={{ minWidth: '80px' }}>Fastest 21</th>
+                <th style={{ minWidth: '60px' }}>PPM</th>
+                <th style={{ minWidth: '60px' }}>MPM</th>
+                <th style={{ minWidth: '80px' }}>Most in 60s</th>
+                <th style={{ minWidth: '100px' }}>Actions</th>
               </tr>
             </thead>
             <tbody>

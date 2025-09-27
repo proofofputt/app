@@ -29,7 +29,7 @@
 
 .session-history-page .session-table {
   width: 100%;
-  min-width: 800px; /* Reduced to fit better in smaller screens */
+  min-width: 1000px; /* Increased to accommodate all columns including Actions */
 }
 
 .session-history-page .session-table th,
