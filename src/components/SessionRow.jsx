@@ -178,14 +178,18 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
           session.competition ? (
             session.competition.type === 'duel' ? (
               <span className="competition-badge duel-badge" title={`Duel vs ${session.competition.opponent_name}`}>
-                🥊 vs {session.competition.opponent_name}
+                Duel
               </span>
             ) : (
               <span className="competition-badge league-badge" title={`${session.competition.league_name} Round ${session.competition.round_number}`}>
-                🏟️ {session.competition.league_name}
+                League
               </span>
             )
-          ) : '—'
+          ) : (
+            <span className="competition-badge practice-badge">
+              Practice
+            </span>
+          )
         }</td>
         <td>{formatDuration(session.session_duration ?? session.duration)}</td>
         <td>{session.makes ?? session.total_makes ?? 0}</td>
