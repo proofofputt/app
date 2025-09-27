@@ -48,40 +48,55 @@ async function handleGetActiveCompetitions(req, res) {
       return res.status(400).json({ success: false, message: 'player_id is required' });
     }
 
-    // Get active duels where player needs to submit a session
+    // Get active duels where player needs to submit OR waiting for opponent
     const duelsQuery = `
-      SELECT 
+      SELECT
         d.duel_id,
         d.status,
         d.settings,
         d.rules,
         d.expires_at,
         d.created_at,
-        CASE 
+        d.duel_creator_session_id,
+        d.duel_invited_player_session_id,
+        CASE
           WHEN d.duel_creator_id = $1 THEN invited_player.name
           ELSE creator.name
         END as opponent_name,
-        CASE 
+        CASE
           WHEN d.duel_creator_id = $1 THEN 'creator'
           ELSE 'invited'
         END as player_role,
-        CASE 
+        CASE
           WHEN d.duel_creator_id = $1 THEN d.duel_creator_session_id IS NULL
           ELSE d.duel_invited_player_session_id IS NULL
-        END as needs_session
+        END as needs_session,
+        CASE
+          WHEN d.duel_creator_id = $1 THEN d.duel_invited_player_session_id IS NULL
+          ELSE d.duel_creator_session_id IS NULL
+        END as waiting_for_opponent,
+        -- Get session data for scores
+        creator_session.data as creator_session_data,
+        invited_session.data as invited_session_data
       FROM duels d
       LEFT JOIN players creator ON d.duel_creator_id = creator.player_id
       LEFT JOIN players invited_player ON d.duel_invited_player_id = invited_player.player_id
-      WHERE 
+      LEFT JOIN sessions creator_session ON d.duel_creator_session_id = creator_session.session_id
+      LEFT JOIN sessions invited_session ON d.duel_invited_player_session_id = invited_session.session_id
+      WHERE
         (d.duel_creator_id = $1 OR d.duel_invited_player_id = $1)
         AND d.status IN ('pending', 'accepted', 'in_progress', 'active')  -- Only truly active statuses
         AND (d.expires_at IS NULL OR d.expires_at > NOW())      -- Not expired
         AND (
-          CASE 
-            WHEN d.duel_creator_id = $1 THEN d.duel_creator_session_id IS NULL
-            ELSE d.duel_invited_player_session_id IS NULL
+          -- Player hasn't submitted session yet OR player submitted but opponent hasn't
+          CASE
+            WHEN d.duel_creator_id = $1 THEN
+              d.duel_creator_session_id IS NULL OR d.duel_invited_player_session_id IS NULL
+            ELSE
+              d.duel_invited_player_session_id IS NULL OR d.duel_creator_session_id IS NULL
           END
-        ) -- Player hasn't submitted session yet
+        )
+        AND NOT (d.duel_creator_session_id IS NOT NULL AND d.duel_invited_player_session_id IS NOT NULL) -- Exclude completed duels
       ORDER BY d.expires_at ASC NULLS LAST
     `;
 
@@ -128,37 +143,69 @@ async function handleGetActiveCompetitions(req, res) {
       const settings = typeof duel.settings === 'string' ? JSON.parse(duel.settings) : duel.settings;
       const rules = typeof duel.rules === 'string' ? JSON.parse(duel.rules) : duel.rules;
       const timeLimit = rules?.session_duration_limit_minutes ? rules.session_duration_limit_minutes * 60 : null; // Convert minutes to seconds
-      
+
       const numberOfAttempts = rules?.number_of_attempts || settings?.number_of_attempts || null;
-      
+      const scoring = settings?.scoring || 'total_makes';
+
       // Calculate expiration date from invitation_expiry_minutes if expires_at is null
       let expiresAt = duel.expires_at;
-      
+
       if (!expiresAt) {
         // Try to get expiry from settings or rules
-        const expiryMinutes = settings?.invitation_expiry_minutes || 
+        const expiryMinutes = settings?.invitation_expiry_minutes ||
                              rules?.invitation_expiry_minutes ||
                              4320; // Default 3 days
-        
+
         const createdAt = new Date(duel.created_at);
         expiresAt = new Date(createdAt.getTime() + (expiryMinutes * 60 * 1000)).toISOString();
       }
-      
+
+      // Extract scores based on scoring method
+      const getScore = (sessionData, scoringMethod) => {
+        if (!sessionData) return null;
+
+        switch (scoringMethod) {
+          case 'total_makes':
+            return sessionData.total_makes || 0;
+          case 'make_percentage':
+            return sessionData.make_percentage || 0;
+          case 'best_streak':
+            return sessionData.best_streak || 0;
+          case 'fastest_21':
+            return sessionData.fastest_21_makes || null;
+          default:
+            return sessionData.total_makes || 0;
+        }
+      };
+
+      // Determine player and opponent scores
+      const isCreator = duel.player_role === 'creator';
+      const playerScore = isCreator
+        ? getScore(duel.creator_session_data, scoring)
+        : getScore(duel.invited_session_data, scoring);
+      const opponentScore = isCreator
+        ? getScore(duel.invited_session_data, scoring)
+        : getScore(duel.creator_session_data, scoring);
+
       return {
         type: 'duel',
         id: duel.duel_id,
         opponent: duel.opponent_name,
         timeLimit: timeLimit,
         numberOfAttempts: numberOfAttempts,
-        scoring: settings?.scoring || 'total_makes',
+        scoring: scoring,
         expiresAt: expiresAt,
         createdAt: duel.created_at,
         playerRole: duel.player_role,
+        needsSession: duel.needs_session,
+        waitingForOpponent: duel.waiting_for_opponent,
+        playerScore: playerScore,
+        opponentScore: opponentScore,
         sessionData: {
           duelId: duel.duel_id,
           timeLimit: timeLimit,
           numberOfAttempts: numberOfAttempts,
-          scoring: settings?.scoring || 'total_makes',
+          scoring: scoring,
           autoUpload: true
         }
       };
