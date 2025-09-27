@@ -155,11 +155,7 @@ export const apiStartSession = async (player_id, duel_id = null, league_round_id
   }
 };
 
-export const apiStartCalibration = (playerId) => 
-  fetch(`${API_BASE_URL}/start-calibration`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ player_id: playerId }) }).then(handleResponse);
-
-export const apiGetCalibrationStatus = (playerId) => 
-  fetch(`${API_BASE_URL}/player/${playerId}/calibration`, { headers: getHeaders() }).then(handleResponse);
+// Calibration functions removed - now handled by desktop app
 
 // --- Duels ---
 export const apiListDuels = (playerId) => 

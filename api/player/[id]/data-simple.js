@@ -149,8 +149,7 @@ export default async function handler(req, res) {
         // Recent sessions array
         sessions: sessions,
         
-        // No calibration data for simplicity
-        calibration_data: null
+        // Calibration data removed - now handled by desktop app
       };
 
       return res.status(200).json(responseData);

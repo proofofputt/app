@@ -151,19 +151,7 @@ export default async function handler(req, res) {
         ...session.data
       }));
 
-      // Get calibration data (if exists) - wrap in try/catch in case table doesn't exist
-      let calibration_data = null;
-      try {
-        const calibrationResult = await client.query(
-          'SELECT calibration_config FROM player_calibration WHERE player_id = $1 ORDER BY created_at DESC LIMIT 1',
-          [playerId]
-        );
-        calibration_data = calibrationResult.rows.length > 0 ? 
-          calibrationResult.rows[0].calibration_config : null;
-      } catch (calibError) {
-        console.log('Calibration table not found or error:', calibError.message);
-        calibration_data = null;
-      }
+      // Calibration is now handled by desktop app - removed redundant web calibration
 
       // Build response matching prototype structure
       const responseData = {
@@ -193,8 +181,7 @@ export default async function handler(req, res) {
         // Recent sessions array (like prototype)  
         sessions: sessions,
 
-        // Calibration data
-        calibration_data: calibration_data
+        // Calibration data removed - now handled by desktop app
       };
 
       return res.status(200).json(responseData);
