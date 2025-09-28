@@ -29,7 +29,7 @@
 
 .session-history-page .session-table {
   width: 100%;
-  min-width: 1000px; /* Increased to accommodate all columns including Actions */
+  min-width: 1200px; /* Increased to accommodate all 12 columns including Type and Actions */
 }
 
 .session-history-page .session-table th,
@@ -96,15 +96,17 @@
 
 /* Better column width distribution for full-width table */
 .session-history-page .session-table th:nth-child(1) { width: 100px; }  /* Details button */
-.session-history-page .session-table th:nth-child(2) { width: 180px; }  /* Session Date */
-.session-history-page .session-table th:nth-child(3) { width: 100px; }  /* Duration */
-.session-history-page .session-table th:nth-child(4) { width: 80px; }   /* Makes */
-.session-history-page .session-table th:nth-child(5) { width: 80px; }   /* Misses */
-.session-history-page .session-table th:nth-child(6) { width: 100px; }  /* Best Streak */
-.session-history-page .session-table th:nth-child(7) { width: 100px; }  /* Fastest 21 */
-.session-history-page .session-table th:nth-child(8) { width: 80px; }   /* PPM */
-.session-history-page .session-table th:nth-child(9) { width: 80px; }   /* MPM */
-.session-history-page .session-table th:nth-child(10) { width: 100px; } /* Most in 60s */
+.session-history-page .session-table th:nth-child(2) { width: 180px; }  /* Session # */
+.session-history-page .session-table th:nth-child(3) { width: 100px; }  /* Type */
+.session-history-page .session-table th:nth-child(4) { width: 100px; }  /* Duration */
+.session-history-page .session-table th:nth-child(5) { width: 80px; }   /* Makes */
+.session-history-page .session-table th:nth-child(6) { width: 80px; }   /* Misses */
+.session-history-page .session-table th:nth-child(7) { width: 100px; }  /* Best Streak */
+.session-history-page .session-table th:nth-child(8) { width: 100px; }  /* Fastest 21 */
+.session-history-page .session-table th:nth-child(9) { width: 80px; }   /* PPM */
+.session-history-page .session-table th:nth-child(10) { width: 80px; }  /* MPM */
+.session-history-page .session-table th:nth-child(11) { width: 100px; } /* Most in 60s */
+.session-history-page .session-table th:nth-child(12) { width: 120px; } /* Actions */
 
 /* Enhanced spacing for session details on full-width layout */
 .session-history-page .session-details-content {
@@ -160,9 +162,9 @@
 }
 
 /* Responsive design for smaller screens */
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
   .session-history-page .session-table {
-    min-width: 900px; /* Reduced minimum width for tablets */
+    min-width: 1100px; /* Reduced minimum width for tablets */
   }
   
   .session-history-page .session-table th,
@@ -176,9 +178,9 @@
   .session-history-page {
     padding: 0 5%; /* Reduced margins on mobile */
   }
-  
+
   .session-history-page .session-table {
-    min-width: 800px; /* Further reduced for mobile */
+    min-width: 1000px; /* Keep reasonable width for mobile scrolling */
   }
   
   .session-history-page .session-table th,
