@@ -184,6 +184,27 @@
   }
 }
 
+/* Add column and row stroke lines to session history table */
+.session-history-page .session-table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+.session-history-page .session-table th,
+.session-history-page .session-table td {
+  border-right: 1px solid var(--surface-color) !important;
+  border-bottom: 1px solid var(--surface-color) !important;
+}
+
+.session-history-page .session-table th:last-child,
+.session-history-page .session-table td:last-child {
+  border-right: none !important;
+}
+
+.session-history-page .session-table tbody tr:last-child td {
+  border-bottom: none !important;
+}
+
 @media (max-width: 768px) {
   .session-history-page {
     padding: 0 5%; /* Reduced margins on mobile */
@@ -192,12 +213,12 @@
   .session-history-page .session-table {
     min-width: 1000px; /* Keep reasonable width for mobile scrolling */
   }
-  
+
   .session-history-page .session-table th,
   .session-history-page .session-table td {
     padding: 0.5rem 0.25rem; /* Minimal padding for mobile */
     font-size: 0.8rem;
   }
-  
+
   .session-history-page .session-table th:nth-child(2) { width: 140px; } /* Shorter date column */
 }

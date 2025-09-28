@@ -245,3 +245,24 @@ p.stat-value {
 .session-table-wrapper {
   margin-bottom: 0.25rem !important; /* Reduce padding below the table */
 }
+
+/* Add column and row stroke lines to session history table */
+.dashboard-main .session-table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+.dashboard-main .session-table th,
+.dashboard-main .session-table td {
+  border-right: 1px solid var(--surface-color) !important;
+  border-bottom: 1px solid var(--surface-color) !important;
+}
+
+.dashboard-main .session-table th:last-child,
+.dashboard-main .session-table td:last-child {
+  border-right: none !important;
+}
+
+.dashboard-main .session-table tbody tr:last-child td {
+  border-bottom: none !important;
+}
