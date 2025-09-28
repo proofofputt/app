@@ -133,8 +133,8 @@ export default async function handler(req, res) {
 
     // Check for existing pending invitation
     const existingInviteResult = await client.query(`
-      SELECT invitation_id FROM league_invitations 
-      WHERE league_id = $1 AND league_invited_player_id = $2 AND invitation_status = 'pending'
+      SELECT invitation_id FROM league_invitations
+      WHERE league_id = $1 AND invited_user_id = $2 AND status = 'pending'
     `, [leagueId, inviteeId]);
 
     if (existingInviteResult.rows.length > 0) {
@@ -147,22 +147,22 @@ export default async function handler(req, res) {
     // Create the invitation
     const invitationResult = await client.query(`
       INSERT INTO league_invitations (
-        league_id, 
-        league_inviter_id, 
-        league_invited_player_id,
-        invitation_status,
-        invitation_message,
-        invited_at,
+        league_id,
+        inviting_user_id,
+        invited_user_id,
+        status,
+        message,
+        created_at,
         expires_at
       )
       VALUES ($1, $2, $3, 'pending', $4, NOW(), NOW() + INTERVAL '7 days')
-      RETURNING 
-        invitation_id, 
+      RETURNING
+        invitation_id,
         league_id,
-        league_inviter_id,
-        league_invited_player_id,
-        invitation_status,
-        invited_at,
+        inviting_user_id,
+        invited_user_id,
+        status,
+        created_at,
         expires_at
     `, [leagueId, inviterId, inviteeId, invitation_message || null]);
 
@@ -180,12 +180,12 @@ export default async function handler(req, res) {
         invitation_id: invitation.invitation_id,
         league_id: invitation.league_id,
         league_name: league.name,
-        inviter_id: invitation.league_inviter_id,
+        inviter_id: invitation.inviting_user_id,
         inviter_name: inviterResult.rows[0]?.name,
-        invited_player_id: invitation.league_invited_player_id,
+        invited_player_id: invitation.invited_user_id,
         invited_player_name: invitee.name,
-        invitation_status: invitation.invitation_status,
-        invited_at: invitation.invited_at,
+        invitation_status: invitation.status,
+        invited_at: invitation.created_at,
         expires_at: invitation.expires_at
       }
     });
