@@ -213,7 +213,7 @@ p.stat-value {
 
 /* Compact spacing for dashboard elements to show more session rows */
 .stats-summary-bar {
-  margin-bottom: 0.25rem !important; /* Further reduce from default to show more rows */
+  margin-bottom: 0.05rem !important; /* Further reduce from default to show more rows */
   padding: 0.05rem 0 !important; /* Minimal top/bottom padding */
 }
 
