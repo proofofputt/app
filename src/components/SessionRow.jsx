@@ -163,8 +163,8 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
   return (
     <>
       <tr className={`session-row ${isExpanded ? 'is-expanded-parent' : ''} ${isLocked ? 'is-locked' : ''}`}>
-        <td>
-          <button 
+        <td style={{ textAlign: 'center' }}>
+          <button
             className="expand-button"
             onClick={handleToggleClick}
             disabled={isLocked}
@@ -173,8 +173,8 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
             {isLocked ? '🔒' : (isExpanded ? '▼' : '▶')}
           </button>
         </td>
-        <td>{formatDate(session.created_at || session.start_time)}</td>
-        <td>{
+        <td style={{ textAlign: 'center' }}>{formatDate(session.created_at || session.start_time)}</td>
+        <td style={{ textAlign: 'center' }}>{
           session.competition ? (
             session.competition.type === 'duel' ? (
               <span className="competition-badge duel-badge" title={`Duel vs ${session.competition.opponent_name}`}>
@@ -191,14 +191,14 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
             </span>
           )
         }</td>
-        <td>{formatDuration(session.session_duration ?? session.duration)}</td>
-        <td>{session.makes ?? session.total_makes ?? 0}</td>
-        <td>{session.misses ?? session.total_misses ?? 0}</td>
-        <td>{session.best_streak || 0}</td>
-        <td>{session.fastest_21_makes ? `${Math.round(session.fastest_21_makes)}s` : 'N/A'}</td>
-        <td>{session.putts_per_minute?.toFixed(1) ?? 'N/A'}</td>
-        <td>{session.makes_per_minute?.toFixed(1) ?? 'N/A'}</td>
-        <td>{session.most_makes_in_60_seconds || 0}</td>
+        <td style={{ textAlign: 'center' }}>{formatDuration(session.session_duration ?? session.duration)}</td>
+        <td style={{ textAlign: 'center' }}>{session.makes ?? session.total_makes ?? 0}</td>
+        <td style={{ textAlign: 'center' }}>{session.misses ?? session.total_misses ?? 0}</td>
+        <td style={{ textAlign: 'center' }}>{session.best_streak || 0}</td>
+        <td style={{ textAlign: 'center' }}>{session.fastest_21_makes ? `${Math.round(session.fastest_21_makes)}s` : 'N/A'}</td>
+        <td style={{ textAlign: 'center' }}>{session.putts_per_minute?.toFixed(1) ?? 'N/A'}</td>
+        <td style={{ textAlign: 'center' }}>{session.makes_per_minute?.toFixed(1) ?? 'N/A'}</td>
+        <td style={{ textAlign: 'center' }}>{session.most_makes_in_60_seconds || 0}</td>
       </tr>
       {isExpanded && (
         <tr className="session-details-row">

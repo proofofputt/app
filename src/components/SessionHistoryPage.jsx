@@ -135,17 +135,17 @@ const SessionHistoryPage = () => {
           <table className="session-table">
             <thead>
               <tr>
-                <th style={{ width: '120px' }}>Details</th>
-                <th style={{ minWidth: '120px' }}>Session #</th>
-                <th style={{ minWidth: '80px' }}>Type</th>
-                <th style={{ minWidth: '80px' }}>Duration</th>
-                <th style={{ minWidth: '60px' }}>Makes</th>
-                <th style={{ minWidth: '60px' }}>Misses</th>
-                <th style={{ minWidth: '80px' }}>Best Streak</th>
-                <th style={{ minWidth: '80px' }}>Fastest 21</th>
-                <th style={{ minWidth: '60px' }}>PPM</th>
-                <th style={{ minWidth: '60px' }}>MPM</th>
-                <th style={{ minWidth: '80px' }}>Most in 60s</th>
+                <th style={{ width: '120px', textAlign: 'center' }}>Details</th>
+                <th style={{ minWidth: '120px', textAlign: 'center' }}>Session #</th>
+                <th style={{ minWidth: '80px', textAlign: 'center' }}>Type</th>
+                <th style={{ minWidth: '80px', textAlign: 'center' }}>Duration</th>
+                <th style={{ minWidth: '60px', textAlign: 'center' }}>Makes</th>
+                <th style={{ minWidth: '60px', textAlign: 'center' }}>Misses</th>
+                <th style={{ minWidth: '80px', textAlign: 'center' }}>Best Streak</th>
+                <th style={{ minWidth: '80px', textAlign: 'center' }}>Fastest 21</th>
+                <th style={{ minWidth: '60px', textAlign: 'center' }}>PPM</th>
+                <th style={{ minWidth: '60px', textAlign: 'center' }}>MPM</th>
+                <th style={{ minWidth: '80px', textAlign: 'center' }}>Most in 60s</th>
               </tr>
             </thead>
             <tbody>
