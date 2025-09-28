@@ -199,48 +199,10 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
         <td>{session.putts_per_minute?.toFixed(1) ?? 'N/A'}</td>
         <td>{session.makes_per_minute?.toFixed(1) ?? 'N/A'}</td>
         <td>{session.most_makes_in_60_seconds || 0}</td>
-        <td style={{ textAlign: 'center' }}>
-          {session.competition ? (
-            session.competition.type === 'duel' ? (
-              <span style={{
-                padding: '4px 8px',
-                fontSize: '11px',
-                borderRadius: '4px',
-                backgroundColor: 'var(--success-color)',
-                color: 'white',
-                fontWeight: '500'
-              }}>
-                Auto-uploaded
-              </span>
-            ) : (
-              <span style={{
-                padding: '4px 8px',
-                fontSize: '11px',
-                borderRadius: '4px',
-                backgroundColor: 'var(--success-color)',
-                color: 'white',
-                fontWeight: '500'
-              }}>
-                Auto-uploaded
-              </span>
-            )
-          ) : (
-            <span style={{
-              padding: '4px 8px',
-              fontSize: '11px',
-              borderRadius: '4px',
-              backgroundColor: 'var(--info-color)',
-              color: 'white',
-              fontWeight: '500'
-            }}>
-              Manual Upload
-            </span>
-          )}
-        </td>
       </tr>
       {isExpanded && (
         <tr className="session-details-row">
-          <td colSpan="12">
+          <td colSpan="11">
             <div className="session-details">
               <h3 className="session-details-header">Session Details</h3>
               {hasDetailedData ? (
