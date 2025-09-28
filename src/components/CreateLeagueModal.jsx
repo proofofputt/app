@@ -17,7 +17,11 @@ const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
   const [allowPlayerInvites, setAllowPlayerInvites] = useState(true);
   const [allowLateJoiners, setAllowLateJoiners] = useState(true);
   const [allowCatchUpSubmissions, setAllowCatchUpSubmissions] = useState(true);
-  const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 16)); // YYYY-MM-DDTHH:MM
+  const [startDate, setStartDate] = useState(() => {
+    const now = new Date();
+    now.setHours(now.getHours() + 1); // Add 1 hour
+    return now.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM
+  });
   const [isIRL, setIsIRL] = useState(false);
   const [numPlayers, setNumPlayers] = useState(4);
   const [playerNames, setPlayerNames] = useState({});
@@ -352,10 +356,16 @@ const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
             <select id="round-duration" value={roundDuration} onChange={(e) => setRoundDuration(e.target.value)}>
               <option value={1}>1 Hour</option>
               <option value={2}>2 Hours</option>
+              <option value={4}>4 Hours</option>
+              <option value={12}>12 Hours</option>
               <option value={24}>1 Day</option>
               <option value={48}>2 Days</option>
+              <option value={72}>3 Days</option>
               <option value={96}>4 Days</option>
               <option value={168}>7 Days</option>
+              <option value={336}>14 Days</option>
+              <option value={504}>21 Days</option>
+              <option value={744}>31 Days</option>
             </select>
           </div>
           {error && <p className="error-message">{error}</p>}
