@@ -61,12 +61,12 @@ export default async function handler(req, res) {
     
     // Get the league and verify permissions
     const leagueResult = await client.query(`
-      SELECT 
+      SELECT
         l.league_id,
         l.name,
         l.created_by,
         l.status,
-        l.rules,
+        l.settings,
         lm.member_role
       FROM leagues l
       LEFT JOIN league_memberships lm ON l.league_id = lm.league_id AND lm.player_id = $2
@@ -86,7 +86,7 @@ export default async function handler(req, res) {
     const canInvite = (
       league.created_by === parseInt(inviterId) ||
       league.member_role === 'admin' ||
-      (league.member_role === 'member' && league.rules?.allow_player_invites)
+      (league.member_role === 'member' && league.settings?.allow_player_invites)
     );
 
     if (!canInvite) {
