@@ -182,7 +182,7 @@ function Dashboard() {
           <div className="session-table-wrapper" ref={tableWrapperRef}>
             <table className="session-table">
               <thead>
-                <tr><th style={{ width: '120px' }}>Details</th><th>Session #</th><th>Type</th><th>Duration</th><th>Makes</th><th>Misses</th><th>Best Streak</th><th>Fastest 21</th><th>PPM</th><th>MPM</th><th>Most in 60s</th></tr>
+                <tr><th style={{ width: '120px', textAlign: 'left' }}>Details</th><th style={{ textAlign: 'center' }}>Session #</th><th style={{ textAlign: 'center' }}>Type</th><th style={{ textAlign: 'center' }}>Duration</th><th style={{ textAlign: 'center' }}>Makes</th><th style={{ textAlign: 'center' }}>Misses</th><th style={{ textAlign: 'center' }}>Best Streak</th><th style={{ textAlign: 'center' }}>Fastest 21</th><th style={{ textAlign: 'center' }}>PPM</th><th style={{ textAlign: 'center' }}>MPM</th><th style={{ textAlign: 'center' }}>Most in 60s</th></tr>
               </thead>
               <tbody>
                 {sessionsLoading ? (

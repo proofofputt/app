@@ -135,7 +135,7 @@ const SessionHistoryPage = () => {
           <table className="session-table">
             <thead>
               <tr>
-                <th style={{ width: '120px', textAlign: 'center' }}>Details</th>
+                <th style={{ width: '120px', textAlign: 'left' }}>Details</th>
                 <th style={{ minWidth: '120px', textAlign: 'center' }}>Session #</th>
                 <th style={{ minWidth: '80px', textAlign: 'center' }}>Type</th>
                 <th style={{ minWidth: '80px', textAlign: 'center' }}>Duration</th>

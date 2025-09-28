@@ -163,7 +163,7 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
   return (
     <>
       <tr className={`session-row ${isExpanded ? 'is-expanded-parent' : ''} ${isLocked ? 'is-locked' : ''}`}>
-        <td style={{ textAlign: 'center' }}>
+        <td style={{ textAlign: 'left', paddingLeft: '1rem' }}>
           <button
             className="expand-button"
             onClick={handleToggleClick}

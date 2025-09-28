@@ -266,3 +266,27 @@ p.stat-value {
 .dashboard-main .session-table tbody tr:last-child td {
   border-bottom: none !important;
 }
+
+/* Column width distribution to match headers */
+.dashboard-main .session-table th:nth-child(1),
+.dashboard-main .session-table td:nth-child(1) { width: 120px; }  /* Details button */
+.dashboard-main .session-table th:nth-child(2),
+.dashboard-main .session-table td:nth-child(2) { width: 120px; }  /* Session # */
+.dashboard-main .session-table th:nth-child(3),
+.dashboard-main .session-table td:nth-child(3) { width: 80px; }   /* Type */
+.dashboard-main .session-table th:nth-child(4),
+.dashboard-main .session-table td:nth-child(4) { width: 80px; }   /* Duration */
+.dashboard-main .session-table th:nth-child(5),
+.dashboard-main .session-table td:nth-child(5) { width: 60px; }   /* Makes */
+.dashboard-main .session-table th:nth-child(6),
+.dashboard-main .session-table td:nth-child(6) { width: 60px; }   /* Misses */
+.dashboard-main .session-table th:nth-child(7),
+.dashboard-main .session-table td:nth-child(7) { width: 80px; }   /* Best Streak */
+.dashboard-main .session-table th:nth-child(8),
+.dashboard-main .session-table td:nth-child(8) { width: 80px; }   /* Fastest 21 */
+.dashboard-main .session-table th:nth-child(9),
+.dashboard-main .session-table td:nth-child(9) { width: 60px; }   /* PPM */
+.dashboard-main .session-table th:nth-child(10),
+.dashboard-main .session-table td:nth-child(10) { width: 60px; }  /* MPM */
+.dashboard-main .session-table th:nth-child(11),
+.dashboard-main .session-table td:nth-child(11) { width: 80px; }  /* Most in 60s */

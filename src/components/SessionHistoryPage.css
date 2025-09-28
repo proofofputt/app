@@ -105,18 +105,28 @@
 }
 
 /* Better column width distribution for full-width table */
-.session-history-page .session-table th:nth-child(1) { width: 100px; }  /* Details button */
-.session-history-page .session-table th:nth-child(2) { width: 180px; }  /* Session # */
-.session-history-page .session-table th:nth-child(3) { width: 100px; }  /* Type */
-.session-history-page .session-table th:nth-child(4) { width: 100px; }  /* Duration */
-.session-history-page .session-table th:nth-child(5) { width: 80px; }   /* Makes */
-.session-history-page .session-table th:nth-child(6) { width: 80px; }   /* Misses */
-.session-history-page .session-table th:nth-child(7) { width: 100px; }  /* Best Streak */
-.session-history-page .session-table th:nth-child(8) { width: 100px; }  /* Fastest 21 */
-.session-history-page .session-table th:nth-child(9) { width: 80px; }   /* PPM */
-.session-history-page .session-table th:nth-child(10) { width: 80px; }  /* MPM */
-.session-history-page .session-table th:nth-child(11) { width: 100px; } /* Most in 60s */
-.session-history-page .session-table th:nth-child(12) { width: 120px; } /* Actions */
+.session-history-page .session-table th:nth-child(1),
+.session-history-page .session-table td:nth-child(1) { width: 120px; }  /* Details button */
+.session-history-page .session-table th:nth-child(2),
+.session-history-page .session-table td:nth-child(2) { width: 120px; }  /* Session # */
+.session-history-page .session-table th:nth-child(3),
+.session-history-page .session-table td:nth-child(3) { width: 80px; }   /* Type */
+.session-history-page .session-table th:nth-child(4),
+.session-history-page .session-table td:nth-child(4) { width: 80px; }   /* Duration */
+.session-history-page .session-table th:nth-child(5),
+.session-history-page .session-table td:nth-child(5) { width: 60px; }   /* Makes */
+.session-history-page .session-table th:nth-child(6),
+.session-history-page .session-table td:nth-child(6) { width: 60px; }   /* Misses */
+.session-history-page .session-table th:nth-child(7),
+.session-history-page .session-table td:nth-child(7) { width: 80px; }   /* Best Streak */
+.session-history-page .session-table th:nth-child(8),
+.session-history-page .session-table td:nth-child(8) { width: 80px; }   /* Fastest 21 */
+.session-history-page .session-table th:nth-child(9),
+.session-history-page .session-table td:nth-child(9) { width: 60px; }   /* PPM */
+.session-history-page .session-table th:nth-child(10),
+.session-history-page .session-table td:nth-child(10) { width: 60px; }  /* MPM */
+.session-history-page .session-table th:nth-child(11),
+.session-history-page .session-table td:nth-child(11) { width: 80px; }  /* Most in 60s */
 
 /* Enhanced spacing for session details on full-width layout */
 .session-history-page .session-details-content {
