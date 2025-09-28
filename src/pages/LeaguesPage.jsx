@@ -36,23 +36,31 @@ const formatRoundInterval = (hours) => {
 const LeagueTableRow = ({ league }) => {
   const rules = league.rules || {};
   const startDate = league.created_at || league.start_time;
-  
+  const competitionMode = rules.competition_mode || 'time_limit';
+
   return (
     <tr>
-      <td>
+      <td className="column-separator">
         <Link to={`/leagues/${league.league_id}`}>{league.name}</Link>
       </td>
-      <td className="league-description-cell">{league.description || 'No description provided.'}</td>
-      <td style={{ textAlign: 'center' }}>{league.member_count}</td>
-      <td>
-        <span className={`privacy-badge ${league.privacy_type}`}>{league.privacy_type}</span>
+      <td className="league-description-cell column-separator">{league.description || 'No description provided.'}</td>
+      <td style={{ textAlign: 'center' }} className="column-separator">{league.member_count}</td>
+      <td className="column-separator">
+        <span className={`privacy-badge ${league.privacy_type || 'public'}`}>
+          {(league.privacy_type || 'public') === 'private' ? 'Private' : 'Public'}
+        </span>
       </td>
-      <td>
+      <td className="column-separator">
         <span className={`status-badge status-${league.status}`}>{league.status}</span>
       </td>
-      <td>{formatDateTime(startDate)}</td>
-      <td style={{ textAlign: 'center' }}>{rules.time_limit_minutes ? `${rules.time_limit_minutes} min` : 'N/A'}</td>
-      <td style={{ textAlign: 'center' }}>{rules.num_rounds || 'N/A'}</td>
+      <td className="column-separator">{formatDateTime(startDate)}</td>
+      <td style={{ textAlign: 'center' }} className="column-separator">
+        {competitionMode === 'shoot_out' ? 'N/A' : (rules.time_limit_minutes ? `${rules.time_limit_minutes} min` : 'N/A')}
+      </td>
+      <td style={{ textAlign: 'center' }} className="column-separator">
+        {competitionMode === 'shoot_out' ? (rules.max_attempts || 'N/A') : 'N/A'}
+      </td>
+      <td style={{ textAlign: 'center' }} className="column-separator">{rules.num_rounds || 'N/A'}</td>
       <td>{formatRoundInterval(rules.round_duration_hours)}</td>
     </tr>
   );
@@ -185,7 +193,8 @@ const LeaguesPage = () => {
                 <th>Privacy</th>
                 <th>Status</th>
                 <th>Start Date/Time</th>
-                <th>Round Time Limit</th>
+                <th>Time Limit</th>
+                <th>Shoot-Out #</th>
                 <th>Number of Rounds</th>
                 <th>Round Interval</th>
               </tr>
@@ -195,7 +204,7 @@ const LeaguesPage = () => {
                 myLeagues.map(league => <LeagueTableRow key={league.league_id} league={league} />)
               ) : (
                 <tr>
-                  <td colSpan="9" style={{ textAlign: 'center', padding: '2rem', fontStyle: 'italic' }}>You haven't joined any leagues yet.</td>
+                  <td colSpan="10" style={{ textAlign: 'center', padding: '2rem', fontStyle: 'italic' }}>You haven't joined any leagues yet.</td>
                 </tr>
               )}
             </tbody>
@@ -215,7 +224,8 @@ const LeaguesPage = () => {
                 <th>Privacy</th>
                 <th>Status</th>
                 <th>Start Date/Time</th>
-                <th>Round Time Limit</th>
+                <th>Time Limit</th>
+                <th>Shoot-Out #</th>
                 <th>Number of Rounds</th>
                 <th>Round Interval</th>
               </tr>
@@ -225,7 +235,7 @@ const LeaguesPage = () => {
                 publicLeagues.map(league => <LeagueTableRow key={league.league_id} league={league} />)
               ) : (
                 <tr>
-                  <td colSpan="9" style={{ textAlign: 'center', padding: '2rem', fontStyle: 'italic' }}>No public leagues to join right now.</td>
+                  <td colSpan="10" style={{ textAlign: 'center', padding: '2rem', fontStyle: 'italic' }}>No public leagues to join right now.</td>
                 </tr>
               )}
             </tbody>
