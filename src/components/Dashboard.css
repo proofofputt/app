@@ -233,11 +233,13 @@ p.stat-value {
 .session-list-container > div:first-child {
   margin-bottom: 0.25rem !important; /* Reduce space below buttons */
   padding: 0.25rem 0 !important; /* Reduce padding around Refresh/Career Stats buttons by 75% */
+  justify-content: center !important; /* Center the buttons */
 }
 
 .session-list-container h3 {
-  margin: 0.25rem 0 !important; /* Reduce Session History title padding by 75% */
+  margin: 0.05rem 0 !important; /* Reduce Session History title padding by 80% */
   padding: 0 !important;
+  text-align: center !important; /* Center the Session History title */
 }
 
 .session-table-wrapper {
