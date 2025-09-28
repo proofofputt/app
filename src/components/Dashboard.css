@@ -213,13 +213,13 @@ p.stat-value {
 
 /* Compact spacing for dashboard elements to show more session rows */
 .stats-summary-bar {
-  margin-bottom: 0.5rem !important; /* Reduce from default to show more rows */
-  padding: 0.25rem 0 !important; /* Reduce top/bottom padding by 75% */
+  margin-bottom: 0.25rem !important; /* Further reduce from default to show more rows */
+  padding: 0.05rem 0 !important; /* Minimal top/bottom padding */
 }
 
 .stats-summary-bar h2 {
-  margin: 0.25rem 0 !important; /* Reduce All-Time Stats padding by 75% */
-  padding: 0.125rem 0 !important;
+  margin: 0.05rem 0 !important; /* Minimal All-Time Stats margin */
+  padding: 0.025rem 0 !important; /* Minimal All-Time Stats padding */
 }
 
 .dashboard-grid {
@@ -231,9 +231,14 @@ p.stat-value {
 }
 
 .session-list-container > div:first-child {
-  margin-bottom: 0.125rem !important; /* Further reduce space below buttons */
-  padding: 0.125rem 0 !important; /* Further reduce padding around Refresh/Career Stats buttons by 87.5% */
+  margin-bottom: 0.05rem !important; /* Minimal space below buttons */
+  padding: 0.05rem 0 !important; /* Minimal padding around Refresh/Career Stats buttons */
   justify-content: space-between !important; /* Keep buttons right-aligned */
+}
+
+/* Make session history buttons thinner */
+.session-list-container .btn {
+  padding: 0.375rem 1rem !important; /* Reduce button height by making vertical padding smaller */
 }
 
 .session-list-container h3 {
@@ -269,7 +274,7 @@ p.stat-value {
 
 /* Column width distribution to match headers */
 .dashboard-main .session-table th:nth-child(1),
-.dashboard-main .session-table td:nth-child(1) { width: 120px; }  /* Details button */
+.dashboard-main .session-table td:nth-child(1) { width: 80px; }  /* Details button - reduced width */
 .dashboard-main .session-table th:nth-child(2),
 .dashboard-main .session-table td:nth-child(2) { width: 120px; }  /* Session # */
 .dashboard-main .session-table th:nth-child(3),
