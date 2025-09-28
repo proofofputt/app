@@ -86,11 +86,30 @@ const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
         savePlayerNames();
       }
 
+      // Calculate round duration hours
+      let roundDurationHours;
+      if (roundDuration === 'monthly') {
+        // Calculate hours from start date to same day next month
+        const startDateTime = new Date(startDate);
+        const nextMonth = new Date(startDateTime);
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+
+        // Handle edge cases for days that don't exist in next month
+        if (nextMonth.getDate() !== startDateTime.getDate()) {
+          // If the day doesn't exist in next month (e.g., Jan 31 -> Feb 28/29)
+          nextMonth.setDate(0); // Set to last day of previous month
+        }
+
+        roundDurationHours = Math.round((nextMonth - startDateTime) / (1000 * 60 * 60));
+      } else {
+        roundDurationHours = parseInt(roundDuration, 10);
+      }
+
       // Build settings based on competition mode
       const baseSettings = {
         competition_mode: competitionMode,
         num_rounds: parseInt(numRounds, 10),
-        round_duration_hours: parseInt(roundDuration, 10),
+        round_duration_hours: roundDurationHours,
         putting_distance_feet: parseFloat(puttingDistance),
         allow_player_invites: isIRL ? false : allowPlayerInvites,
         allow_late_joiners: isIRL ? false : allowLateJoiners,
@@ -365,7 +384,7 @@ const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
               <option value={168}>7 Days</option>
               <option value={336}>14 Days</option>
               <option value={504}>21 Days</option>
-              <option value={744}>31 Days</option>
+              <option value="monthly">1 Month</option>
             </select>
           </div>
           {error && <p className="error-message">{error}</p>}
