@@ -55,6 +55,7 @@ async function handleGetActiveCompetitions(req, res) {
         d.status,
         d.settings,
         d.rules,
+        d.competition_mode,
         d.expires_at,
         d.created_at,
         d.duel_creator_session_id,
@@ -142,9 +143,19 @@ async function handleGetActiveCompetitions(req, res) {
     const activeDuels = duelsResult.rows.map(duel => {
       const settings = typeof duel.settings === 'string' ? JSON.parse(duel.settings) : duel.settings;
       const rules = typeof duel.rules === 'string' ? JSON.parse(duel.rules) : duel.rules;
-      const timeLimit = rules?.session_duration_limit_minutes ? rules.session_duration_limit_minutes * 60 : null; // Convert minutes to seconds
+      const competitionMode = duel.competition_mode || 'time_limit';
 
-      const numberOfAttempts = rules?.number_of_attempts || settings?.number_of_attempts || null;
+      let timeLimit = null;
+      let numberOfAttempts = null;
+
+      if (competitionMode === 'shoot_out') {
+        // For shoot-out mode, get the max attempts
+        numberOfAttempts = rules?.max_attempts || settings?.max_attempts || 21;
+      } else {
+        // For time limit mode
+        timeLimit = rules?.session_duration_limit_minutes ? rules.session_duration_limit_minutes * 60 : null; // Convert minutes to seconds
+      }
+
       const scoring = settings?.scoring || 'total_makes';
 
       // Calculate expiration date from invitation_expiry_minutes if expires_at is null
@@ -214,8 +225,18 @@ async function handleGetActiveCompetitions(req, res) {
     // Format league rounds for desktop UI  
     const activeLeagueRounds = leaguesResult.rows.map(league => {
       const rules = typeof league.rules === 'string' ? JSON.parse(league.rules) : league.rules;
-      const timeLimit = rules?.time_limit_minutes ? rules.time_limit_minutes * 60 : null; // Convert minutes to seconds
-      const numberOfAttempts = rules?.num_rounds || rules?.number_of_attempts || null;
+      const competitionMode = rules?.competition_mode || 'time_limit';
+
+      let timeLimit = null;
+      let numberOfAttempts = null;
+
+      if (competitionMode === 'shoot_out') {
+        // For shoot-out mode in leagues, get the max attempts
+        numberOfAttempts = rules?.max_attempts || 21;
+      } else {
+        // For time limit mode
+        timeLimit = rules?.time_limit_minutes ? rules.time_limit_minutes * 60 : null; // Convert minutes to seconds
+      }
       
       return {
         type: 'league',

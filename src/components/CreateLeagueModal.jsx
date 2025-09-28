@@ -8,9 +8,11 @@ const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [privacy, setPrivacy] = useState('private');
-  const [numRounds, setNumRounds] = useState(4);
-  const [roundDuration, setRoundDuration] = useState(168);
-  const [timeLimit, setTimeLimit] = useState(15);
+  const [competitionMode, setCompetitionMode] = useState('time_limit');
+  const [numRounds, setNumRounds] = useState(10); // Updated default
+  const [roundDuration, setRoundDuration] = useState(2); // Updated default to 2 hours
+  const [timeLimit, setTimeLimit] = useState(2); // Updated default to 2 minutes
+  const [maxAttempts, setMaxAttempts] = useState(21); // Default for shoot-out mode
   const [puttingDistance, setPuttingDistance] = useState(7.0);
   const [allowPlayerInvites, setAllowPlayerInvites] = useState(true);
   const [allowLateJoiners, setAllowLateJoiners] = useState(true);
@@ -80,24 +82,34 @@ const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
         savePlayerNames();
       }
 
+      // Build settings based on competition mode
+      const baseSettings = {
+        competition_mode: competitionMode,
+        num_rounds: parseInt(numRounds, 10),
+        round_duration_hours: parseInt(roundDuration, 10),
+        putting_distance_feet: parseFloat(puttingDistance),
+        allow_player_invites: isIRL ? false : allowPlayerInvites,
+        allow_late_joiners: isIRL ? false : allowLateJoiners,
+        allow_catch_up_submissions: isIRL ? false : allowCatchUpSubmissions,
+        is_irl: isIRL,
+        num_players: isIRL ? numPlayers : undefined,
+        player_names: isIRL ? playerNames : undefined,
+      };
+
+      // Add mode-specific settings
+      if (competitionMode === 'shoot_out') {
+        baseSettings.max_attempts = parseInt(maxAttempts, 10);
+      } else {
+        baseSettings.time_limit_minutes = parseInt(timeLimit, 10);
+      }
+
       const leagueData = {
         creator_id: playerData.player_id,
         name,
         description,
         privacy_type: privacy,
-        start_time: startDate, // Add start_time here
-        settings: {
-          num_rounds: parseInt(numRounds, 10),
-          round_duration_hours: parseInt(roundDuration, 10),
-          time_limit_minutes: parseInt(timeLimit, 10),
-          putting_distance_feet: parseFloat(puttingDistance),
-          allow_player_invites: isIRL ? false : allowPlayerInvites,
-          allow_late_joiners: isIRL ? false : allowLateJoiners,
-          allow_catch_up_submissions: isIRL ? false : allowCatchUpSubmissions,
-          is_irl: isIRL,
-          num_players: isIRL ? numPlayers : undefined,
-          player_names: isIRL ? playerNames : undefined,
-        },
+        start_time: startDate,
+        settings: baseSettings,
       };
       await apiCreateLeague(leagueData);
       onLeagueCreated();
@@ -262,11 +274,53 @@ const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="time-limit">Time Limit (minutes)</label>
-            <select id="time-limit" value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)}>
-              {[2, 5, 10, 15, 21].map(n => <option key={n} value={n}>{n} minutes</option>)}
-            </select>
+            <label>Competition Mode</label>
+            <div className="radio-group">
+              <label className="radio-option">
+                <input
+                  type="radio"
+                  value="time_limit"
+                  checked={competitionMode === 'time_limit'}
+                  onChange={(e) => setCompetitionMode(e.target.value)}
+                />
+                <span>Time Limit</span>
+              </label>
+              <label className="radio-option">
+                <input
+                  type="radio"
+                  value="shoot_out"
+                  checked={competitionMode === 'shoot_out'}
+                  onChange={(e) => setCompetitionMode(e.target.value)}
+                />
+                <span>Shoot Out</span>
+              </label>
+            </div>
           </div>
+          {competitionMode === 'time_limit' ? (
+            <div className="form-group">
+              <label htmlFor="time-limit">Time Limit (minutes)</label>
+              <select id="time-limit" value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)}>
+                {[2, 5, 10, 15, 21].map(n => <option key={n} value={n}>{n} minutes</option>)}
+              </select>
+            </div>
+          ) : (
+            <div className="form-group">
+              <label htmlFor="max-attempts">Number of Putts</label>
+              <select id="max-attempts" value={maxAttempts} onChange={(e) => setMaxAttempts(parseInt(e.target.value, 10))}>
+                <option value={5}>5 Putts</option>
+                <option value={10}>10 Putts</option>
+                <option value={21}>21 Putts</option>
+                <option value={50}>50 Putts</option>
+                <option value={77}>77 Putts</option>
+                <option value={100}>100 Putts</option>
+                <option value={210}>210 Putts</option>
+                <option value={420}>420 Putts</option>
+                <option value={777}>777 Putts</option>
+                <option value={1000}>1000 Putts</option>
+                <option value={2100}>2100 Putts</option>
+              </select>
+            </div>
+          )}
           <div className="form-group">
             <label htmlFor="putting-distance">
               Length: {puttingDistance.toFixed(1)} feet

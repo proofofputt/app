@@ -21,7 +21,9 @@ const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
   const [searchResults, setSearchResults] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState(rematchData?.opponent || null);
   const [selectedNewPlayer, setSelectedNewPlayer] = useState(null); // For new player invites
+  const [competitionMode, setCompetitionMode] = useState(rematchData?.competitionMode || 'time_limit');
   const [duration, setDuration] = useState(rematchData?.duration || 5);
+  const [maxAttempts, setMaxAttempts] = useState(rematchData?.maxAttempts || 21); // Default 21 for shoot-out
   const [inviteExpiration, setInviteExpiration] = useState(rematchData?.expiration || 72); // Default to 72 hours
   const [puttingDistance, setPuttingDistance] = useState(rematchData?.puttingDistance || 7.0);
   const [error, setError] = useState('');
@@ -86,16 +88,26 @@ const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
     try {
       let duelData;
       
+      // Build settings based on competition mode
+      const baseSettings = {
+        competition_mode: competitionMode,
+        invitation_expiry_minutes: inviteExpiration * 60, // Convert hours to minutes
+        putting_distance_feet: parseFloat(puttingDistance),
+      };
+
+      // Add mode-specific settings
+      if (competitionMode === 'shoot_out') {
+        baseSettings.max_attempts = maxAttempts;
+      } else {
+        baseSettings.session_duration_limit_minutes = duration;
+      }
+
       if (selectedPlayer) {
         // Existing player duel
         duelData = {
           creator_id: playerData.player_id,
           invited_player_id: selectedPlayer.player_id,
-          settings: {
-            session_duration_limit_minutes: duration,
-            invitation_expiry_minutes: inviteExpiration * 60, // Convert hours to minutes
-            putting_distance_feet: parseFloat(puttingDistance),
-          },
+          settings: baseSettings,
         };
       } else if (selectedNewPlayer) {
         // New player invitation
@@ -106,11 +118,7 @@ const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
             type: selectedNewPlayer.inputType,
             value: selectedNewPlayer.contact
           },
-          settings: {
-            session_duration_limit_minutes: duration,
-            invitation_expiry_minutes: inviteExpiration * 60, // Convert hours to minutes
-            putting_distance_feet: parseFloat(puttingDistance),
-          },
+          settings: baseSettings,
         };
       }
       
@@ -208,17 +216,59 @@ const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
           </div>
         )}
 
-
         <div className="form-group">
-          <label htmlFor="duration">Session Duration</label>
-          <select id="duration" value={duration} onChange={(e) => setDuration(parseInt(e.target.value, 10))}>
-            <option value={2}>2 Minutes</option>
-            <option value={5}>5 Minutes</option>
-            <option value={10}>10 Minutes</option>
-            <option value={15}>15 Minutes</option>
-            <option value={21}>21 Minutes</option>
-          </select>
+          <label>Competition Mode</label>
+          <div className="radio-group">
+            <label className="radio-option">
+              <input
+                type="radio"
+                value="time_limit"
+                checked={competitionMode === 'time_limit'}
+                onChange={(e) => setCompetitionMode(e.target.value)}
+              />
+              <span>⏱️ Time Limit</span>
+            </label>
+            <label className="radio-option">
+              <input
+                type="radio"
+                value="shoot_out"
+                checked={competitionMode === 'shoot_out'}
+                onChange={(e) => setCompetitionMode(e.target.value)}
+              />
+              <span>🎯 Shoot Out</span>
+            </label>
+          </div>
         </div>
+
+        {competitionMode === 'time_limit' ? (
+          <div className="form-group">
+            <label htmlFor="duration">Session Duration</label>
+            <select id="duration" value={duration} onChange={(e) => setDuration(parseInt(e.target.value, 10))}>
+              <option value={2}>2 Minutes</option>
+              <option value={5}>5 Minutes</option>
+              <option value={10}>10 Minutes</option>
+              <option value={15}>15 Minutes</option>
+              <option value={21}>21 Minutes</option>
+            </select>
+          </div>
+        ) : (
+          <div className="form-group">
+            <label htmlFor="max-attempts">Number of Putts</label>
+            <select id="max-attempts" value={maxAttempts} onChange={(e) => setMaxAttempts(parseInt(e.target.value, 10))}>
+              <option value={5}>5 Putts</option>
+              <option value={10}>10 Putts</option>
+              <option value={21}>21 Putts</option>
+              <option value={50}>50 Putts</option>
+              <option value={77}>77 Putts</option>
+              <option value={100}>100 Putts</option>
+              <option value={210}>210 Putts</option>
+              <option value={420}>420 Putts</option>
+              <option value={777}>777 Putts</option>
+              <option value={1000}>1000 Putts</option>
+              <option value={2100}>2100 Putts</option>
+            </select>
+          </div>
+        )}
 
         <div className="form-group">
           <label htmlFor="invite-expiration">Invite Expiration</label>

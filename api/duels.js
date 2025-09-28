@@ -72,6 +72,7 @@ async function handleGetDuels(req, res) {
         d.status,
         d.settings,
         d.rules,
+        d.competition_mode,
         d.created_at,
         d.expires_at,
         d.winner_id,
@@ -98,26 +99,34 @@ async function handleGetDuels(req, res) {
       // Parse settings and rules to extract time limit
       const settings = duel.settings || {};
       const rules = duel.rules || {};
-      
-      // Extract time limit from multiple possible fields, converting hours to minutes if needed
+      const competitionMode = duel.competition_mode || 'time_limit';
+
+      // Extract time limit or max attempts based on competition mode
       let timeLimit = null;
-      
-      if (settings.session_duration_limit_minutes) {
-        timeLimit = settings.session_duration_limit_minutes;
-      } else if (rules.session_duration_limit_minutes) {
-        timeLimit = rules.session_duration_limit_minutes;
-      } else if (settings.time_limit_minutes) {
-        timeLimit = settings.time_limit_minutes;
-      } else if (rules.time_limit_minutes) {
-        timeLimit = rules.time_limit_minutes;
-      } else if (rules.time_limit_hours) {
-        timeLimit = rules.time_limit_hours * 60; // Convert hours to minutes
-      } else if (settings.time_limit) {
-        timeLimit = settings.time_limit;
-      } else if (rules.time_limit) {
-        timeLimit = rules.time_limit;
+      let maxAttempts = null;
+
+      if (competitionMode === 'shoot_out') {
+        // For shoot-out mode, get max attempts
+        maxAttempts = rules.max_attempts || settings.max_attempts || 21;
+      } else {
+        // For time limit mode, extract time limit from multiple possible fields
+        if (settings.session_duration_limit_minutes) {
+          timeLimit = settings.session_duration_limit_minutes;
+        } else if (rules.session_duration_limit_minutes) {
+          timeLimit = rules.session_duration_limit_minutes;
+        } else if (settings.time_limit_minutes) {
+          timeLimit = settings.time_limit_minutes;
+        } else if (rules.time_limit_minutes) {
+          timeLimit = rules.time_limit_minutes;
+        } else if (rules.time_limit_hours) {
+          timeLimit = rules.time_limit_hours * 60; // Convert hours to minutes
+        } else if (settings.time_limit) {
+          timeLimit = settings.time_limit;
+        } else if (rules.time_limit) {
+          timeLimit = rules.time_limit;
+        }
       }
-      
+
       // Extract putting distance, default to 7.0 feet if not specified
       let puttingDistance = 7.0;
       if (settings.putting_distance_feet) {
@@ -179,7 +188,9 @@ async function handleGetDuels(req, res) {
         created_at: duel.created_at,
         expires_at: expiresAt,
         winner_id: duel.winner_id,
-        time_limit_minutes: timeLimit, // Extract time limit for frontend
+        competition_mode: competitionMode, // Competition format
+        time_limit_minutes: timeLimit, // Extract time limit for frontend (null for shoot-out)
+        max_attempts: maxAttempts, // Max attempts for shoot-out mode
         putting_distance_feet: puttingDistance, // Extract putting distance for frontend
         creator_score: calculatedCreatorScore,
         invited_player_score: calculatedInvitedScore,
@@ -232,12 +243,42 @@ async function handleCreateDuel(req, res) {
 
   // Use settings or rules for the duel configuration
   const duelRules = settings || rules || {};
-  
+
+  // Determine competition mode (default to time_limit for backwards compatibility)
+  const competitionMode = duelRules.competition_mode || 'time_limit';
+
+  // Validate competition mode
+  if (!['time_limit', 'shoot_out'].includes(competitionMode)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid competition mode. Must be "time_limit" or "shoot_out"'
+    });
+  }
+
+  // Validate shoot-out specific settings
+  if (competitionMode === 'shoot_out') {
+    // Valid shoot-out attempt options
+    const validAttempts = [5, 10, 21, 50, 77, 100, 210, 420, 777, 1000, 2100];
+    const maxAttempts = duelRules.max_attempts || 21; // Default to 21
+
+    if (!validAttempts.includes(maxAttempts)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid max_attempts for shoot-out mode. Must be one of: ${validAttempts.join(', ')}`
+      });
+    }
+
+    // Store max_attempts in rules
+    duelRules.max_attempts = maxAttempts;
+    // Clear time limit for shoot-out mode
+    delete duelRules.session_duration_limit_minutes;
+  }
+
   // Ensure putting distance is set, default to 7.0 feet
   if (!duelRules.putting_distance_feet) {
     duelRules.putting_distance_feet = 7.0;
   }
-  
+
   // Validate putting distance range (3.0 - 10.0 feet)
   if (duelRules.putting_distance_feet < 3.0 || duelRules.putting_distance_feet > 10.0) {
     return res.status(400).json({
@@ -298,10 +339,10 @@ async function handleCreateDuel(req, res) {
       
       // Create duel with temporary player reference
       duelResult = await client.query(`
-        INSERT INTO duels (duel_creator_id, duel_invited_player_id, status, rules, created_at, expires_at)
-        VALUES ($1, $2, 'pending_new_player', $3, NOW(), NOW() + INTERVAL '${expiryMinutes} minutes')
-        RETURNING duel_id, duel_creator_id, duel_invited_player_id, status, rules, created_at, expires_at
-      `, [creator_id, tempPlayerId, enhancedRules]);
+        INSERT INTO duels (duel_creator_id, duel_invited_player_id, status, rules, competition_mode, created_at, expires_at)
+        VALUES ($1, $2, 'pending_new_player', $3, $4, NOW(), NOW() + INTERVAL '${expiryMinutes} minutes')
+        RETURNING duel_id, duel_creator_id, duel_invited_player_id, status, rules, competition_mode, created_at, expires_at
+      `, [creator_id, tempPlayerId, enhancedRules, competitionMode]);
 
     } else {
       // Calculate expires_at for regular duels
@@ -309,10 +350,10 @@ async function handleCreateDuel(req, res) {
       
       // Regular duel with existing player
       duelResult = await client.query(`
-        INSERT INTO duels (duel_creator_id, duel_invited_player_id, status, rules, created_at, expires_at)
-        VALUES ($1, $2, 'pending', $3, NOW(), NOW() + INTERVAL '${expiryMinutes} minutes')
-        RETURNING duel_id, duel_creator_id, duel_invited_player_id, status, rules, created_at, expires_at
-      `, [creator_id, invited_player_id, duelRules]);
+        INSERT INTO duels (duel_creator_id, duel_invited_player_id, status, rules, competition_mode, created_at, expires_at)
+        VALUES ($1, $2, 'pending', $3, $4, NOW(), NOW() + INTERVAL '${expiryMinutes} minutes')
+        RETURNING duel_id, duel_creator_id, duel_invited_player_id, status, rules, competition_mode, created_at, expires_at
+      `, [creator_id, invited_player_id, duelRules, competitionMode]);
     }
 
     const duel = duelResult.rows[0];

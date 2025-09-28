@@ -200,12 +200,23 @@ async function handleCreateLeague(req, res, client) {
     return res.status(400).json({ success: false, message: 'Invalid user token - missing playerId' });
   }
 
+  // Determine competition mode (default to time_limit for backwards compatibility)
+  const competitionMode = leagueSettings.competition_mode || 'time_limit';
+
+  // Validate competition mode
+  if (!['time_limit', 'shoot_out'].includes(competitionMode)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid competition mode. Must be "time_limit" or "shoot_out"'
+    });
+  }
+
   // Create league with default settings (including validated putting distance)
   const defaultSettings = {
     privacy: 'public',
     num_rounds: 4,
     round_duration_hours: 168, // 1 week
-    time_limit_minutes: 30,
+    competition_mode: competitionMode,
     scoring_type: 'total_makes',
     allow_late_joiners: true,
     allow_player_invites: true,
@@ -213,6 +224,29 @@ async function handleCreateLeague(req, res, client) {
     putting_distance_feet: 7.0, // Default putting distance
     ...leagueSettings // Use validated settings with putting distance
   };
+
+  // Handle shoot-out mode specific settings
+  if (competitionMode === 'shoot_out') {
+    // Valid shoot-out attempt options
+    const validAttempts = [5, 10, 21, 50, 77, 100, 210, 420, 777, 1000, 2100];
+    const maxAttempts = defaultSettings.max_attempts || 21; // Default to 21
+
+    if (!validAttempts.includes(maxAttempts)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid max_attempts for shoot-out mode. Must be one of: ${validAttempts.join(', ')}`
+      });
+    }
+
+    // Store max_attempts and clear time limit for shoot-out mode
+    defaultSettings.max_attempts = maxAttempts;
+    delete defaultSettings.time_limit_minutes;
+  } else {
+    // Ensure time limit exists for time_limit mode
+    if (!defaultSettings.time_limit_minutes) {
+      defaultSettings.time_limit_minutes = 30; // Default 30 minutes
+    }
+  }
 
   const isIRL = defaultSettings.is_irl || false;
 
