@@ -23,7 +23,6 @@ const SessionHistoryPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [viewedPlayer, setViewedPlayer] = useState(null);
-  const [expandedSessionId, setExpandedSessionId] = useState(null);
 
   const isViewingOwnProfile = playerData && playerData.player_id === parseInt(playerId);
   const isSubscribed = playerData?.membership_tier === 'premium' || playerData?.membership_tier === 'regular';
@@ -77,11 +76,6 @@ const SessionHistoryPage = () => {
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    setExpandedSessionId(null); // Close any expanded session when changing pages
-  };
-
-  const handleToggleExpand = (sessionId) => {
-    setExpandedSessionId(expandedSessionId === sessionId ? null : sessionId);
   };
 
   if (isLoading) return <p style={{ textAlign: 'center', padding: '2rem' }}>Loading session history...</p>;
@@ -135,7 +129,7 @@ const SessionHistoryPage = () => {
           <table className="session-table">
             <thead>
               <tr>
-                <th style={{ width: '120px', textAlign: 'center' }}>Details</th>
+                <th style={{ width: '120px', textAlign: 'center' }}>Tier</th>
                 <th style={{ minWidth: '120px', textAlign: 'center' }}>Session #</th>
                 <th style={{ minWidth: '80px', textAlign: 'center' }}>Type</th>
                 <th style={{ minWidth: '80px', textAlign: 'center' }}>Duration</th>
@@ -156,8 +150,6 @@ const SessionHistoryPage = () => {
                     session={session}
                     playerTimezone={playerData.timezone}
                     isLocked={!isSubscribed && !(currentPage === 1 && index === 0)}
-                    isExpanded={expandedSessionId === session.session_id}
-                    onToggleExpand={handleToggleExpand}
                     dailySessionNumber={dailySessionNumbers[session.session_id]}
                   />
                 ))

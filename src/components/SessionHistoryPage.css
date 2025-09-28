@@ -9,6 +9,16 @@
   max-width: none !important; /* Override any parent max-width constraints */
 }
 
+/* Reduce spacing for session history page header */
+.session-history-page .page-header {
+  margin-bottom: 0.5rem !important; /* Reduce space below Session History title */
+  padding-bottom: 0.25rem !important; /* Reduce padding by 75% */
+}
+
+.session-history-page .page-header h2 {
+  margin: 0.25rem 0 !important; /* Reduce title margins by 75% */
+}
+
 .session-list-container.full-height {
   flex-grow: 1;
   display: flex;

@@ -210,3 +210,36 @@ p.stat-value {
     font-size: 0.9rem;  /* Smaller value font on very small screens */
   }
 }
+
+/* Compact spacing for dashboard elements to show more session rows */
+.stats-summary-bar {
+  margin-bottom: 0.5rem !important; /* Reduce from default to show more rows */
+  padding: 0.25rem 0 !important; /* Reduce top/bottom padding by 75% */
+}
+
+.stats-summary-bar h2 {
+  margin: 0.25rem 0 !important; /* Reduce All-Time Stats padding by 75% */
+  padding: 0.125rem 0 !important;
+}
+
+.dashboard-grid {
+  margin-bottom: 0.5rem !important; /* Reduce space after stats cards */
+}
+
+.session-list-container {
+  margin-top: 0.25rem !important; /* Reduce space above session history */
+}
+
+.session-list-container > div:first-child {
+  margin-bottom: 0.25rem !important; /* Reduce space below buttons */
+  padding: 0.25rem 0 !important; /* Reduce padding around Refresh/Career Stats buttons by 75% */
+}
+
+.session-list-container h3 {
+  margin: 0.25rem 0 !important; /* Reduce Session History title padding by 75% */
+  padding: 0 !important;
+}
+
+.session-table-wrapper {
+  margin-bottom: 0.25rem !important; /* Reduce padding below the table */
+}
