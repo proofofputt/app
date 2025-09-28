@@ -93,19 +93,30 @@ const SessionHistoryPage = () => {
 
   // Calculate daily session numbers for privacy-friendly display
   const calculateDailySessionNumbers = (sessions) => {
-    const dailyCounters = {};
+    const sessionsByDate = {};
     const sessionDayNumbers = {};
 
-    // Sort sessions by date (newest first, same as display order)
-    const sortedSessions = [...sessions].sort((a, b) => new Date(b.created_at || b.start_time) - new Date(a.created_at || a.start_time));
-
-    sortedSessions.forEach(session => {
+    // Group sessions by date
+    sessions.forEach(session => {
       const sessionDate = session.created_at || session.start_time;
       if (sessionDate) {
         const dateKey = new Date(sessionDate).toDateString(); // "Wed Sep 25 2024"
-        dailyCounters[dateKey] = (dailyCounters[dateKey] || 0) + 1;
-        sessionDayNumbers[session.session_id] = dailyCounters[dateKey];
+        if (!sessionsByDate[dateKey]) {
+          sessionsByDate[dateKey] = [];
+        }
+        sessionsByDate[dateKey].push(session);
       }
+    });
+
+    // For each date, sort sessions chronologically (oldest first) and assign numbers
+    Object.keys(sessionsByDate).forEach(dateKey => {
+      const sessionsForDate = sessionsByDate[dateKey].sort((a, b) =>
+        new Date(a.created_at || a.start_time) - new Date(b.created_at || b.start_time)
+      );
+
+      sessionsForDate.forEach((session, index) => {
+        sessionDayNumbers[session.session_id] = index + 1; // Start from 1, newest gets highest number
+      });
     });
 
     return sessionDayNumbers;
