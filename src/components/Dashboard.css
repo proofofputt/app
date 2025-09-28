@@ -77,7 +77,7 @@
 
 .dashboard-main {
   width: 100%;
-  padding: 40px 2.625% 40px 2.625%; /* Further reduced left/right margins by half for maximum table width */
+  padding: 10px 2.625% 10px 2.625%; /* Reduced top/bottom padding from 40px to 10px */
   box-sizing: border-box;
   height: calc(100vh - 132px); /* Account for increased header height (68px + 64px padding = 132px) */
   display: flex;
@@ -214,7 +214,7 @@ p.stat-value {
 /* Compact spacing for dashboard elements to show more session rows */
 .stats-summary-bar {
   margin-bottom: 0.05rem !important; /* Further reduce from default to show more rows */
-  padding: 0.05rem 0 !important; /* Minimal top/bottom padding */
+  padding: 0.25rem 0 !important; /* Reduced top/bottom padding from 0.8 to 0.25 */
 }
 
 .stats-summary-bar h2 {
