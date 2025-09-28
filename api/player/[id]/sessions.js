@@ -73,7 +73,7 @@ export default async function handler(req, res) {
           );
           totalSessions = parseInt(countResult.rows[0].count);
           
-          // Build query with pagination support - include duel context and prioritize updated_at
+          // Build query with pagination support - include full competition context
           let query = `
             SELECT
               s.session_id,
@@ -81,10 +81,39 @@ export default async function handler(req, res) {
               s.stats_summary,
               s.created_at,
               s.updated_at,
-              COALESCE(d1.duel_id, d2.duel_id) as duel_id
+              -- Duel context
+              COALESCE(d1.duel_id, d2.duel_id) as duel_id,
+              COALESCE(d1.status, d2.status) as duel_status,
+              CASE
+                WHEN d1.duel_creator_id = s.player_id THEN d1.duel_invited_player_id
+                WHEN d1.duel_invited_player_id = s.player_id THEN d1.duel_creator_id
+                WHEN d2.duel_creator_id = s.player_id THEN d2.duel_invited_player_id
+                WHEN d2.duel_invited_player_id = s.player_id THEN d2.duel_creator_id
+                ELSE NULL
+              END as duel_opponent_id,
+              CASE
+                WHEN d1.duel_creator_id = s.player_id THEN invited_player1.name
+                WHEN d1.duel_invited_player_id = s.player_id THEN creator1.name
+                WHEN d2.duel_creator_id = s.player_id THEN invited_player2.name
+                WHEN d2.duel_invited_player_id = s.player_id THEN creator2.name
+                ELSE NULL
+              END as duel_opponent_name,
+              -- League context
+              lrs.league_id,
+              lrs.round_id as league_round_id,
+              l.name as league_name,
+              lr.round_number
             FROM sessions s
             LEFT JOIN duels d1 ON s.session_id = d1.duel_creator_session_id
             LEFT JOIN duels d2 ON s.session_id = d2.duel_invited_player_session_id
+            LEFT JOIN players creator1 ON d1.duel_creator_id = creator1.player_id
+            LEFT JOIN players invited_player1 ON d1.duel_invited_player_id = invited_player1.player_id
+            LEFT JOIN players creator2 ON d2.duel_creator_id = creator2.player_id
+            LEFT JOIN players invited_player2 ON d2.duel_invited_player_id = invited_player2.player_id
+            -- LEFT JOIN for league sessions
+            LEFT JOIN league_round_sessions lrs ON s.session_id = lrs.session_id
+            LEFT JOIN leagues l ON lrs.league_id = l.league_id
+            LEFT JOIN league_rounds lr ON lrs.round_id = lr.round_id
             WHERE s.player_id = $1
             ORDER BY COALESCE(s.updated_at, s.created_at, NOW()) DESC
           `;
@@ -124,7 +153,7 @@ export default async function handler(req, res) {
               dailyTotals[dateKey] += 1;
             });
 
-            // Second pass: assign numbers in reverse (newest = highest number)
+            // Second pass: assign numbers with newest = 1 (as requested by user)
             rows.forEach((row) => {
               const timestamp = row.updated_at || row.created_at || new Date().toISOString();
               const date = new Date(timestamp);
@@ -132,12 +161,12 @@ export default async function handler(req, res) {
 
               // Initialize counter for this date if not exists
               if (!dailyCounters[dateKey]) {
-                dailyCounters[dateKey] = dailyTotals[dateKey]; // Start from total count
+                dailyCounters[dateKey] = 1; // Start from 1 for newest session
               }
 
-              // Store session number for this session (decrements so newest = highest)
+              // Store session number for this session (increments so newest = 1)
               sessionNumbers[row.session_id] = dailyCounters[dateKey];
-              dailyCounters[dateKey] -= 1; // Decrement for next session
+              dailyCounters[dateKey] += 1; // Increment for next (older) session
             });
 
             return sessionNumbers;
@@ -176,6 +205,26 @@ export default async function handler(req, res) {
             const sessionNumber = dailySessionNumbers[row.session_id] || 1;
             const formattedSessionDate = formatSessionDate(sessionTimestamp, sessionNumber);
 
+            // Determine competition context
+            let competitionContext = null;
+            if (row.duel_id) {
+              competitionContext = {
+                type: 'duel',
+                duel_id: row.duel_id,
+                opponent_id: row.duel_opponent_id,
+                opponent_name: row.duel_opponent_name,
+                status: row.duel_status
+              };
+            } else if (row.league_id) {
+              competitionContext = {
+                type: 'league',
+                league_id: row.league_id,
+                league_round_id: row.league_round_id,
+                league_name: row.league_name,
+                round_number: row.round_number
+              };
+            }
+
             return {
               // Legacy format for compatibility
               id: index + 1,
@@ -195,6 +244,8 @@ export default async function handler(req, res) {
               created_at: sessionTimestamp,
               duel_id: row.duel_id || null,
               session_duration: sessionDurationSeconds,
+              // Competition context
+              competition: competitionContext,
               total_makes: totalMakes,
               total_misses: totalMisses,
               fastest_21_makes: data.fastest_21_makes_seconds || data.fastest_21_makes || timeStats.fastest_21_makes_seconds || null,
