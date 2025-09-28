@@ -384,7 +384,7 @@ const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
               <option value={168}>7 Days</option>
               <option value={336}>14 Days</option>
               <option value={504}>21 Days</option>
-              <option value="monthly">1 Month</option>
+              <option value="monthly">Monthly on Start Day</option>
             </select>
           </div>
           {error && <p className="error-message">{error}</p>}
