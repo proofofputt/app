@@ -274,7 +274,7 @@ p.stat-value {
 
 /* Column width distribution to match headers */
 .dashboard-main .session-table th:nth-child(1),
-.dashboard-main .session-table td:nth-child(1) { width: 80px; }  /* Details button - reduced width */
+.dashboard-main .session-table td:nth-child(1) { width: 1%; white-space: nowrap; }  /* Details button - minimal width */
 .dashboard-main .session-table th:nth-child(2),
 .dashboard-main .session-table td:nth-child(2) { width: 120px; }  /* Session # */
 .dashboard-main .session-table th:nth-child(3),
