@@ -47,7 +47,7 @@ const DetailCategory = ({ title, overview, detailed, allDetailed }) => {
 
 const ConsecutiveCategory = ({ consecutiveData }) => {
   // For consecutive makes, always show all standard thresholds, even if zero
-  const standardThresholds = ['3', '7', '10', '15', '21', '42', '50', '77', '100'];
+  const standardThresholds = ['3', '7', '10', '15', '21', '50', '77', '100'];
   
   // Parse the data if it's a JSON string
   let data = {};
