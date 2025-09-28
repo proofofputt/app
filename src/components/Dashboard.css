@@ -231,15 +231,15 @@ p.stat-value {
 }
 
 .session-list-container > div:first-child {
-  margin-bottom: 0.25rem !important; /* Reduce space below buttons */
-  padding: 0.25rem 0 !important; /* Reduce padding around Refresh/Career Stats buttons by 75% */
-  justify-content: center !important; /* Center the buttons */
+  margin-bottom: 0.125rem !important; /* Further reduce space below buttons */
+  padding: 0.125rem 0 !important; /* Further reduce padding around Refresh/Career Stats buttons by 87.5% */
+  justify-content: space-between !important; /* Keep buttons right-aligned */
 }
 
 .session-list-container h3 {
-  margin: 0.05rem 0 !important; /* Reduce Session History title padding by 80% */
+  margin: 0.025rem 0 !important; /* Further reduce Session History title padding by 90% */
   padding: 0 !important;
-  text-align: center !important; /* Center the Session History title */
+  text-align: left !important; /* Keep Session History title left-aligned */
 }
 
 .session-table-wrapper {
