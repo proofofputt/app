@@ -182,12 +182,12 @@ function Dashboard() {
           <div className="session-table-wrapper" ref={tableWrapperRef}>
             <table className="session-table">
               <thead>
-                <tr><th style={{ width: '120px' }}>Details</th><th>Session #</th><th>Duration</th><th>Makes</th><th>Misses</th><th>Best Streak</th><th>Fastest 21</th><th>PPM</th><th>MPM</th><th>Most in 60s</th></tr>
+                <tr><th style={{ width: '120px' }}>Details</th><th>Session #</th><th>Type</th><th>Duration</th><th>Makes</th><th>Misses</th><th>Best Streak</th><th>Fastest 21</th><th>PPM</th><th>MPM</th><th>Most in 60s</th><th>Actions</th></tr>
               </thead>
               <tbody>
                 {sessionsLoading ? (
                   <tr className="table-placeholder-row">
-                    <td colSpan="10">Loading sessions...</td>
+                    <td colSpan="12">Loading sessions...</td>
                   </tr>
                 ) : paginatedSessions && paginatedSessions.sessions && paginatedSessions.sessions.length > 0 ? (
                   paginatedSessions.sessions.map((session, index) => (
@@ -203,7 +203,7 @@ function Dashboard() {
                   ))
                 ) : (
                   <tr className="table-placeholder-row">
-                      <td colSpan="10">No sessions recorded yet.</td>
+                      <td colSpan="12">No sessions recorded yet.</td>
                   </tr>
                 )}
               </tbody>

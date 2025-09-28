@@ -123,7 +123,7 @@ const SessionHistoryPage = () => {
         <div className="session-table-wrapper">
           <table className="session-table">
             <thead>
-              {/* Force deployment with all headers including Type and Actions */}
+              {/* Force deployment with all 12 headers including Type and Actions - Sept 27 fix */}
               <tr>
                 <th style={{ width: '120px' }}>Details</th>
                 <th style={{ minWidth: '120px' }}>Session #</th>
