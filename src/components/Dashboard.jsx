@@ -80,13 +80,28 @@ function Dashboard() {
           // Sort sessions by date (newest first, same as display order)
           const sortedSessions = [...sessions].sort((a, b) => new Date(b.created_at || b.start_time) - new Date(a.created_at || a.start_time));
 
+          // First pass: count sessions per date
+          const sessionsByDate = {};
           sortedSessions.forEach(session => {
             const sessionDate = session.created_at || session.start_time;
             if (sessionDate) {
-              const dateKey = new Date(sessionDate).toDateString(); // "Wed Sep 25 2024"
-              dailyCounters[dateKey] = (dailyCounters[dateKey] || 0) + 1;
-              sessionDayNumbers[session.session_id] = dailyCounters[dateKey];
+              const dateKey = new Date(sessionDate).toDateString();
+              if (!sessionsByDate[dateKey]) {
+                sessionsByDate[dateKey] = [];
+              }
+              sessionsByDate[dateKey].push(session);
             }
+          });
+
+          // Second pass: assign numbers with newest = highest number
+          Object.keys(sessionsByDate).forEach(dateKey => {
+            const sessionsForDate = sessionsByDate[dateKey];
+            const totalForDate = sessionsForDate.length;
+
+            sessionsForDate.forEach((session, index) => {
+              // Newest session gets highest number (totalForDate), oldest gets 1
+              sessionDayNumbers[session.session_id] = totalForDate - index;
+            });
           });
 
           return sessionDayNumbers;
@@ -94,6 +109,22 @@ function Dashboard() {
 
         const dailySessionNumbers = calculateDailySessionNumbers(sessionData.sessions);
         sessionData.dailySessionNumbers = dailySessionNumbers;
+
+        // Sort sessions by date (newest first), then by session number (highest first) within each date
+        sessionData.sessions.sort((a, b) => {
+          const dateA = new Date(a.created_at || a.start_time);
+          const dateB = new Date(b.created_at || b.start_time);
+
+          // First sort by date (newest first)
+          if (dateA.toDateString() !== dateB.toDateString()) {
+            return dateB - dateA;
+          }
+
+          // If same date, sort by session number (highest/newest first)
+          const numA = dailySessionNumbers[a.session_id] || 0;
+          const numB = dailySessionNumbers[b.session_id] || 0;
+          return numB - numA;
+        });
       }
 
       setPaginatedSessions(sessionData);

@@ -107,7 +107,7 @@ const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
         duelData = {
           creator_id: playerData.player_id,
           invited_player_id: selectedPlayer.player_id,
-          settings: baseSettings,
+          rules: baseSettings,
         };
       } else if (selectedNewPlayer) {
         // New player invitation
@@ -118,7 +118,7 @@ const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
             type: selectedNewPlayer.inputType,
             value: selectedNewPlayer.contact
           },
-          settings: baseSettings,
+          rules: baseSettings,
         };
       }
       
@@ -160,10 +160,10 @@ const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Invite by username or email"
                 />
-                <button type="submit" disabled={isLoading}>
-                  {isLoading ? 'Searching...' : 'Search'}
-                </button>
               </div>
+              <button type="submit" disabled={isLoading} className="search-button">
+                {isLoading ? 'Searching...' : 'Search'}
+              </button>
             </form>
 
             {(searchResults.length > 0 || showNewPlayerOption) && (

@@ -108,14 +108,16 @@ const SessionHistoryPage = () => {
       }
     });
 
-    // For each date, sort sessions chronologically (oldest first) and assign numbers
+    // For each date, sort sessions chronologically (newest first) and assign numbers
     Object.keys(sessionsByDate).forEach(dateKey => {
       const sessionsForDate = sessionsByDate[dateKey].sort((a, b) =>
-        new Date(a.created_at || a.start_time) - new Date(b.created_at || b.start_time)
+        new Date(b.created_at || b.start_time) - new Date(a.created_at || a.start_time)
       );
 
+      const totalForDate = sessionsForDate.length;
       sessionsForDate.forEach((session, index) => {
-        sessionDayNumbers[session.session_id] = index + 1; // Start from 1, newest gets highest number
+        // Newest session gets highest number (totalForDate), oldest gets 1
+        sessionDayNumbers[session.session_id] = totalForDate - index;
       });
     });
 
@@ -123,6 +125,22 @@ const SessionHistoryPage = () => {
   };
 
   const dailySessionNumbers = calculateDailySessionNumbers(sessionsToShow);
+
+  // Sort sessions by date (newest first), then by session number (highest first) within each date
+  const sortedSessionsToShow = [...sessionsToShow].sort((a, b) => {
+    const dateA = new Date(a.created_at || a.start_time);
+    const dateB = new Date(b.created_at || b.start_time);
+
+    // First sort by date (newest first)
+    if (dateA.toDateString() !== dateB.toDateString()) {
+      return dateB - dateA;
+    }
+
+    // If same date, sort by session number (highest/newest first)
+    const numA = dailySessionNumbers[a.session_id] || 0;
+    const numB = dailySessionNumbers[b.session_id] || 0;
+    return numB - numA;
+  });
 
   return (
     <div className="session-history-page">
@@ -149,8 +167,8 @@ const SessionHistoryPage = () => {
               </tr>
             </thead>
             <tbody>
-              {sessionsToShow.length > 0 ? (
-                sessionsToShow.map((session, index) => (
+              {sortedSessionsToShow.length > 0 ? (
+                sortedSessionsToShow.map((session, index) => (
                   <SessionRow
                     key={session.session_id}
                     session={session}

@@ -71,8 +71,8 @@ export const apiRegister = (name, email, password, referralSessionId = null, con
 export const apiForgotPassword = (email) => 
   fetch(`${API_BASE_URL}/forgot-password`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ email }) }).then(handleResponse);
 
-export const apiResetPassword = (token, new_password) => 
-  fetch(`${API_BASE_URL}/reset-password`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ token, new_password }) }).then(handleResponse);
+export const apiResetPassword = (token, password) =>
+  fetch(`${API_BASE_URL}/reset-password`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ token, password }) }).then(handleResponse);
 
 export const apiChangePassword = (playerId, oldPassword, newPassword) =>
   fetch(`${API_BASE_URL}/player/${playerId}/change-password`, {
