@@ -1,6 +1,8 @@
 import { Pool } from 'pg';
 import crypto from 'crypto';
 import { sendPasswordResetEmail } from '../utils/emailService.js';
+import { checkRateLimit } from '../utils/rateLimiter.js';
+import { setCORSHeaders } from '../utils/cors.js';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -8,6 +10,13 @@ const pool = new Pool({
 });
 
 export default async function handler(req, res) {
+  // Set CORS headers
+  setCORSHeaders(req, res);
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -18,13 +27,38 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Email is required' });
   }
 
+  // Apply rate limiting - 3 attempts per email per hour
+  const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+  const rateLimitKey = `forgot-password:${email.toLowerCase()}:${clientIP}`;
+  const rateLimit = checkRateLimit(rateLimitKey, 3, 3600000); // 3 attempts per hour
+
+  if (!rateLimit.allowed) {
+    res.set({
+      'X-RateLimit-Limit': '3',
+      'X-RateLimit-Remaining': '0',
+      'X-RateLimit-Reset': new Date(rateLimit.resetTime).toISOString(),
+      'Retry-After': rateLimit.retryAfter
+    });
+    return res.status(429).json({
+      error: 'Too many password reset attempts. Please try again later.',
+      retryAfter: rateLimit.retryAfter
+    });
+  }
+
+  // Set rate limit headers for successful requests
+  res.set({
+    'X-RateLimit-Limit': '3',
+    'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+    'X-RateLimit-Reset': new Date(rateLimit.resetTime).toISOString()
+  });
+
   const client = await pool.connect();
   
   try {
 
     // Check if user exists
     const users = await client.query(
-      'SELECT player_id, username FROM players WHERE LOWER(email) = LOWER($1)',
+      'SELECT player_id, name FROM players WHERE LOWER(email) = LOWER($1)',
       [email]
     );
 

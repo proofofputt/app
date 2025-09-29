@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { apiForgotPassword, apiResetPassword } from '../api';
 import './ResetPasswordPage.css';
 
 const ResetPasswordPage = () => {
@@ -28,13 +29,7 @@ const ResetPasswordPage = () => {
     setError('');
     setMessage('');
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to send reset link.');
+      const data = await apiForgotPassword(email);
       setMessage(data.message || 'If an account with that email exists, a password reset link has been sent.');
     } catch (err) {
       setError(err.message);
@@ -53,13 +48,7 @@ const ResetPasswordPage = () => {
     setError('');
     setMessage('');
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/reset-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, password }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to reset password.');
+      const data = await apiResetPassword(token, password);
       setMessage(data.message || 'Password has been reset successfully! You will be redirected to login.');
       setTimeout(() => navigate('/login'), 3000);
     } catch (err) {

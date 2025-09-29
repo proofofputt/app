@@ -47,8 +47,8 @@ export default async function handler(req, res) {
 
     // Update password and clear reset token
     await client.query(
-      `UPDATE players 
-       SET password = $1, reset_token = NULL, reset_token_expiry = NULL, updated_at = NOW()
+      `UPDATE players
+       SET password_hash = $1, reset_token = NULL, reset_token_expiry = NULL, updated_at = NOW()
        WHERE player_id = $2`,
       [hashedPassword, user.player_id]
     );
