@@ -231,7 +231,35 @@
   margin-bottom: 2rem; /* Ensure adequate space before next section */
 }
 
+.search-section form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.search-button {
+  align-self: flex-start;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--primary-color);
+  color: var(--background-color);
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.search-button:hover:not(:disabled) {
+  background-color: var(--primary-color-hover);
+}
+
+.search-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .search-results {
+  margin-top: 0.5rem; /* Keep results close to the search form */
   margin-bottom: 1.5rem; /* Additional margin after search results */
 }
 

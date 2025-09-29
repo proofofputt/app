@@ -3,29 +3,23 @@
   background-color: #f4f1e8; /* Sandy/beige background */
   border: 2px solid #2d5016; /* Dark green border */
   border-radius: 8px;
-  padding: 1.5rem; /* Increased padding */
+  padding: 1.5rem;
   margin: 1rem 0;
   color: #2d5016; /* Dark green text */
-  min-width: 500px; /* Ensure sandy background is wide enough */
   width: 100%;
-  max-width: 600px; /* Prevent it from being too wide */
-  overflow: visible; /* Allow content to extend if needed */
+  max-width: 500px; /* Reasonable max width to prevent overflow */
+  box-sizing: border-box; /* Include padding in width calculation */
 }
 
 .search-input-wrapper {
   position: relative;
   margin-bottom: 0.75rem;
-  overflow: visible; /* Allow input to extend beyond container */
-  width: 100%; /* Ensure wrapper takes full width */
-  min-height: 150px; /* Reserve space for dropdown above */
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end; /* Align input to bottom of wrapper */
+  width: 100%;
 }
 
 .inline-invite-input {
-  width: 400px !important; /* Force specific width - twice the normal size */
-  min-width: 400px !important;
+  width: 100%;
+  max-width: 400px;
   padding: 0.5rem;
   border: 1px solid #4a6b2a;
   border-radius: 4px;
@@ -55,11 +49,11 @@
   overflow-y: auto;
   background-color: rgba(255, 255, 255, 0.95);
   position: absolute;
-  bottom: 100%; /* Position above the input field */
+  top: 100%; /* Position below the input field */
   left: 0;
-  width: 400px; /* Match input field width */
+  width: 100%; /* Match input field width dynamically */
   z-index: 10;
-  margin-bottom: 0.5rem; /* Space between dropdown and input */
+  margin-top: 0.25rem; /* Small space between input and dropdown */
 }
 
 .inline-invite-form .search-results li {
@@ -206,9 +200,9 @@
 /* Form actions */
 .invite-form-actions {
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 0.75rem;
-  margin-left: 0; /* Align button with input field left edge */
-  justify-content: flex-start;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  width: 100%;
 }

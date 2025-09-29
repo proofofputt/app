@@ -512,7 +512,6 @@ const LeagueDetailPage = () => {
                               {isMember ? (
                                 canParticipate ? (
                                   <div className="league-round-actions">
-                                    <button onClick={() => handleStartLeagueSession(round)} className="btn btn-small btn-secondary" title="Copy parameters to paste into desktop app">Copy Parameters</button>
                                     <button onClick={() => handleOpenLeagueApp(round)} className="btn btn-small btn-primary" title="Try to open desktop app directly">Open App</button>
                                   </div>
                                 ) : hasSubmitted ? (
