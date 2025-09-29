@@ -4,6 +4,10 @@ import { setCORSHeaders } from '../utils/cors.js';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  connectionTimeoutMillis: 10000,
+  idleTimeoutMillis: 30000,
+  max: 10
 });
 
 function verifyToken(req) {
@@ -31,26 +35,28 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
+  let client;
   try {
-    const client = await pool.connect();
-    
+    client = await pool.connect();
+
     if (req.method === 'GET') {
       await handleGetLeaderboard(req, res, client);
     } else if (req.method === 'POST') {
       await handleCreateContext(req, res, client);
     } else {
-      client.release();
       return res.status(405).json({ success: false, message: 'Method Not Allowed' });
     }
-    
-    client.release();
   } catch (error) {
     console.error('Leaderboards V2 API error:', error);
-    return res.status(500).json({ 
-      success: false, 
+    return res.status(500).json({
+      success: false,
       message: 'An internal server error occurred.',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
+  } finally {
+    if (client) {
+      client.release();
+    }
   }
 }
 
