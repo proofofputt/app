@@ -21,19 +21,32 @@ export const PersistentNotificationProvider = ({ children }) => {
 
   const fetchUnreadCount = useCallback(async () => {
     if (!playerData) return;
-    // DISABLED: Notifications API calls - using mock data for testing
-    console.log("Notifications disabled - using mock unread count");
-    setUnreadCount(0); // Mock: no unread notifications
+
+    try {
+      const result = await apiGetUnreadNotificationsCount(playerData.id);
+      setUnreadCount(result.unread_count || 0);
+    } catch (error) {
+      console.error('Failed to fetch unread notification count:', error);
+      setUnreadCount(0);
+    }
   }, [playerData]);
 
   const fetchNotifications = useCallback(async (limit = 20, offset = 0) => {
     if (!playerData) return;
     setIsLoading(true);
-    // DISABLED: Notifications API calls - using mock data for testing
-    console.log("Notifications disabled - using mock notifications");
-    setNotifications([]); // Mock: empty notifications array
-    setUnreadCount(0);   // Mock: no unread notifications
-    setIsLoading(false);
+    setError('');
+
+    try {
+      const result = await apiGetNotifications(playerData.id);
+      setNotifications(result.notifications || []);
+      setUnreadCount(result.unread_count || 0);
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+      setError('Failed to load notifications');
+      setNotifications([]);
+    } finally {
+      setIsLoading(false);
+    }
   }, [playerData]);
 
   useEffect(() => {
@@ -44,26 +57,45 @@ export const PersistentNotificationProvider = ({ children }) => {
   }, [playerData, fetchUnreadCount]);
 
   const markAsRead = async (notificationId) => {
-    // DISABLED: Notifications API calls - mock functionality
-    console.log("Notifications disabled - mock markAsRead", notificationId);
-    setNotifications(prev => prev.map(n => (n.id === notificationId ? { ...n, read_status: true } : n)));
-    setUnreadCount(prev => Math.max(0, prev - 1));
+    if (!playerData) return;
+
+    try {
+      await apiMarkNotificationAsRead(playerData.id, notificationId);
+      setNotifications(prev => prev.map(n => (n.id === notificationId ? { ...n, read_status: true } : n)));
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+      setError('Failed to mark notification as read');
+    }
   };
 
   const markAllAsRead = async () => {
-    // DISABLED: Notifications API calls - mock functionality  
-    console.log("Notifications disabled - mock markAllAsRead");
-    setNotifications(prev => prev.map(n => ({ ...n, read_status: true })));
-    setUnreadCount(0);
+    if (!playerData) return;
+
+    try {
+      await apiMarkAllNotificationsAsRead(playerData.id);
+      setNotifications(prev => prev.map(n => ({ ...n, read_status: true })));
+      setUnreadCount(0);
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+      setError('Failed to mark all notifications as read');
+    }
   };
 
   const deleteNotification = async (notificationId) => {
-    // DISABLED: Notifications API calls - mock functionality
-    console.log("Notifications disabled - mock deleteNotification", notificationId);
+    if (!playerData) return;
+
     const notificationToDelete = notifications.find(n => n.id === notificationId);
-    setNotifications(prev => prev.filter(n => n.id !== notificationId));
-    if (notificationToDelete && !notificationToDelete.read_status) {
+
+    try {
+      await apiDeleteNotification(playerData.id, notificationId);
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+      if (notificationToDelete && !notificationToDelete.read_status) {
         setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+    } catch (error) {
+      console.error('Failed to delete notification:', error);
+      setError('Failed to delete notification');
     }
   };
 

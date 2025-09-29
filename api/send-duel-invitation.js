@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 import emailService from './services/email.js';
+import notificationService from './services/notification.js';
 import { setCORSHeaders } from '../utils/cors.js';
 
 const pool = new Pool({
@@ -86,23 +87,13 @@ async function sendSMSInvitation(invitation, challengerName) {
  */
 async function createInAppNotification(client, userId, invitation, challengerName) {
   const { duel_config, message } = invitation;
-  
-  await client.query(`
-    INSERT INTO user_notifications (user_id, notification_type, title, message, data, action_url, expires_at)
-    VALUES ($1, $2, $3, $4, $5, $6, $7)
-  `, [
-    userId,
-    'duel_invitation',
-    `Duel challenge from ${challengerName}`,
-    message || `${challengerName} challenged you to a ${duel_config.duel_type || 'standard'} duel!`,
-    JSON.stringify({
-      invitation_id: invitation.invitation_id,
-      challenger_name: challengerName,
-      duel_config: duel_config
-    }),
-    `/duels/invitation/${invitation.invitation_id}`,
-    new Date(Date.now() + (duel_config.time_limit_hours || 48) * 60 * 60 * 1000)
-  ]);
+
+  // Use the new notification service
+  await notificationService.createDuelChallengeNotification({
+    playerId: userId,
+    challengerName: challengerName,
+    duelId: invitation.duel_id
+  });
 }
 
 export default async function handler(req, res) {

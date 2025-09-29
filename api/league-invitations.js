@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import jwt from 'jsonwebtoken';
+import notificationService from './services/notification.js';
 import { setCORSHeaders } from '../utils/cors.js';
 
 const pool = new Pool({
