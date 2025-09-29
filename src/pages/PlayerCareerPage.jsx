@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { apiGetCareerStats, apiListDuels, apiListLeagues } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
-// import AchievementCertificates from '../components/AchievementCertificates.jsx'; // DISABLED FOR TESTING
+import AchievementCertificates from '../components/AchievementCertificates.jsx';
 import './PlayerCareerPage.css';
 
 const StatRow = ({ label, best, cumulative, isSubscribed, unit = '' }) => {
@@ -262,12 +262,12 @@ const PlayerCareerPage = () => {
         </div>
       )}
 
-      {/* Achievement Certificates - Full Width Section - DISABLED FOR TESTING */}
-      {/* <AchievementCertificates
+      {/* Achievement Certificates - Full Width Section */}
+      <AchievementCertificates
         playerId={playerId}
         playerName={player_name}
         isSubscribed={isSubscribed}
-      /> */}
+      />
     </div>
   );
 };
