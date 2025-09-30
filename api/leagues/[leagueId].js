@@ -30,14 +30,30 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  if (req.method === 'GET') {
-    return await handleGetLeagueDetails(req, res, client);
-  } else if (req.method === 'DELETE') {
-    return await handleLeagueAction(req, res, client);
-  } else {
-    return res.status(405).json({ success: false, message: 'Method Not Allowed' });
-  }
+  let client;
+  try {
+    client = await pool.connect();
+    console.log('League API: Database connected successfully');
 
+    if (req.method === 'GET') {
+      return await handleGetLeagueDetails(req, res, client);
+    } else if (req.method === 'DELETE') {
+      return await handleLeagueAction(req, res, client);
+    } else {
+      return res.status(405).json({ success: false, message: 'Method Not Allowed' });
+    }
+
+  } catch (error) {
+    console.error('League API error:', error);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  } finally {
+    if (client) client.release();
+  }
 }
 
 async function handleGetLeagueDetails(req, res, client) {
