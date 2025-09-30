@@ -103,7 +103,7 @@ async function handleGetActiveCompetitions(req, res) {
 
     // Get active league rounds where player needs to submit a session
     const leaguesQuery = `
-      SELECT 
+      SELECT
         lr.round_id,
         lr.round_number,
         lr.start_time,
@@ -112,6 +112,7 @@ async function handleGetActiveCompetitions(req, res) {
         l.name as league_name,
         l.status as league_status,
         l.rules,
+        l.created_by as league_creator_id,
         lm.player_id as member_player_id,
         lm.is_active as membership_active,
         -- Check if player has already submitted for this round
@@ -120,8 +121,8 @@ async function handleGetActiveCompetitions(req, res) {
       JOIN leagues l ON lr.league_id = l.league_id
       JOIN league_memberships lm ON l.league_id = lm.league_id
       LEFT JOIN league_round_sessions lrs ON lr.round_id = lrs.round_id AND lrs.player_id = $1
-      WHERE 
-        lm.player_id = $1 
+      WHERE
+        lm.player_id = $1
         AND lm.is_active = true                         -- Player is active member
         AND l.status IN ('active', 'in_progress')       -- League is active
         AND lr.start_time <= NOW()                      -- Round has started
@@ -241,12 +242,14 @@ async function handleGetActiveCompetitions(req, res) {
       return {
         type: 'league',
         id: league.round_id,
+        leagueId: league.league_id,
         leagueName: league.league_name,
         roundNumber: league.round_number,
         timeLimit: timeLimit,
         numberOfAttempts: numberOfAttempts,
         endTime: league.end_time,
         startTime: league.start_time,
+        creatorId: league.league_creator_id,
         sessionData: {
           leagueRoundId: league.round_id,
           league: league.league_name,
