@@ -7,7 +7,7 @@ const pool = new Pool({
 });
 
 export default async function handler(req, res) {
-  const { playerId } = req.query;
+  const { id, notificationId } = req.query;
   const { method } = req;
 
   // Add CORS headers
@@ -23,32 +23,36 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  if (!playerId) {
-    return res.status(400).json({ error: 'Player ID is required' });
+  if (!id || !notificationId) {
+    return res.status(400).json({ error: 'Player ID and Notification ID are required' });
   }
 
   const client = await pool.connect();
 
   try {
-    // Mark all notifications as read for the player
+    // Mark notification as read
     const updateQuery = `
       UPDATE notifications
       SET read_status = true
-      WHERE player_id = $1 AND read_status = false
-      RETURNING COUNT(*)
+      WHERE id = $1 AND player_id = $2
+      RETURNING id, read_status
     `;
 
-    const result = await client.query(updateQuery, [playerId]);
+    const result = await client.query(updateQuery, [notificationId, id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Notification not found or not owned by player' });
+    }
 
     return res.status(200).json({
       success: true,
-      message: 'All notifications marked as read',
-      updated_count: result.rowCount
+      message: 'Notification marked as read',
+      notification: result.rows[0]
     });
 
   } catch (error) {
-    console.error('Error marking all notifications as read:', error);
-    return res.status(500).json({ error: 'Failed to mark all notifications as read' });
+    console.error('Error marking notification as read:', error);
+    return res.status(500).json({ error: 'Failed to mark notification as read' });
   } finally {
     client.release();
   }

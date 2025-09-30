@@ -7,7 +7,7 @@ const pool = new Pool({
 });
 
 export default async function handler(req, res) {
-  const { playerId } = req.query;
+  const { id } = req.query;
   const { method } = req;
 
   // Add CORS headers
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  if (!playerId) {
+  if (!id) {
     return res.status(400).json({ error: 'Player ID is required' });
   }
 
@@ -28,7 +28,7 @@ export default async function handler(req, res) {
   try {
     switch (method) {
       case 'GET':
-        return await getNotifications(req, res, client, playerId);
+        return await getNotifications(req, res, client, id);
       default:
         return res.status(405).json({ error: 'Method not allowed' });
     }
@@ -40,12 +40,12 @@ export default async function handler(req, res) {
   }
 }
 
-async function getNotifications(req, res, client, playerId) {
+async function getNotifications(req, res, client, id) {
   const { limit = 20, offset = 0 } = req.query;
 
   try {
     // First, verify the player exists
-    const playerCheck = await client.query('SELECT id FROM players WHERE id = $1', [playerId]);
+    const playerCheck = await client.query('SELECT id FROM players WHERE id = $1', [id]);
     if (playerCheck.rows.length === 0) {
       return res.status(404).json({ error: 'Player not found' });
     }
@@ -80,7 +80,7 @@ async function getNotifications(req, res, client, playerId) {
       LIMIT $2 OFFSET $3
     `;
 
-    const notificationsResult = await client.query(notificationsQuery, [playerId, limit, offset]);
+    const notificationsResult = await client.query(notificationsQuery, [id, limit, offset]);
 
     // Get unread count
     const unreadCountQuery = `
@@ -89,7 +89,7 @@ async function getNotifications(req, res, client, playerId) {
       WHERE player_id = $1 AND read_status = false
     `;
 
-    const unreadCountResult = await client.query(unreadCountQuery, [playerId]);
+    const unreadCountResult = await client.query(unreadCountQuery, [id]);
     const unreadCount = parseInt(unreadCountResult.rows[0].count);
 
     return res.status(200).json({

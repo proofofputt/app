@@ -7,7 +7,7 @@ const pool = new Pool({
 });
 
 export default async function handler(req, res) {
-  const { playerId } = req.query;
+  const { id } = req.query;
   const { method } = req;
 
   // Add CORS headers
@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  if (!playerId) {
+  if (!id) {
     return res.status(400).json({ error: 'Player ID is required' });
   }
 
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
 
   try {
     // First, verify the player exists
-    const playerCheck = await client.query('SELECT id FROM players WHERE id = $1', [playerId]);
+    const playerCheck = await client.query('SELECT id FROM players WHERE id = $1', [id]);
     if (playerCheck.rows.length === 0) {
       return res.status(404).json({ error: 'Player not found' });
     }
@@ -43,7 +43,7 @@ export default async function handler(req, res) {
       WHERE player_id = $1 AND read_status = false
     `;
 
-    const result = await client.query(unreadCountQuery, [playerId]);
+    const result = await client.query(unreadCountQuery, [id]);
     const unreadCount = parseInt(result.rows[0].count);
 
     return res.status(200).json({
