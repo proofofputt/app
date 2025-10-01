@@ -367,18 +367,19 @@
 /* Responsive design - prioritize horizontal scrolling over compression */
 @media (max-width: 768px) {
   .duels-table th {
-    font-size: 0.75rem;
-    padding: 0.5rem 0.25rem;
+    font-size: 0.7rem;
+    padding: 0.4rem 0.3rem;
   }
 
   .duels-table td {
-    padding: 0.5rem 0.25rem;
-    font-size: 0.875rem;
+    padding: 0.4rem 0.3rem;
+    font-size: 0.75rem;
   }
 
   .duels-table-container {
     overflow-x: auto; /* Force horizontal scrolling on mobile */
     overflow-y: visible; /* Don't clip content vertically */
+    max-height: 70vh; /* Limit height on mobile */
   }
 
   .duels-table {
@@ -387,8 +388,41 @@
 
   /* Adjust page margins for mobile */
   .duels-page .container {
-    margin: 0 3%; /* Reduced margins on mobile */
-    width: 94%; /* Increased content width on mobile */
+    margin: 0 2%; /* Reduced margins on mobile */
+    width: 96%; /* Increased content width on mobile */
+    padding: 0.5rem;
+  }
+
+  .duels-page .page-header {
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .duels-page .page-header h2 {
+    font-size: 1.5rem;
+    text-align: center;
+  }
+
+  .duels-page .page-header .btn-primary {
+    width: 100%;
+    text-align: center;
+  }
+
+  .duel-category-title {
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .status-badge {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.4rem;
+  }
+
+  .expiration-box {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.3rem;
   }
 }
 
