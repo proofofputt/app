@@ -39,15 +39,19 @@ export default async function handler(req, res) {
       // Create new user account for OAuth user
       console.log(`[OAuth] Creating new user for: ${email}`);
 
-      // Generate username from email
-      const username = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
-      const display_name = name || username;
+      const display_name = name || email.split('@')[0];
 
       const insertResult = await pool.query(
-        `INSERT INTO players (username, email, name, google_id, created_at)
-         VALUES ($1, $2, $3, $4, NOW())
-         RETURNING player_id, username, email, name, created_at`,
-        [username, email, display_name, google_id]
+        `INSERT INTO players (email, display_name, google_id, oauth_providers, oauth_profile, created_at)
+         VALUES ($1, $2, $3, $4, $5, NOW())
+         RETURNING *`,
+        [
+          email,
+          display_name,
+          google_id,
+          JSON.stringify({ google: true }),
+          JSON.stringify({ google: { name, verified: true } })
+        ]
       );
 
       user = insertResult;
@@ -69,24 +73,23 @@ export default async function handler(req, res) {
     const token = jwt.sign(
       {
         player_id: playerData.player_id,
-        username: playerData.username,
-        email: playerData.email
+        email: playerData.email,
+        display_name: playerData.display_name
       },
       process.env.JWT_SECRET || 'your-secret-key-change-this',
       { expiresIn: '7d' }
     );
 
-    console.log(`[OAuth] Authentication successful for: ${playerData.username}`);
+    console.log(`[OAuth] Authentication successful for: ${playerData.email}`);
 
     return res.status(200).json({
       success: true,
       token: token,
       player: {
         player_id: playerData.player_id,
-        username: playerData.username,
         email: playerData.email,
-        name: playerData.name,
-        display_name: playerData.name || playerData.username,
+        display_name: playerData.display_name,
+        name: playerData.display_name,
         created_at: playerData.created_at
       }
     });
