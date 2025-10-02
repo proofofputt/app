@@ -4,15 +4,17 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 /**
  * Initiate Google OAuth flow
+ * @param {string} mode - 'login' or 'signup'
  * @returns {Promise<{authUrl: string, sessionId: string}>}
  */
-export async function initiateGoogleOAuth() {
+export async function initiateGoogleOAuth(mode = 'login') {
   try {
     const response = await fetch(`${API_BASE_URL}/auth/google/init`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify({ mode }),
     });
 
     const data = await response.json();
@@ -195,6 +197,7 @@ export const OAUTH_PROVIDERS = {
   google: {
     name: 'Google',
     displayName: 'Continue with Google',
+    signupDisplayName: 'Sign up with Google',
     icon: '🔍', // Could be replaced with actual Google icon
     color: '#4285f4'
   },

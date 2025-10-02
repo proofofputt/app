@@ -205,20 +205,8 @@ const LoginPage = () => {
             </div>
 
             <div className="oauth-buttons">
-              <OAuthButton 
+              <OAuthButton
                 provider="google"
-                onSuccess={handleOAuthSuccess}
-                onError={handleOAuthError}
-                disabled={isLoading}
-              />
-              <OAuthButton 
-                provider="linkedin"
-                onSuccess={handleOAuthSuccess}
-                onError={handleOAuthError}
-                disabled={isLoading}
-              />
-              <OAuthButton 
-                provider="nostr"
                 onSuccess={handleOAuthSuccess}
                 onError={handleOAuthError}
                 disabled={isLoading}
@@ -306,17 +294,31 @@ const LoginPage = () => {
               />
             </div>
             
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="login-button"
               disabled={isLoading}
             >
               {isLoading ? 'Creating Account...' : 'Create Account'}
             </button>
 
+            <div className="oauth-divider">
+              <span className="oauth-divider-text">or</span>
+            </div>
+
+            <div className="oauth-buttons">
+              <OAuthButton
+                provider="google"
+                mode="signup"
+                onSuccess={handleOAuthSuccess}
+                onError={handleOAuthError}
+                disabled={isLoading}
+              />
+            </div>
+
             <div className="login-links">
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="link-button"
                 onClick={() => { setMode('login'); setError(''); setSuccess(''); }}
               >

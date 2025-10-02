@@ -13,10 +13,10 @@ const OAuthButton = ({ provider, onSuccess, onError, disabled = false, mode = 's
 
     try {
       let authData;
-      
+
       // Get authorization URL from backend
       if (provider === 'google') {
-        authData = await initiateGoogleOAuth();
+        authData = await initiateGoogleOAuth(mode === 'signup' ? 'signup' : 'login');
       }
       // LinkedIn and Nostr authentication temporarily disabled
       // else if (provider === 'linkedin') {
@@ -78,11 +78,13 @@ const OAuthButton = ({ provider, onSuccess, onError, disabled = false, mode = 's
     return null;
   }
 
-  const buttonText = isLoading 
+  const buttonText = isLoading
     ? `Connecting...`
-    : mode === 'link' 
+    : mode === 'link'
       ? `Link ${providerInfo.name}`
-      : providerInfo.displayName;
+      : mode === 'signup'
+        ? (providerInfo.signupDisplayName || `Sign up with ${providerInfo.name}`)
+        : providerInfo.displayName;
 
   return (
     <button

@@ -19,6 +19,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import LinkAccountPage from './pages/LinkAccountPage';
+import SetupAccountPage from './pages/SetupAccountPage';
 import './App.css';
 
 const AppContent = () => {
@@ -38,6 +40,8 @@ const AppContent = () => {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/link-account" element={<LinkAccountPage />} />
+          <Route path="/setup-account" element={<SetupAccountPage />} />
 
           {/* Root Route - Dashboard if authenticated, otherwise redirect to login */}
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

@@ -43,6 +43,9 @@ export default async function handler(req, res) {
       return res.redirect(`${process.env.FRONTEND_URL || 'https://app.proofofputt.com'}/login?oauth_error=invalid_session`);
     }
 
+    const oauthSession = sessionResult.rows[0];
+    const intentMode = oauthSession.mode || 'login'; // 'login' or 'signup'
+
     // Clean up the session
     await pool.query('DELETE FROM oauth_sessions WHERE state = $1', [state]);
 
@@ -85,41 +88,80 @@ export default async function handler(req, res) {
         'SELECT * FROM players WHERE email = $1',
         [email]
       );
-      
+
       player = playerResult.rows[0];
 
       if (player) {
-        // Link Google account to existing user
-        await pool.query(
-          `UPDATE players 
-           SET google_id = $1, 
-               oauth_providers = COALESCE(oauth_providers, '{}'::jsonb) || '{"google": true}'::jsonb,
-               avatar_url = COALESCE(avatar_url, $2),
-               oauth_profile = COALESCE(oauth_profile, '{}'::jsonb) || $3::jsonb,
-               updated_at = NOW()
-           WHERE player_id = $4`,
-          [googleId, picture, JSON.stringify({ google: { name, picture, verified: emailVerified } }), player.player_id]
-        );
-        
-        console.log(`[OAuth] Linked Google account to existing player ${player.player_id}`);
+        // Existing account found with matching email
+        if (intentMode === 'signup') {
+          // User tried to sign up, but account exists - redirect to account linking
+          console.log(`[OAuth] Account exists for ${email}, redirecting to link account`);
+          const linkToken = jwt.sign(
+            {
+              email,
+              googleId,
+              name,
+              picture,
+              emailVerified,
+              action: 'link_google'
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '15m' }
+          );
+          return res.redirect(`${process.env.FRONTEND_URL || 'https://app.proofofputt.com'}/link-account?token=${linkToken}&provider=google`);
+        } else {
+          // Login mode - link Google account to existing user
+          await pool.query(
+            `UPDATE players
+             SET google_id = $1,
+                 oauth_providers = COALESCE(oauth_providers, '{}'::jsonb) || '{"google": true}'::jsonb,
+                 avatar_url = COALESCE(avatar_url, $2),
+                 oauth_profile = COALESCE(oauth_profile, '{}'::jsonb) || $3::jsonb,
+                 updated_at = NOW()
+             WHERE player_id = $4`,
+            [googleId, picture, JSON.stringify({ google: { name, picture, verified: emailVerified } }), player.player_id]
+          );
+
+          console.log(`[OAuth] Linked Google account to existing player ${player.player_id}`);
+        }
       } else {
-        // Create new user account
-        const insertResult = await pool.query(
-          `INSERT INTO players (email, display_name, google_id, avatar_url, oauth_providers, oauth_profile, created_at) 
-           VALUES ($1, $2, $3, $4, $5, $6, NOW()) 
-           RETURNING *`,
-          [
-            email, 
-            name, 
-            googleId, 
-            picture,
-            JSON.stringify({ google: true }),
-            JSON.stringify({ google: { name, picture, verified: emailVerified } })
-          ]
-        );
-        
-        player = insertResult.rows[0];
-        console.log(`[OAuth] Created new player ${player.player_id} via Google OAuth`);
+        // No existing account
+        if (intentMode === 'login') {
+          // User tried to login, but no account exists - redirect to setup
+          console.log(`[OAuth] No account found for ${email}, redirecting to account setup`);
+          const setupToken = jwt.sign(
+            {
+              email,
+              googleId,
+              name,
+              picture,
+              emailVerified,
+              action: 'setup_account',
+              provider: 'google'
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '15m' }
+          );
+          return res.redirect(`${process.env.FRONTEND_URL || 'https://app.proofofputt.com'}/setup-account?token=${setupToken}&provider=google`);
+        } else {
+          // Signup mode - create new user account
+          const insertResult = await pool.query(
+            `INSERT INTO players (email, display_name, google_id, avatar_url, oauth_providers, oauth_profile, created_at)
+             VALUES ($1, $2, $3, $4, $5, $6, NOW())
+             RETURNING *`,
+            [
+              email,
+              name,
+              googleId,
+              picture,
+              JSON.stringify({ google: true }),
+              JSON.stringify({ google: { name, picture, verified: emailVerified } })
+            ]
+          );
+
+          player = insertResult.rows[0];
+          console.log(`[OAuth] Created new player ${player.player_id} via Google OAuth signup`);
+        }
       }
     } else {
       // Update existing Google-linked user
@@ -193,7 +235,7 @@ export default async function handler(req, res) {
     );
 
     // Redirect to frontend with success
-    const redirectUrl = new URL(process.env.FRONTEND_URL || 'https://app.proofofputt.com');
+    const redirectUrl = new URL(`${process.env.FRONTEND_URL || 'https://app.proofofputt.com'}/login`);
     redirectUrl.searchParams.set('oauth_success', 'true');
     redirectUrl.searchParams.set('token', appToken);
     redirectUrl.searchParams.set('provider', 'google');

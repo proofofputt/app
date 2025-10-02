@@ -222,7 +222,7 @@ export default async function handler(req, res) {
     );
 
     // Redirect to frontend with success
-    const redirectUrl = new URL(process.env.FRONTEND_URL || 'https://app.proofofputt.com');
+    const redirectUrl = new URL(`${process.env.FRONTEND_URL || 'https://app.proofofputt.com'}/login`);
     redirectUrl.searchParams.set('oauth_success', 'true');
     redirectUrl.searchParams.set('token', appToken);
     redirectUrl.searchParams.set('provider', 'linkedin');

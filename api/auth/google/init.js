@@ -22,11 +22,14 @@ export default async function handler(req, res) {
     // Validate environment variables
     if (!process.env.GOOGLE_CLIENT_ID) {
       console.error('GOOGLE_CLIENT_ID environment variable is not set');
-      return res.status(500).json({ 
-        success: false, 
-        message: 'OAuth configuration error' 
+      return res.status(500).json({
+        success: false,
+        message: 'OAuth configuration error'
       });
     }
+
+    // Get mode from request body ('login' or 'signup')
+    const { mode = 'login' } = req.body;
 
     const oauth2Client = new OAuth2Client(
       process.env.GOOGLE_CLIENT_ID,
@@ -38,13 +41,13 @@ export default async function handler(req, res) {
     const state = uuidv4();
     const sessionId = uuidv4();
 
-    // Store OAuth session in database
+    // Store OAuth session in database with mode
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-    
+
     await pool.query(
-      `INSERT INTO oauth_sessions (session_id, provider, state, expires_at) 
-       VALUES ($1, $2, $3, $4)`,
-      [sessionId, 'google', state, expiresAt]
+      `INSERT INTO oauth_sessions (session_id, provider, state, mode, expires_at)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [sessionId, 'google', state, mode, expiresAt]
     );
 
     // Generate authorization URL
