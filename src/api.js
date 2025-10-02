@@ -285,8 +285,11 @@ export const apiUpdateLeagueSettings = (leagueId, editorId, settings) =>
 export const apiStartLeague = (leagueId) => 
   fetch(`${API_BASE_URL}/leagues/${leagueId}/start`, { method: 'POST', headers: getHeaders() }).then(handleResponse);
 
-export const apiDeleteLeague = (leagueId, deleterId) => 
-  fetch(`${API_BASE_URL}/leagues/${leagueId}`, { method: 'DELETE', headers: getHeaders(), body: JSON.stringify({ deleter_id: deleterId }) }).then(handleResponse);
+export const apiDeleteLeague = (leagueId) =>
+  fetch(`${API_BASE_URL}/leagues/${leagueId}`, { method: 'DELETE', headers: getHeaders(), body: JSON.stringify({ action: 'delete' }) }).then(handleResponse);
+
+export const apiLeaveLeague = (leagueId) =>
+  fetch(`${API_BASE_URL}/leagues/${leagueId}`, { method: 'DELETE', headers: getHeaders(), body: JSON.stringify({ action: 'leave' }) }).then(handleResponse);
 
 // Get league invitations for a player
 export const apiGetLeagueInvitations = (playerId) => 

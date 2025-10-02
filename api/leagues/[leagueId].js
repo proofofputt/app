@@ -225,22 +225,20 @@ async function handleLeagueAction(req, res, client) {
       return res.status(400).json({ success: false, message: 'You are not a member of this league' });
     }
 
-    if (isCreator) {
-      return res.status(400).json({
-        success: false,
-        message: 'League creators cannot leave their own league. Delete the league instead.'
-      });
-    }
-
+    // Allow creators to leave their own league (they can host without playing)
     // Remove player from league
     await client.query(`
       DELETE FROM league_memberships
       WHERE league_id = $1 AND player_id = $2
     `, [leagueIdInt, user.playerId]);
 
+    const message = isCreator
+      ? `You have left "${league.name}" as a player. You remain the league creator and can still manage the league.`
+      : `Successfully left league "${league.name}"`;
+
     return res.status(200).json({
       success: true,
-      message: `Successfully left league "${league.name}"`
+      message
     });
 
   } else if (action === 'delete') {

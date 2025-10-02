@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNotification } from '../context/NotificationContext.jsx';
-import { apiGetLeagueDetails, apiJoinLeague, apiInviteToLeague, apiStartSession, apiGetLeaderboard } from '../api.js';
+import { apiGetLeagueDetails, apiJoinLeague, apiInviteToLeague, apiStartSession, apiGetLeaderboard, apiDeleteLeague, apiLeaveLeague } from '../api.js';
 import EditLeagueModal from './EditLeagueModal.jsx';
 import CountdownTimer from './CountdownTimer.jsx';
 import InlineInviteForm from './InlineInviteForm.jsx';
@@ -101,6 +101,36 @@ const LeagueDetailPage = () => {
       setIsJoining(false);
     }
   }, [leagueId, playerData, fetchLeagueDetails, showNotification]);
+
+  const handleDeleteLeague = useCallback(async () => {
+    if (!window.confirm(`Are you sure you want to permanently delete "${league?.name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await apiDeleteLeague(leagueId);
+      showNotification('League deleted successfully.');
+      // Redirect to leagues page after deletion
+      window.location.href = '/leagues';
+    } catch (err) {
+      showNotification(err.message || 'Failed to delete league.', true);
+    }
+  }, [leagueId, league?.name, showNotification]);
+
+  const handleLeaveLeague = useCallback(async () => {
+    if (!window.confirm(`Are you sure you want to leave "${league?.name}"?`)) {
+      return;
+    }
+
+    try {
+      await apiLeaveLeague(leagueId);
+      showNotification('Successfully left the league.');
+      // Redirect to leagues page after leaving
+      window.location.href = '/leagues';
+    } catch (err) {
+      showNotification(err.message || 'Failed to leave league.', true);
+    }
+  }, [leagueId, league?.name, showNotification]);
 
   const handleStartLeagueSession = useCallback(async (round) => {
     try {
@@ -392,7 +422,21 @@ const LeagueDetailPage = () => {
       <div className="card league-info-card">
         <div className="section-header">
           <h3>League Description</h3>
-          {canEdit && <button className="btn-tertiary btn-small" onClick={() => setShowEditModal(true)}>Edit League</button>}
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {canEdit && <button className="btn-tertiary btn-small" onClick={() => setShowEditModal(true)}>Edit League</button>}
+            {isMember && (
+              <button
+                className="btn-secondary btn-small"
+                onClick={handleLeaveLeague}
+                title={league.creator_id === playerData.player_id ? "Leave as a player (you'll remain the league creator)" : "Leave this league"}
+              >
+                Leave League
+              </button>
+            )}
+            {league.creator_id === playerData.player_id && (
+              <button className="btn-danger btn-small" onClick={handleDeleteLeague}>Delete League</button>
+            )}
+          </div>
         </div>
         <p className="league-description">{league.description || "No description provided."}</p>
         <div className="league-info-grid">
