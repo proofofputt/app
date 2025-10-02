@@ -29,7 +29,38 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const loadAndRefreshData = async () => {
       setIsLoading(true);
-      
+
+      // Check for auth token in URL (from desktop OAuth redirect)
+      const urlParams = new URLSearchParams(location.search);
+      const urlToken = urlParams.get('auth_token');
+
+      if (urlToken) {
+        // Store the token and remove from URL
+        localStorage.setItem('authToken', urlToken);
+        console.log('[AuthContext] Auth token received from URL, logging in...');
+
+        // Clear the URL parameter
+        window.history.replaceState({}, document.title, location.pathname);
+
+        // Decode JWT to get player data
+        try {
+          const payload = JSON.parse(atob(urlToken.split('.')[1]));
+          if (payload.player_id) {
+            // Fetch full player data
+            const freshData = await apiGetPlayerData(payload.player_id);
+            if (freshData) {
+              localStorage.setItem('playerData', JSON.stringify(freshData));
+              setPlayerData(freshData);
+              setIsLoading(false);
+              navigate('/dashboard');
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('[AuthContext] Failed to process URL token:', error);
+        }
+      }
+
       // Check for existing auth token and player data
       const token = localStorage.getItem('authToken');
       const storedPlayerData = localStorage.getItem('playerData');

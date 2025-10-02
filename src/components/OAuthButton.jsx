@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { initiateGoogleOAuth, initiateLinkedInOAuth, openOAuthPopup, OAUTH_PROVIDERS } from '../utils/oauth';
-import { authenticateWithNostr, isNostrAvailable } from '../utils/nostr';
+import { initiateGoogleOAuth, /* initiateLinkedInOAuth, */ openOAuthPopup, OAUTH_PROVIDERS } from '../utils/oauth';
+// import { authenticateWithNostr, isNostrAvailable } from '../utils/nostr';
 import './OAuthButton.css';
 
 const OAuthButton = ({ provider, onSuccess, onError, disabled = false, mode = 'signin' }) => {
@@ -17,28 +17,31 @@ const OAuthButton = ({ provider, onSuccess, onError, disabled = false, mode = 's
       // Get authorization URL from backend
       if (provider === 'google') {
         authData = await initiateGoogleOAuth();
-      } else if (provider === 'linkedin') {
-        authData = await initiateLinkedInOAuth();
-      } else if (provider === 'nostr') {
-        // Nostr authentication is handled directly (no popup needed)
-        const nostrResult = await authenticateWithNostr();
-        
-        if (nostrResult.success && nostrResult.token) {
-          localStorage.setItem('authToken', nostrResult.token);
-          
-          if (onSuccess) {
-            onSuccess({
-              token: nostrResult.token,
-              provider: 'nostr'
-            });
-          }
-        } else {
-          throw new Error(nostrResult.error || 'Nostr authentication failed');
-        }
-        
-        setIsLoading(false);
-        return;
-      } else {
+      }
+      // LinkedIn and Nostr authentication temporarily disabled
+      // else if (provider === 'linkedin') {
+      //   authData = await initiateLinkedInOAuth();
+      // } else if (provider === 'nostr') {
+      //   // Nostr authentication is handled directly (no popup needed)
+      //   const nostrResult = await authenticateWithNostr();
+      //
+      //   if (nostrResult.success && nostrResult.token) {
+      //     localStorage.setItem('authToken', nostrResult.token);
+      //
+      //     if (onSuccess) {
+      //       onSuccess({
+      //         token: nostrResult.token,
+      //         provider: 'nostr'
+      //       });
+      //     }
+      //   } else {
+      //     throw new Error(nostrResult.error || 'Nostr authentication failed');
+      //   }
+      //
+      //   setIsLoading(false);
+      //   return;
+      // }
+      else {
         throw new Error(`Unsupported provider: ${provider}`);
       }
 
