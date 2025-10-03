@@ -159,15 +159,15 @@ export function openOAuthPopup(authUrl, provider) {
           return;
         }
 
-        // Check if popup has navigated to our success page
+        // Check if popup has navigated to our success page (either /login or / with oauth params)
         const popupUrl = popup.location.href;
-        if (popupUrl && popupUrl.includes('/login')) {
+        if (popupUrl && (popupUrl.includes('oauth_success=true') || popupUrl.includes('oauth_error='))) {
           const url = new URL(popupUrl);
           const result = handleOAuthCallback(url.searchParams);
-          
+
           clearInterval(pollTimer);
           popup.close();
-          
+
           resolve(result);
         }
       } catch (e) {

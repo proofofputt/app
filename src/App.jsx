@@ -30,8 +30,14 @@ const AppContent = () => {
   const { playerData, isLoading } = useAuth();
   const [oauthProcessing, setOauthProcessing] = React.useState(false);
 
-  // Handle OAuth callback at app level
+  // Handle OAuth callback at app level (but not in popup windows)
   useEffect(() => {
+    // Don't process OAuth in popup windows - let the parent window handle it
+    if (window.opener) {
+      console.log('[App] Detected popup window, skipping OAuth processing');
+      return;
+    }
+
     const urlParams = new URLSearchParams(location.search);
     const oauthResult = handleOAuthCallback(urlParams);
 
