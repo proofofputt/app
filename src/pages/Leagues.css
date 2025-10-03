@@ -614,7 +614,7 @@
   letter-spacing: 0.5px;
   font-weight: 600;
   padding: 0.5rem 0.75rem; /* Thinner header */
-  border-top: 1px solid var(--primary-color);
+  border: none; /* Remove all borders from header */
 }
 
 /* Round the first and last header cells */
