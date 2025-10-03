@@ -118,7 +118,7 @@ const LoginPage = () => {
   const handleOAuthSuccess = ({ token, provider }) => {
     // Set loading state to show spinner immediately
     setIsLoading(true);
-    console.log(`[OAuth] Success callback received for ${provider}`);
+    console.log(`[OAuth v2.0] Success callback received for ${provider}`);
 
     // The token is already stored in localStorage by OAuthButton
     // Now fetch player data before navigating
