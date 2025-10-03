@@ -116,12 +116,13 @@ const LoginPage = () => {
   };
 
   const handleOAuthSuccess = ({ token, provider }) => {
-    setSuccess(`Successfully logged in with ${provider}!`);
+    // Set loading state to show spinner immediately
+    setIsLoading(true);
+    console.log(`[OAuth] Success callback received for ${provider}, navigating to dashboard`);
+
     // The token is already stored in localStorage by OAuthButton
-    // Navigate to dashboard
-    setTimeout(() => {
-      navigate('/');
-    }, 1500);
+    // Navigate to dashboard immediately
+    navigate('/', { replace: true });
   };
 
   const handleOAuthError = (errorMessage) => {
