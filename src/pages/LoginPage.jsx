@@ -45,7 +45,11 @@ const LoginPage = () => {
         const payload = JSON.parse(atob(oauthResult.token.split('.')[1]));
         if (payload.playerId) {
           // Use same login pattern as regular login to fetch player data
-          fetch(`/api/player/${payload.playerId}/data`)
+          fetch(`/api/player/${payload.playerId}/data`, {
+            headers: {
+              'Authorization': `Bearer ${oauthResult.token}`
+            }
+          })
             .then(res => res.json())
             .then(playerData => {
               localStorage.setItem('playerData', JSON.stringify(playerData));
