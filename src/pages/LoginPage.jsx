@@ -34,6 +34,7 @@ const LoginPage = () => {
 
     if (oauthResult.success && oauthResult.token) {
       // OAuth login successful - store token and fetch player data
+      console.log('[OAuth] Login successful, storing token');
       localStorage.setItem('authToken', oauthResult.token);
 
       // Clear stored referral since OAuth login doesn't need it
@@ -41,28 +42,42 @@ const LoginPage = () => {
 
       // Decode JWT to get player_id and fetch full player data
       const payload = JSON.parse(atob(oauthResult.token.split('.')[1]));
+      console.log('[OAuth] Decoded payload:', payload);
 
       if (payload.playerId) {
         // Use same login pattern as regular login to fetch player data
+        console.log(`[OAuth] Fetching player data for ID ${payload.playerId}`);
         fetch(`/api/player/${payload.playerId}/data`, {
           headers: {
             'Authorization': `Bearer ${oauthResult.token}`
           }
         })
-          .then(res => res.json())
+          .then(res => {
+            console.log(`[OAuth] Player data response status: ${res.status}`);
+            if (!res.ok) {
+              throw new Error(`HTTP ${res.status}`);
+            }
+            return res.json();
+          })
           .then(playerData => {
-            localStorage.setItem('playerData', JSON.stringify(playerData));
-            // Navigate immediately to dashboard
-            navigate('/', { replace: true });
+            console.log('[OAuth] Player data received:', playerData);
+            if (playerData && playerData.player_id) {
+              localStorage.setItem('playerData', JSON.stringify(playerData));
+              console.log('[OAuth] Player data stored, navigating to dashboard');
+              // Navigate immediately to dashboard
+              navigate('/', { replace: true });
+            } else {
+              console.error('[OAuth] Invalid player data received');
+              setError('Authentication failed - invalid player data');
+            }
           })
           .catch(error => {
-            console.error('Failed to fetch player data:', error);
-            // Navigate anyway, AuthContext will handle fetching
-            navigate('/', { replace: true });
+            console.error('[OAuth] Failed to fetch player data:', error);
+            setError(`Authentication failed: ${error.message}`);
           });
       } else {
-        console.error('No playerId in JWT payload');
-        navigate('/', { replace: true });
+        console.error('[OAuth] No playerId in JWT payload');
+        setError('Authentication failed - invalid token');
       }
 
     } else if (oauthResult.error) {
