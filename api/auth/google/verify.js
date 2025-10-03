@@ -45,11 +45,16 @@ export default async function handler(req, res) {
       const maxIdQuery = await pool.query('SELECT COALESCE(MAX(player_id), 999) as max_id FROM players');
       const nextPlayerId = Math.max(maxIdQuery.rows[0].max_id + 1, 1000);
 
+      // OAuth users don't have passwords, but password_hash has NOT NULL constraint
+      // Use a placeholder that can't be matched (bcrypt hash of random UUID)
+      const placeholderPasswordHash = '$2a$10$OAUTH_USER_NO_PASSWORD_PLACEHOLDER_HASH_CANNOT_LOGIN';
+
       const insertResult = await pool.query(
         `INSERT INTO players (
           player_id,
           email,
           name,
+          password_hash,
           google_id,
           membership_tier,
           subscription_status,
@@ -57,12 +62,13 @@ export default async function handler(req, res) {
           created_at,
           updated_at
         )
-         VALUES ($1, $2, $3, $4, 'basic', 'active', 'America/New_York', NOW(), NOW())
+         VALUES ($1, $2, $3, $4, $5, 'basic', 'active', 'America/New_York', NOW(), NOW())
          RETURNING *`,
         [
           nextPlayerId,
           email,
           display_name,
+          placeholderPasswordHash,
           google_id
         ]
       );
