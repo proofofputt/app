@@ -260,13 +260,11 @@ export default async function handler(req, res) {
       { expiresIn: '7d' }
     );
 
-    // Redirect to frontend with success
-    const redirectUrl = new URL(`${process.env.FRONTEND_URL || 'https://app.proofofputt.com'}/login`);
-    redirectUrl.searchParams.set('oauth_success', 'true');
-    redirectUrl.searchParams.set('token', appToken);
-    redirectUrl.searchParams.set('provider', 'google');
+    // Redirect to frontend with success (use absolute URL to avoid Vercel path issues)
+    const frontendUrl = process.env.FRONTEND_URL || 'https://app.proofofputt.com';
+    const redirectUrl = `${frontendUrl}/login?oauth_success=true&token=${encodeURIComponent(appToken)}&provider=google`;
 
-    return res.redirect(redirectUrl.toString());
+    return res.redirect(redirectUrl);
 
   } catch (error) {
     console.error('Google OAuth callback error:', error);
