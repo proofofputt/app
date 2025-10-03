@@ -103,9 +103,16 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Google OAuth verification error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      stack: error.stack
+    });
     return res.status(500).json({
       success: false,
-      message: 'Failed to verify Google authentication'
+      message: 'Failed to verify Google authentication',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 }
