@@ -118,11 +118,56 @@ const LoginPage = () => {
   const handleOAuthSuccess = ({ token, provider }) => {
     // Set loading state to show spinner immediately
     setIsLoading(true);
-    console.log(`[OAuth] Success callback received for ${provider}, navigating to dashboard`);
+    console.log(`[OAuth] Success callback received for ${provider}`);
 
     // The token is already stored in localStorage by OAuthButton
-    // Navigate to dashboard immediately
-    navigate('/', { replace: true });
+    // Now fetch player data before navigating
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      console.log('[OAuth] Decoded payload:', payload);
+
+      if (payload.playerId) {
+        console.log(`[OAuth] Fetching player data for ID ${payload.playerId}`);
+        fetch(`/api/player/${payload.playerId}/data`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+          .then(res => {
+            console.log(`[OAuth] Player data response status: ${res.status}`);
+            if (!res.ok) {
+              throw new Error(`HTTP ${res.status}`);
+            }
+            return res.json();
+          })
+          .then(playerData => {
+            console.log('[OAuth] Player data received:', playerData);
+            if (playerData && playerData.player_id) {
+              localStorage.setItem('playerData', JSON.stringify(playerData));
+              console.log('[OAuth] Player data stored, navigating to dashboard');
+              // Reload page to let AuthContext pick up the new data
+              window.location.href = '/';
+            } else {
+              console.error('[OAuth] Invalid player data received');
+              setIsLoading(false);
+              setError('Authentication failed - invalid player data');
+            }
+          })
+          .catch(error => {
+            console.error('[OAuth] Failed to fetch player data:', error);
+            setIsLoading(false);
+            setError(`Authentication failed: ${error.message}`);
+          });
+      } else {
+        console.error('[OAuth] No playerId in JWT payload');
+        setIsLoading(false);
+        setError('Authentication failed - invalid token');
+      }
+    } catch (error) {
+      console.error('[OAuth] Failed to decode JWT:', error);
+      setIsLoading(false);
+      setError('Authentication failed - invalid token');
+    }
   };
 
   const handleOAuthError = (errorMessage) => {
