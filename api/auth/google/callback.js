@@ -22,17 +22,19 @@ export default async function handler(req, res) {
   const frontendBaseUrl = process.env.FRONTEND_URL || 'https://app.proofofputt.com';
 
   try {
-    // Handle OAuth errors
+    // Handle OAuth errors (use HTML redirect to bypass Vercel rewrite issues)
     if (error) {
       console.error('Google OAuth error:', error);
-      res.writeHead(302, { 'Location': `${frontendBaseUrl}/login?oauth_error=${encodeURIComponent(error)}` });
-      return res.end();
+      const redirectUrl = `${frontendBaseUrl}/login?oauth_error=${encodeURIComponent(error)}`;
+      res.setHeader('Content-Type', 'text/html');
+      return res.status(200).send(`<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${redirectUrl}"><script>window.location.href="${redirectUrl}";</script></head><body>Redirecting...</body></html>`);
     }
 
     if (!code || !state) {
       console.error('Missing authorization code or state parameter');
-      res.writeHead(302, { 'Location': `${frontendBaseUrl}/login?oauth_error=missing_parameters` });
-      return res.end();
+      const redirectUrl = `${frontendBaseUrl}/login?oauth_error=missing_parameters`;
+      res.setHeader('Content-Type', 'text/html');
+      return res.status(200).send(`<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${redirectUrl}"><script>window.location.href="${redirectUrl}";</script></head><body>Redirecting...</body></html>`);
     }
 
     // Verify state parameter against stored session
@@ -43,8 +45,9 @@ export default async function handler(req, res) {
 
     if (sessionResult.rows.length === 0) {
       console.error('Invalid or expired OAuth session');
-      res.writeHead(302, { 'Location': `${frontendBaseUrl}/login?oauth_error=invalid_session` });
-      return res.end();
+      const redirectUrl = `${frontendBaseUrl}/login?oauth_error=invalid_session`;
+      res.setHeader('Content-Type', 'text/html');
+      return res.status(200).send(`<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${redirectUrl}"><script>window.location.href="${redirectUrl}";</script></head><body>Redirecting...</body></html>`);
     }
 
     const oauthSession = sessionResult.rows[0];
@@ -112,8 +115,9 @@ export default async function handler(req, res) {
             process.env.JWT_SECRET,
             { expiresIn: '15m' }
           );
-          res.writeHead(302, { 'Location': `${frontendBaseUrl}/link-account?token=${linkToken}&provider=google` });
-          return res.end();
+          const redirectUrl = `${frontendBaseUrl}/link-account?token=${linkToken}&provider=google`;
+          res.setHeader('Content-Type', 'text/html');
+          return res.status(200).send(`<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${redirectUrl}"><script>window.location.href="${redirectUrl}";</script></head><body>Redirecting...</body></html>`);
         } else {
           // Login mode - link Google account to existing user
           await pool.query(
@@ -265,14 +269,15 @@ export default async function handler(req, res) {
       { expiresIn: '7d' }
     );
 
-    // Redirect to frontend with success (use absolute URL to avoid Vercel path issues)
+    // Redirect to frontend with success (use HTML redirect to bypass Vercel rewrite issues)
     const redirectUrl = `${frontendBaseUrl}/login?oauth_success=true&token=${encodeURIComponent(appToken)}&provider=google`;
-    res.writeHead(302, { 'Location': redirectUrl });
-    return res.end();
+    res.setHeader('Content-Type', 'text/html');
+    return res.status(200).send(`<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${redirectUrl}"><script>window.location.href="${redirectUrl}";</script></head><body>Redirecting...</body></html>`);
 
   } catch (error) {
     console.error('Google OAuth callback error:', error);
-    res.writeHead(302, { 'Location': `${frontendBaseUrl}/login?oauth_error=authentication_failed` });
-    return res.end();
+    const redirectUrl = `${frontendBaseUrl}/login?oauth_error=authentication_failed`;
+    res.setHeader('Content-Type', 'text/html');
+    return res.status(200).send(`<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${redirectUrl}"><script>window.location.href="${redirectUrl}";</script></head><body>Redirecting...</body></html>`);
   }
 }
