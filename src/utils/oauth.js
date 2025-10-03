@@ -147,41 +147,51 @@ export function openOAuthPopup(authUrl, provider) {
       return;
     }
 
-    // Poll for popup closure or success
+    // Listen for postMessage from popup
+    const messageHandler = (event) => {
+      // Verify origin matches our app
+      if (event.origin !== window.location.origin) {
+        return;
+      }
+
+      // Check if this is an OAuth result message
+      if (event.data && event.data.type === 'OAUTH_RESULT') {
+        console.log('[OAuth] Received result from popup:', event.data.result);
+
+        window.removeEventListener('message', messageHandler);
+        clearInterval(pollTimer);
+        clearTimeout(timeoutId);
+
+        // Popup will close itself
+        resolve(event.data.result);
+      }
+    };
+
+    window.addEventListener('message', messageHandler);
+
+    // Also poll for popup closure (backup in case postMessage fails)
     const pollTimer = setInterval(() => {
-      try {
-        if (popup.closed) {
-          clearInterval(pollTimer);
-          resolve({
-            success: false,
-            error: 'Authentication cancelled'
-          });
-          return;
-        }
+      if (popup.closed) {
+        clearInterval(pollTimer);
+        clearTimeout(timeoutId);
+        window.removeEventListener('message', messageHandler);
 
-        // Check if popup has navigated to our success page (either /login or / with oauth params)
-        const popupUrl = popup.location.href;
-        if (popupUrl && (popupUrl.includes('oauth_success=true') || popupUrl.includes('oauth_error='))) {
-          const url = new URL(popupUrl);
-          const result = handleOAuthCallback(url.searchParams);
-
-          clearInterval(pollTimer);
-          popup.close();
-
-          resolve(result);
-        }
-      } catch (e) {
-        // Cross-origin errors are expected during OAuth flow
-        // Continue polling until popup closes or succeeds
+        resolve({
+          success: false,
+          error: 'Authentication cancelled'
+        });
       }
     }, 1000);
 
     // Timeout after 5 minutes
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       clearInterval(pollTimer);
+      window.removeEventListener('message', messageHandler);
+
       if (!popup.closed) {
         popup.close();
       }
+
       resolve({
         success: false,
         error: 'Authentication timeout'

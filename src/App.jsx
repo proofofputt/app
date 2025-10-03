@@ -32,9 +32,24 @@ const AppContent = () => {
 
   // Handle OAuth callback at app level (but not in popup windows)
   useEffect(() => {
-    // Don't process OAuth in popup windows - let the parent window handle it
+    // If this is a popup window, send OAuth result to parent and close
     if (window.opener) {
-      console.log('[App] Detected popup window, skipping OAuth processing');
+      console.log('[App] Detected popup window, checking for OAuth params');
+      const urlParams = new URLSearchParams(location.search);
+      const oauthResult = handleOAuthCallback(urlParams);
+
+      if (oauthResult.success || oauthResult.error) {
+        console.log('[App] Sending OAuth result to parent window');
+        window.opener.postMessage({
+          type: 'OAUTH_RESULT',
+          result: oauthResult
+        }, window.location.origin);
+
+        // Close popup after sending message
+        setTimeout(() => {
+          window.close();
+        }, 100);
+      }
       return;
     }
 
