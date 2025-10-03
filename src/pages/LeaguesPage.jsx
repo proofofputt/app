@@ -195,7 +195,7 @@ const LeaguesPage = () => {
                 <th>Start Date/Time</th>
                 <th>Time Limit</th>
                 <th>Shoot-Out #</th>
-                <th>Number of Rounds</th>
+                <th>Rounds</th>
                 <th>Round Interval</th>
               </tr>
             </thead>
@@ -226,7 +226,7 @@ const LeaguesPage = () => {
                 <th>Start Date/Time</th>
                 <th>Time Limit</th>
                 <th>Shoot-Out #</th>
-                <th>Number of Rounds</th>
+                <th>Rounds</th>
                 <th>Round Interval</th>
               </tr>
             </thead>

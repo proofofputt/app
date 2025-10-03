@@ -572,36 +572,60 @@
   width: 100%;
   background-color: var(--surface-color);
   border-radius: 12px;
-  padding: 0 1.5rem 1rem;
+  padding: 1.5rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
   box-sizing: border-box;
   border: 1px solid var(--border-color);
+  overflow-x: auto; /* Allow horizontal scrolling on small screens */
 }
 
 .leagues-table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 800px; /* Prevent table from getting too narrow */
 }
 
 .leagues-table th,
 .leagues-table td {
-  padding: 1rem; /* A bit more padding for readability */
+  padding: 0.75rem; /* Slightly reduced padding */
   text-align: left;
   border-bottom: 1px solid var(--border-color);
   vertical-align: middle;
+  white-space: nowrap; /* Prevent column wrapping */
 }
 
 .leagues-table tbody tr:last-child td {
   border-bottom: none;
 }
 
+.leagues-table thead {
+  position: relative;
+}
+
+.leagues-table thead tr {
+  background-color: transparent;
+}
+
 .leagues-table th {
   background-color: var(--primary-color);
   color: var(--masters-green-dark);
   text-transform: uppercase;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   letter-spacing: 0.5px;
-  font-weight: bold;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem; /* Thinner header */
+  border-top: 1px solid var(--primary-color);
+}
+
+/* Round the first and last header cells */
+.leagues-table th:first-child {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+.leagues-table th:last-child {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
 }
 
 .leagues-table tbody tr:hover {
@@ -624,10 +648,11 @@
 .leagues-table .league-description-cell {
   color: var(--text-color-secondary);
   font-size: 0.9rem;
-  max-width: 400px; /* Prevent long descriptions from stretching the table too much */
-  white-space: nowrap;
+  max-width: 300px; /* Limit description width */
+  white-space: normal; /* Allow wrapping */
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.4;
 }
 
 .leagues-table a {
