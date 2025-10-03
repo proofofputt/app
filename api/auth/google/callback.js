@@ -265,10 +265,10 @@ export default async function handler(req, res) {
       { expiresIn: '7d' }
     );
 
-    // Redirect to frontend with success (construct URL in JS to bypass Vercel rewriting)
+    // Redirect to frontend with success (redirect to dashboard root)
     const encodedToken = encodeURIComponent(appToken);
     res.setHeader('Content-Type', 'text/html');
-    return res.status(200).send(`<!DOCTYPE html><html><head><script>var u="https"+"://"+"${frontendDomain}"+"/log"+"in"+"?oauth_success=true&token=${encodedToken}&provider=google";window.location.replace(u);</script></head><body>Redirecting...</body></html>`);
+    return res.status(200).send(`<!DOCTYPE html><html><head><script>var u="https"+"://"+"${frontendDomain}"+"/?oauth_success=true&token=${encodedToken}&provider=google";window.location.replace(u);</script></head><body>Redirecting...</body></html>`);
 
   } catch (error) {
     console.error('Google OAuth callback error:', error);
