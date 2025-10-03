@@ -17,9 +17,17 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [referralContext, setReferralContext] = useState({ hasReferral: false });
-  const { login } = useAuth();
+  const { login, playerData } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (playerData && playerData.player_id) {
+      console.log('[LoginPage] User already authenticated, redirecting to dashboard');
+      navigate('/', { replace: true });
+    }
+  }, [playerData, navigate]);
 
   // Handle OAuth callback and referral tracking on component mount
   useEffect(() => {
