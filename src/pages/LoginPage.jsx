@@ -24,31 +24,56 @@ const LoginPage = () => {
   // Handle OAuth callback and referral tracking on component mount
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
-    
+
     // Handle referral tracking first
     handleReferralTracking(urlParams);
     setReferralContext(getReferralContext(urlParams));
-    
+
     // Then handle OAuth callback
     const oauthResult = handleOAuthCallback(urlParams);
-    
+
     if (oauthResult.success && oauthResult.token) {
-      // OAuth login successful
+      // OAuth login successful - store token and fetch player data
       localStorage.setItem('authToken', oauthResult.token);
       setSuccess(`Successfully logged in with ${oauthResult.provider}!`);
-      
+
       // Clear stored referral since OAuth login doesn't need it
       clearStoredReferralSession();
-      
-      // Navigate to dashboard after a brief delay
-      setTimeout(() => {
-        navigate('/');
-      }, 1500);
-      
+
+      // Decode JWT to get player_id and fetch full player data
+      try {
+        const payload = JSON.parse(atob(oauthResult.token.split('.')[1]));
+        if (payload.playerId) {
+          // Use same login pattern as regular login to fetch player data
+          fetch(`/api/player/${payload.playerId}/data`)
+            .then(res => res.json())
+            .then(playerData => {
+              localStorage.setItem('playerData', JSON.stringify(playerData));
+              // Navigate to dashboard after a brief delay
+              setTimeout(() => {
+                navigate('/');
+              }, 1500);
+            })
+            .catch(error => {
+              console.error('Failed to fetch player data:', error);
+              // Navigate anyway, AuthContext will handle fetching
+              setTimeout(() => {
+                navigate('/');
+              }, 1500);
+            });
+        }
+      } catch (error) {
+        console.error('Failed to decode OAuth token:', error);
+        // Navigate anyway, let AuthContext handle it
+        setTimeout(() => {
+          navigate('/');
+        }, 1500);
+      }
+
     } else if (oauthResult.error) {
       // OAuth login failed
       setError(`OAuth login failed: ${oauthResult.error}`);
-      
+
       // Clean up URL parameters
       navigate('/login', { replace: true });
     }
