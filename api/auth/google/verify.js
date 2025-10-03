@@ -42,8 +42,17 @@ export default async function handler(req, res) {
       const display_name = name || email.split('@')[0];
 
       const insertResult = await pool.query(
-        `INSERT INTO players (email, name, google_id, created_at)
-         VALUES ($1, $2, $3, NOW())
+        `INSERT INTO players (
+          email,
+          name,
+          google_id,
+          membership_tier,
+          subscription_status,
+          timezone,
+          created_at,
+          updated_at
+        )
+         VALUES ($1, $2, $3, 'basic', 'active', 'America/New_York', NOW(), NOW())
          RETURNING *`,
         [
           email,
