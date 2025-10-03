@@ -28,6 +28,7 @@ const AppContent = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { playerData, isLoading } = useAuth();
+  const [oauthProcessing, setOauthProcessing] = React.useState(false);
 
   // Handle OAuth callback at app level
   useEffect(() => {
@@ -35,44 +36,61 @@ const AppContent = () => {
     const oauthResult = handleOAuthCallback(urlParams);
 
     if (oauthResult.success && oauthResult.token) {
+      setOauthProcessing(true);
       console.log('[App] OAuth callback detected, storing token');
       localStorage.setItem('authToken', oauthResult.token);
 
       // Decode JWT to get player_id and fetch player data
-      const payload = JSON.parse(atob(oauthResult.token.split('.')[1]));
-      console.log('[App] Decoded payload:', payload);
+      try {
+        const payload = JSON.parse(atob(oauthResult.token.split('.')[1]));
+        console.log('[App] Decoded payload:', payload);
 
-      if (payload.playerId) {
-        console.log(`[App] Fetching player data for ID ${payload.playerId}`);
-        fetch(`/api/player/${payload.playerId}/data`, {
-          headers: {
-            'Authorization': `Bearer ${oauthResult.token}`
-          }
-        })
-          .then(res => {
-            console.log(`[App] Player data response status: ${res.status}`);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            return res.json();
-          })
-          .then(playerData => {
-            console.log('[App] Player data received:', playerData);
-            if (playerData && playerData.player_id) {
-              localStorage.setItem('playerData', JSON.stringify(playerData));
-              console.log('[App] Player data stored, cleaning URL');
-              // Clean URL and force reload to update auth state
-              navigate('/', { replace: true });
-              window.location.reload();
+        if (payload.playerId) {
+          console.log(`[App] Fetching player data for ID ${payload.playerId}`);
+          fetch(`/api/player/${payload.playerId}/data`, {
+            headers: {
+              'Authorization': `Bearer ${oauthResult.token}`
             }
           })
-          .catch(error => {
-            console.error('[App] Failed to fetch player data:', error);
-          });
+            .then(res => {
+              console.log(`[App] Player data response status: ${res.status}`);
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              return res.json();
+            })
+            .then(playerData => {
+              console.log('[App] Player data received:', playerData);
+              if (playerData && playerData.player_id) {
+                localStorage.setItem('playerData', JSON.stringify(playerData));
+                console.log('[App] Player data stored, reloading page');
+                // Reload to update auth state with clean URL
+                window.location.href = '/';
+              } else {
+                console.error('[App] Invalid player data:', playerData);
+                setOauthProcessing(false);
+              }
+            })
+            .catch(error => {
+              console.error('[App] Failed to fetch player data:', error);
+              setOauthProcessing(false);
+            });
+        } else {
+          console.error('[App] No playerId in JWT');
+          setOauthProcessing(false);
+        }
+      } catch (error) {
+        console.error('[App] Failed to decode JWT:', error);
+        setOauthProcessing(false);
       }
     }
   }, [location.search, navigate]);
 
-  if (isLoading) {
-    return <p style={{ textAlign: 'center', padding: '2rem' }}>Loading...</p>;
+  if (isLoading || oauthProcessing) {
+    return (
+      <div style={{ textAlign: 'center', padding: '3rem' }}>
+        <div className="loading-spinner" style={{ margin: '0 auto 1rem' }}></div>
+        <p>{oauthProcessing ? 'Completing sign in...' : 'Loading...'}</p>
+      </div>
+    );
   }
 
   return (
