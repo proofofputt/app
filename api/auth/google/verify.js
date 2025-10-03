@@ -42,15 +42,13 @@ export default async function handler(req, res) {
       const display_name = name || email.split('@')[0];
 
       const insertResult = await pool.query(
-        `INSERT INTO players (email, display_name, google_id, oauth_providers, oauth_profile, created_at)
-         VALUES ($1, $2, $3, $4, $5, NOW())
+        `INSERT INTO players (email, name, google_id, created_at)
+         VALUES ($1, $2, $3, NOW())
          RETURNING *`,
         [
           email,
           display_name,
-          google_id,
-          JSON.stringify({ google: true }),
-          JSON.stringify({ google: { name, verified: true } })
+          google_id
         ]
       );
 
@@ -74,7 +72,7 @@ export default async function handler(req, res) {
       {
         player_id: playerData.player_id,
         email: playerData.email,
-        display_name: playerData.display_name
+        name: playerData.name
       },
       process.env.JWT_SECRET || 'your-secret-key-change-this',
       { expiresIn: '7d' }
@@ -88,8 +86,8 @@ export default async function handler(req, res) {
       player: {
         player_id: playerData.player_id,
         email: playerData.email,
-        display_name: playerData.display_name,
-        name: playerData.display_name,
+        name: playerData.name,
+        display_name: playerData.name,
         created_at: playerData.created_at
       }
     });
