@@ -9,7 +9,10 @@
     "dev:full": "npm run dev:server & npm run dev",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:oauth": "node tests/oauth-flow-test.js",
+    "test:oauth:prod": "API_BASE_URL=https://app.proofofputt.com node tests/oauth-flow-test.js",
+    "test:all": "npm run test:oauth"
   },
   "dependencies": {
     "@sendgrid/mail": "^8.1.5",
