@@ -41,8 +41,13 @@ export default async function handler(req, res) {
 
       const display_name = name || email.split('@')[0];
 
+      // Get the next player ID starting from 1000 (matching register.js)
+      const maxIdQuery = await pool.query('SELECT COALESCE(MAX(player_id), 999) as max_id FROM players');
+      const nextPlayerId = Math.max(maxIdQuery.rows[0].max_id + 1, 1000);
+
       const insertResult = await pool.query(
         `INSERT INTO players (
+          player_id,
           email,
           name,
           google_id,
@@ -52,9 +57,10 @@ export default async function handler(req, res) {
           created_at,
           updated_at
         )
-         VALUES ($1, $2, $3, 'basic', 'active', 'America/New_York', NOW(), NOW())
+         VALUES ($1, $2, $3, $4, 'basic', 'active', 'America/New_York', NOW(), NOW())
          RETURNING *`,
         [
+          nextPlayerId,
           email,
           display_name,
           google_id
@@ -62,6 +68,25 @@ export default async function handler(req, res) {
       );
 
       user = insertResult;
+
+      // Initialize player stats (matching register.js)
+      const newPlayerId = user.rows[0].player_id;
+      await pool.query(
+        `INSERT INTO player_stats (
+          player_id,
+          total_sessions,
+          total_putts,
+          total_makes,
+          total_misses,
+          make_percentage,
+          best_streak,
+          created_at,
+          updated_at
+        )
+        VALUES ($1, 0, 0, 0, 0, 0.0, 0, NOW(), NOW())
+        ON CONFLICT (player_id) DO NOTHING`,
+        [newPlayerId]
+      );
     } else {
       // Update existing user with Google ID if not set
       const existingUser = user.rows[0];
