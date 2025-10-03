@@ -125,43 +125,69 @@ export default async function handler(req, res) {
           console.log(`[OAuth] Linked Google account to existing player ${player.player_id}`);
         }
       } else {
-        // No existing account
-        if (intentMode === 'login') {
-          // User tried to login, but no account exists - redirect to setup
-          console.log(`[OAuth] No account found for ${email}, redirecting to account setup`);
-          const setupToken = jwt.sign(
-            {
-              email,
-              googleId,
-              name,
-              picture,
-              emailVerified,
-              action: 'setup_account',
-              provider: 'google'
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: '15m' }
-          );
-          return res.redirect(`${process.env.FRONTEND_URL || 'https://app.proofofputt.com'}/setup-account?token=${setupToken}&provider=google`);
-        } else {
-          // Signup mode - create new user account
-          const insertResult = await pool.query(
-            `INSERT INTO players (email, display_name, google_id, avatar_url, oauth_providers, oauth_profile, created_at)
-             VALUES ($1, $2, $3, $4, $5, $6, NOW())
-             RETURNING *`,
-            [
-              email,
-              name,
-              googleId,
-              picture,
-              JSON.stringify({ google: true }),
-              JSON.stringify({ google: { name, picture, verified: emailVerified } })
-            ]
-          );
+        // No existing account - create new user (both login and signup mode)
+        console.log(`[OAuth] Creating new account for ${email}`);
 
-          player = insertResult.rows[0];
-          console.log(`[OAuth] Created new player ${player.player_id} via Google OAuth signup`);
-        }
+        // Get next player ID starting from 1000 (matching verify endpoint)
+        const maxIdQuery = await pool.query('SELECT COALESCE(MAX(player_id), 999) as max_id FROM players');
+        const nextPlayerId = Math.max(maxIdQuery.rows[0].max_id + 1, 1000);
+
+        // OAuth users don't have passwords, but password_hash has NOT NULL constraint
+        const placeholderPasswordHash = '$2a$10$OAUTH_USER_NO_PASSWORD_PLACEHOLDER_HASH_CANNOT_LOGIN';
+
+        const insertResult = await pool.query(
+          `INSERT INTO players (
+            player_id,
+            email,
+            name,
+            display_name,
+            password_hash,
+            google_id,
+            avatar_url,
+            oauth_providers,
+            oauth_profile,
+            membership_tier,
+            subscription_status,
+            timezone,
+            created_at,
+            updated_at
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'basic', 'active', 'America/New_York', NOW(), NOW())
+          RETURNING *`,
+          [
+            nextPlayerId,
+            email,
+            name,
+            name, // display_name
+            placeholderPasswordHash,
+            googleId,
+            picture,
+            JSON.stringify({ google: true }),
+            JSON.stringify({ google: { name, picture, verified: emailVerified } })
+          ]
+        );
+
+        player = insertResult.rows[0];
+
+        // Initialize player stats (matching verify endpoint)
+        await pool.query(
+          `INSERT INTO player_stats (
+            player_id,
+            total_sessions,
+            total_putts,
+            total_makes,
+            total_misses,
+            make_percentage,
+            best_streak,
+            created_at,
+            updated_at
+          )
+          VALUES ($1, 0, 0, 0, 0, 0.0, 0, NOW(), NOW())
+          ON CONFLICT (player_id) DO NOTHING`,
+          [nextPlayerId]
+        );
+
+        console.log(`[OAuth] Created new player ${player.player_id} via Google OAuth`);
       }
     } else {
       // Update existing Google-linked user
