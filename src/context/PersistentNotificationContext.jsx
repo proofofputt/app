@@ -23,7 +23,7 @@ export const PersistentNotificationProvider = ({ children }) => {
     if (!playerData) return;
 
     try {
-      const result = await apiGetUnreadNotificationsCount(playerData.id);
+      const result = await apiGetUnreadNotificationsCount(playerData.player_id);
       setUnreadCount(result.unread_count || 0);
     } catch (error) {
       console.error('Failed to fetch unread notification count:', error);
@@ -37,7 +37,7 @@ export const PersistentNotificationProvider = ({ children }) => {
     setError('');
 
     try {
-      const result = await apiGetNotifications(playerData.id);
+      const result = await apiGetNotifications(playerData.player_id);
       setNotifications(result.notifications || []);
       setUnreadCount(result.unread_count || 0);
     } catch (error) {
@@ -60,7 +60,7 @@ export const PersistentNotificationProvider = ({ children }) => {
     if (!playerData) return;
 
     try {
-      await apiMarkNotificationAsRead(playerData.id, notificationId);
+      await apiMarkNotificationAsRead(playerData.player_id, notificationId);
       setNotifications(prev => prev.map(n => (n.id === notificationId ? { ...n, read_status: true } : n)));
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
@@ -73,7 +73,7 @@ export const PersistentNotificationProvider = ({ children }) => {
     if (!playerData) return;
 
     try {
-      await apiMarkAllNotificationsAsRead(playerData.id);
+      await apiMarkAllNotificationsAsRead(playerData.player_id);
       setNotifications(prev => prev.map(n => ({ ...n, read_status: true })));
       setUnreadCount(0);
     } catch (error) {
@@ -88,7 +88,7 @@ export const PersistentNotificationProvider = ({ children }) => {
     const notificationToDelete = notifications.find(n => n.id === notificationId);
 
     try {
-      await apiDeleteNotification(playerData.id, notificationId);
+      await apiDeleteNotification(playerData.player_id, notificationId);
       setNotifications(prev => prev.filter(n => n.id !== notificationId));
       if (notificationToDelete && !notificationToDelete.read_status) {
         setUnreadCount(prev => Math.max(0, prev - 1));
