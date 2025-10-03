@@ -25,12 +25,14 @@ export default async function handler(req, res) {
     // Handle OAuth errors
     if (error) {
       console.error('Google OAuth error:', error);
-      return res.redirect(302, `${frontendBaseUrl}/login?oauth_error=${encodeURIComponent(error)}`);
+      res.writeHead(302, { 'Location': `${frontendBaseUrl}/login?oauth_error=${encodeURIComponent(error)}` });
+      return res.end();
     }
 
     if (!code || !state) {
       console.error('Missing authorization code or state parameter');
-      return res.redirect(302, `${frontendBaseUrl}/login?oauth_error=missing_parameters`);
+      res.writeHead(302, { 'Location': `${frontendBaseUrl}/login?oauth_error=missing_parameters` });
+      return res.end();
     }
 
     // Verify state parameter against stored session
@@ -41,7 +43,8 @@ export default async function handler(req, res) {
 
     if (sessionResult.rows.length === 0) {
       console.error('Invalid or expired OAuth session');
-      return res.redirect(302, `${frontendBaseUrl}/login?oauth_error=invalid_session`);
+      res.writeHead(302, { 'Location': `${frontendBaseUrl}/login?oauth_error=invalid_session` });
+      return res.end();
     }
 
     const oauthSession = sessionResult.rows[0];
@@ -109,7 +112,8 @@ export default async function handler(req, res) {
             process.env.JWT_SECRET,
             { expiresIn: '15m' }
           );
-          return res.redirect(302, `${frontendBaseUrl}/link-account?token=${linkToken}&provider=google`);
+          res.writeHead(302, { 'Location': `${frontendBaseUrl}/link-account?token=${linkToken}&provider=google` });
+          return res.end();
         } else {
           // Login mode - link Google account to existing user
           await pool.query(
@@ -263,10 +267,12 @@ export default async function handler(req, res) {
 
     // Redirect to frontend with success (use absolute URL to avoid Vercel path issues)
     const redirectUrl = `${frontendBaseUrl}/login?oauth_success=true&token=${encodeURIComponent(appToken)}&provider=google`;
-    return res.redirect(302, redirectUrl);
+    res.writeHead(302, { 'Location': redirectUrl });
+    return res.end();
 
   } catch (error) {
     console.error('Google OAuth callback error:', error);
-    return res.redirect(302, `${frontendBaseUrl}/login?oauth_error=authentication_failed`);
+    res.writeHead(302, { 'Location': `${frontendBaseUrl}/login?oauth_error=authentication_failed` });
+    return res.end();
   }
 }
