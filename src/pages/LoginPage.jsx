@@ -35,43 +35,34 @@ const LoginPage = () => {
     if (oauthResult.success && oauthResult.token) {
       // OAuth login successful - store token and fetch player data
       localStorage.setItem('authToken', oauthResult.token);
-      setSuccess(`Successfully logged in with ${oauthResult.provider}!`);
 
       // Clear stored referral since OAuth login doesn't need it
       clearStoredReferralSession();
 
       // Decode JWT to get player_id and fetch full player data
-      try {
-        const payload = JSON.parse(atob(oauthResult.token.split('.')[1]));
-        if (payload.playerId) {
-          // Use same login pattern as regular login to fetch player data
-          fetch(`/api/player/${payload.playerId}/data`, {
-            headers: {
-              'Authorization': `Bearer ${oauthResult.token}`
-            }
+      const payload = JSON.parse(atob(oauthResult.token.split('.')[1]));
+
+      if (payload.playerId) {
+        // Use same login pattern as regular login to fetch player data
+        fetch(`/api/player/${payload.playerId}/data`, {
+          headers: {
+            'Authorization': `Bearer ${oauthResult.token}`
+          }
+        })
+          .then(res => res.json())
+          .then(playerData => {
+            localStorage.setItem('playerData', JSON.stringify(playerData));
+            // Navigate immediately to dashboard
+            navigate('/', { replace: true });
           })
-            .then(res => res.json())
-            .then(playerData => {
-              localStorage.setItem('playerData', JSON.stringify(playerData));
-              // Navigate to dashboard after a brief delay
-              setTimeout(() => {
-                navigate('/');
-              }, 1500);
-            })
-            .catch(error => {
-              console.error('Failed to fetch player data:', error);
-              // Navigate anyway, AuthContext will handle fetching
-              setTimeout(() => {
-                navigate('/');
-              }, 1500);
-            });
-        }
-      } catch (error) {
-        console.error('Failed to decode OAuth token:', error);
-        // Navigate anyway, let AuthContext handle it
-        setTimeout(() => {
-          navigate('/');
-        }, 1500);
+          .catch(error => {
+            console.error('Failed to fetch player data:', error);
+            // Navigate anyway, AuthContext will handle fetching
+            navigate('/', { replace: true });
+          });
+      } else {
+        console.error('No playerId in JWT payload');
+        navigate('/', { replace: true });
       }
 
     } else if (oauthResult.error) {
