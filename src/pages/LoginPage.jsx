@@ -41,7 +41,8 @@ const LoginPage = () => {
     const oauthResult = handleOAuthCallback(urlParams);
 
     if (oauthResult.success && oauthResult.token) {
-      // OAuth login successful - store token and fetch player data
+      // OAuth login successful - show loading state
+      setIsLoading(true);
       console.log('[OAuth] Login successful, storing token');
       localStorage.setItem('authToken', oauthResult.token);
 
@@ -76,15 +77,18 @@ const LoginPage = () => {
               navigate('/', { replace: true });
             } else {
               console.error('[OAuth] Invalid player data received');
+              setIsLoading(false);
               setError('Authentication failed - invalid player data');
             }
           })
           .catch(error => {
             console.error('[OAuth] Failed to fetch player data:', error);
+            setIsLoading(false);
             setError(`Authentication failed: ${error.message}`);
           });
       } else {
         console.error('[OAuth] No playerId in JWT payload');
+        setIsLoading(false);
         setError('Authentication failed - invalid token');
       }
 
@@ -191,6 +195,20 @@ const LoginPage = () => {
     setIsLoading(false);
   };
 
+  // Show loading screen during OAuth processing
+  if (isLoading && location.search.includes('oauth_success')) {
+    return (
+      <div className="login-container">
+        <div className="login-card">
+          <div className="loading-container" style={{ padding: '3rem', textAlign: 'center' }}>
+            <div className="loading-spinner" style={{ margin: '0 auto 1rem' }}></div>
+            <p>Completing sign in...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="login-container">
       <div className="login-card">
@@ -202,7 +220,7 @@ const LoginPage = () => {
             {mode === 'forgot' && 'Reset your password'}
           </p>
         </div>
-        
+
         {/* Login Form */}
         {mode === 'login' && (
           <form onSubmit={handleLogin} className="login-form">
