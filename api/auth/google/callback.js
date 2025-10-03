@@ -19,17 +19,18 @@ export default async function handler(req, res) {
   }
 
   const { code, state, error } = req.query;
+  const frontendBaseUrl = process.env.FRONTEND_URL || 'https://app.proofofputt.com';
 
   try {
     // Handle OAuth errors
     if (error) {
       console.error('Google OAuth error:', error);
-      return res.redirect(`${process.env.FRONTEND_URL || 'https://app.proofofputt.com'}/login?oauth_error=${encodeURIComponent(error)}`);
+      return res.redirect(302, `${frontendBaseUrl}/login?oauth_error=${encodeURIComponent(error)}`);
     }
 
     if (!code || !state) {
       console.error('Missing authorization code or state parameter');
-      return res.redirect(`${process.env.FRONTEND_URL || 'https://app.proofofputt.com'}/login?oauth_error=missing_parameters`);
+      return res.redirect(302, `${frontendBaseUrl}/login?oauth_error=missing_parameters`);
     }
 
     // Verify state parameter against stored session
@@ -40,7 +41,7 @@ export default async function handler(req, res) {
 
     if (sessionResult.rows.length === 0) {
       console.error('Invalid or expired OAuth session');
-      return res.redirect(`${process.env.FRONTEND_URL || 'https://app.proofofputt.com'}/login?oauth_error=invalid_session`);
+      return res.redirect(302, `${frontendBaseUrl}/login?oauth_error=invalid_session`);
     }
 
     const oauthSession = sessionResult.rows[0];
@@ -108,7 +109,7 @@ export default async function handler(req, res) {
             process.env.JWT_SECRET,
             { expiresIn: '15m' }
           );
-          return res.redirect(`${process.env.FRONTEND_URL || 'https://app.proofofputt.com'}/link-account?token=${linkToken}&provider=google`);
+          return res.redirect(302, `${frontendBaseUrl}/link-account?token=${linkToken}&provider=google`);
         } else {
           // Login mode - link Google account to existing user
           await pool.query(
@@ -261,13 +262,11 @@ export default async function handler(req, res) {
     );
 
     // Redirect to frontend with success (use absolute URL to avoid Vercel path issues)
-    const frontendUrl = process.env.FRONTEND_URL || 'https://app.proofofputt.com';
-    const redirectUrl = `${frontendUrl}/login?oauth_success=true&token=${encodeURIComponent(appToken)}&provider=google`;
-
-    return res.redirect(redirectUrl);
+    const redirectUrl = `${frontendBaseUrl}/login?oauth_success=true&token=${encodeURIComponent(appToken)}&provider=google`;
+    return res.redirect(302, redirectUrl);
 
   } catch (error) {
     console.error('Google OAuth callback error:', error);
-    return res.redirect(`${process.env.FRONTEND_URL || 'https://app.proofofputt.com'}/login?oauth_error=authentication_failed`);
+    return res.redirect(302, `${frontendBaseUrl}/login?oauth_error=authentication_failed`);
   }
 }
