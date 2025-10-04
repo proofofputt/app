@@ -69,7 +69,7 @@ export default async function handler(req, res) {
         created_at,
         updated_at
       )
-      VALUES ($1, $2, $3, $4, 'basic', 'active', 'America/New_York', NOW(), NOW())
+      VALUES ($1, $2, $3, $4, 'regular', 'active', 'America/New_York', NOW(), NOW())
       RETURNING player_id, name, email, membership_tier, subscription_status, timezone`,
       [nextPlayerId, name, email, hashedPassword]
     );
