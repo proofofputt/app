@@ -1,6 +1,7 @@
 import { Pool } from 'pg';
 import jwt from 'jsonwebtoken';
 import { setCORSHeaders } from '../utils/cors.js';
+import notificationService from './services/notification.js';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -71,51 +72,63 @@ async function processExpiredRounds(client) {
           // Check if this was the final round
           if (round.remaining_rounds === 0) {
             results.completed_leagues++;
-            
-            // Send league completion notifications
-            await client.query(`
-              INSERT INTO league_notifications (league_id, user_id, notification_type, title, message, data, expires_at)
-              SELECT $1, lm.player_id, $2, $3, $4, $5, $6
-              FROM league_memberships lm 
-              WHERE lm.league_id = $1 AND lm.is_active = true
-            `, [
-              round.league_id,
-              'league_completed',
-              `${round.league_name} Complete!`,
-              'The league has finished. Check the final standings and results.',
-              JSON.stringify({
-                league_id: round.league_id,
-                final_round: round.round_number,
-                completed_at: new Date().toISOString()
-              }),
-              new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-            ]);
 
-            const completionNotifications = await client.query('SELECT COUNT(*) as count FROM league_memberships WHERE league_id = $1 AND is_active = true', [round.league_id]);
-            results.notifications_sent += parseInt(completionNotifications.rows[0].count);
+            // Send league completion notifications using NotificationService
+            try {
+              const membersList = await client.query(
+                'SELECT player_id FROM league_memberships WHERE league_id = $1 AND is_active = true',
+                [round.league_id]
+              );
+
+              for (const member of membersList.rows) {
+                await notificationService.createSystemNotification({
+                  playerId: member.player_id,
+                  title: `${round.league_name} Complete!`,
+                  message: 'The league has finished. Check the final standings and results.',
+                  linkPath: `/leagues/${round.league_id}`,
+                  data: {
+                    league_id: round.league_id,
+                    final_round: round.round_number,
+                    completed_at: new Date().toISOString(),
+                    notification_type: 'league_completed'
+                  }
+                });
+                results.notifications_sent++;
+              }
+
+              console.log(`[league-automation] League completion notifications sent for league ${round.league_id}`);
+            } catch (notifError) {
+              console.error('[league-automation] Failed to send league completion notifications:', notifError);
+            }
 
           } else {
-            // Send round advancement notifications
-            await client.query(`
-              INSERT INTO league_notifications (league_id, user_id, notification_type, title, message, data, expires_at)
-              SELECT $1, lm.player_id, $2, $3, $4, $5, $6
-              FROM league_memberships lm 
-              WHERE lm.league_id = $1 AND lm.is_active = true
-            `, [
-              round.league_id,
-              'round_advanced',
-              `${round.league_name} - New Round!`,
-              `Round ${round.round_number + 1} has started. Submit your sessions now!`,
-              JSON.stringify({
-                league_id: round.league_id,
-                previous_round: round.round_number,
-                current_round: round.round_number + 1
-              }),
-              new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
-            ]);
+            // Send round advancement notifications using NotificationService
+            try {
+              const membersList = await client.query(
+                'SELECT player_id FROM league_memberships WHERE league_id = $1 AND is_active = true',
+                [round.league_id]
+              );
 
-            const advancementNotifications = await client.query('SELECT COUNT(*) as count FROM league_memberships WHERE league_id = $1 AND is_active = true', [round.league_id]);
-            results.notifications_sent += parseInt(advancementNotifications.rows[0].count);
+              for (const member of membersList.rows) {
+                await notificationService.createSystemNotification({
+                  playerId: member.player_id,
+                  title: `${round.league_name} - New Round!`,
+                  message: `Round ${round.round_number + 1} has started. Submit your sessions now!`,
+                  linkPath: `/leagues/${round.league_id}`,
+                  data: {
+                    league_id: round.league_id,
+                    previous_round: round.round_number,
+                    current_round: round.round_number + 1,
+                    notification_type: 'round_advanced'
+                  }
+                });
+                results.notifications_sent++;
+              }
+
+              console.log(`[league-automation] Round advancement notifications sent for league ${round.league_id}`);
+            } catch (notifError) {
+              console.error('[league-automation] Failed to send round advancement notifications:', notifError);
+            }
           }
         }
 

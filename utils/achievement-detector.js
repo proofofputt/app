@@ -1,4 +1,5 @@
 import { createHash } from 'crypto';
+import notificationService from '../api/services/notification.js';
 
 /**
  * Achievement Detection System for Proof of Putt
@@ -53,6 +54,23 @@ async function queueAchievement(client, playerId, achievementType, achievementVa
   } catch (error) {
     console.error('[achievement-detector] Error queuing achievement:', error);
     throw error;
+  }
+}
+
+/**
+ * Send achievement notification to player
+ */
+async function sendAchievementNotification(playerId, achievementData) {
+  try {
+    await notificationService.createAchievementNotification({
+      playerId,
+      achievementName: achievementData.description || achievementData.achievement_type,
+      description: achievementData.description || `Achievement unlocked: ${achievementData.milestone_value}`
+    });
+    console.log(`[achievement-detector] Notification sent for achievement: ${achievementData.achievement_type}`);
+  } catch (error) {
+    console.error('[achievement-detector] Failed to send achievement notification:', error);
+    // Non-blocking: continue even if notification fails
   }
 }
 
@@ -199,6 +217,8 @@ async function checkConsecutiveMakesAchievements(client, playerId, sessionData, 
             data: achievementData,
             queue_id: queueId
           });
+          // Send notification
+          await sendAchievementNotification(playerId, achievementData);
         }
       }
     }
@@ -240,6 +260,8 @@ async function checkPerfectSessionAchievements(client, playerId, sessionData, se
           data: achievementData,
           queue_id: queueId
         });
+        // Send notification
+        await sendAchievementNotification(playerId, achievementData);
       }
     }
   }
@@ -287,6 +309,8 @@ async function checkCareerMilestoneAchievements(client, playerId, sessionData, s
             data: achievementData,
             queue_id: queueId
           });
+          // Send notification
+          await sendAchievementNotification(playerId, achievementData);
         }
       }
     }
@@ -339,6 +363,8 @@ async function checkAccuracyMilestoneAchievements(client, playerId, sessionData,
               data: achievementData,
               queue_id: queueId
             });
+            // Send notification
+            await sendAchievementNotification(playerId, achievementData);
           }
         }
       }
@@ -399,6 +425,8 @@ async function checkCompetitionAchievements(client, playerId, sessionData, sessi
               data: achievementData,
               queue_id: queueId
             });
+            // Send notification
+            await sendAchievementNotification(playerId, achievementData);
           }
         }
       }
@@ -477,6 +505,8 @@ async function checkCompetitionAchievements(client, playerId, sessionData, sessi
                 data: achievementData,
                 queue_id: queueId
               });
+              // Send notification
+              await sendAchievementNotification(playerId, achievementData);
             }
           }
         }
@@ -548,6 +578,8 @@ async function checkSessionMilestoneAchievements(client, playerId, sessionData, 
               data: achievementData,
               queue_id: queueId
             });
+            // Send notification
+            await sendAchievementNotification(playerId, achievementData);
           }
         }
       }

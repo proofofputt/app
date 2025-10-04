@@ -264,17 +264,23 @@ export default async function handler(req, res) {
         
         // Create welcome notification for new users
         if (!invitation.invited_user_id) {
-          await client.query(`
-            INSERT INTO user_notifications (user_id, notification_type, title, message, data, expires_at)
-            VALUES ($1, $2, $3, $4, $5, $6)
-          `, [
-            acceptingUserId,
-            'welcome',
-            'Welcome to Proof of Putt!',
-            'Your account has been created and your duel is ready. Start by completing a putting session!',
-            JSON.stringify({ duel_id: invitation.duel_id, from_invitation: true }),
-            new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
-          ]);
+          try {
+            await notificationService.createSystemNotification({
+              playerId: acceptingUserId,
+              title: 'Welcome to Proof of Putt!',
+              message: 'Your account has been created and your duel is ready. Start by completing a putting session!',
+              linkPath: `/duels/${invitation.duel_id}`,
+              data: {
+                duel_id: invitation.duel_id,
+                from_invitation: true,
+                expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+              }
+            });
+            console.log(`[accept-duel-invitation] Welcome notification sent to user ${acceptingUserId}`);
+          } catch (notifError) {
+            console.error('[accept-duel-invitation] Failed to send welcome notification:', notifError);
+            // Non-blocking: continue even if notification fails
+          }
         }
 
         return res.status(200).json({

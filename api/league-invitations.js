@@ -314,41 +314,52 @@ export default async function handler(req, res) {
         
         // Create welcome notification for new users
         if (!invitation.invited_user_id) {
-          await client.query(`
-            INSERT INTO league_notifications (league_id, user_id, notification_type, title, message, data, expires_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-          `, [
-            invitation.league_id,
-            acceptingUserId,
-            'welcome',
-            `Welcome to ${invitation.league_name}!`,
-            'Your account has been created and you\'ve joined the league. Start submitting sessions to compete!',
-            JSON.stringify({ 
-              league_id: invitation.league_id, 
-              from_invitation: true,
-              inviter_id: invitation.inviting_user_id
-            }),
-            new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
-          ]);
+          try {
+            await notificationService.createSystemNotification({
+              playerId: acceptingUserId,
+              title: `Welcome to ${invitation.league_name}!`,
+              message: 'Your account has been created and you\'ve joined the league. Start submitting sessions to compete!',
+              linkPath: `/leagues/${invitation.league_id}`,
+              data: {
+                league_id: invitation.league_id,
+                from_invitation: true,
+                inviter_id: invitation.inviting_user_id,
+                expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+              }
+            });
+            console.log(`[league-invitations] Welcome notification sent to user ${acceptingUserId}`);
+          } catch (notifError) {
+            console.error('[league-invitations] Failed to send welcome notification:', notifError);
+            // Non-blocking: continue even if notification fails
+          }
         }
 
         // Notify league admins of new member
-        const adminNotificationResult = await client.query(`
-          INSERT INTO league_notifications (league_id, user_id, notification_type, title, message, data)
-          SELECT $1, lm.player_id, $2, $3, $4, $5
-          FROM league_memberships lm 
-          WHERE lm.league_id = $1 AND lm.member_role IN ('owner', 'admin') AND lm.is_active = true
-        `, [
-          invitation.league_id,
-          'member_joined',
-          'New Member Joined',
-          `${registration_data?.display_name || 'A new player'} has joined the league`,
-          JSON.stringify({
-            new_member_id: acceptingUserId,
-            league_id: invitation.league_id,
-            joined_via: 'invitation'
-          })
-        ]);
+        try {
+          const adminsList = await client.query(`
+            SELECT lm.player_id
+            FROM league_memberships lm
+            WHERE lm.league_id = $1 AND lm.member_role IN ('owner', 'admin') AND lm.is_active = true
+          `, [invitation.league_id]);
+
+          for (const admin of adminsList.rows) {
+            await notificationService.createSystemNotification({
+              playerId: admin.player_id,
+              title: 'New Member Joined',
+              message: `${registration_data?.display_name || 'A new player'} has joined the league`,
+              linkPath: `/leagues/${invitation.league_id}`,
+              data: {
+                new_member_id: acceptingUserId,
+                league_id: invitation.league_id,
+                joined_via: 'invitation'
+              }
+            });
+          }
+          console.log(`[league-invitations] Admin notifications sent for league ${invitation.league_id}`);
+        } catch (notifError) {
+          console.error('[league-invitations] Failed to send admin notifications:', notifError);
+          // Non-blocking: continue even if notification fails
+        }
 
         return res.status(200).json({
           success: true,
