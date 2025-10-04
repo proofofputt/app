@@ -50,6 +50,9 @@ const ProfileDropdown = () => {
       </button>
       {isOpen && (
         <div className="dropdown-menu">
+          <a href="https://proofofputt.com" target="_blank" rel="noopener noreferrer" className="dropdown-item" onClick={() => setIsOpen(false)}>
+            Documentation
+          </a>
           <NavLink to="/settings" className="dropdown-item" onClick={() => setIsOpen(false)}>
             Settings
           </NavLink>
