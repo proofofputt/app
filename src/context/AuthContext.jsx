@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
               localStorage.setItem('playerData', JSON.stringify(freshData));
               setPlayerData(freshData);
               setIsLoading(false);
-              navigate('/dashboard');
+              navigate('/');
               return;
             }
           }
