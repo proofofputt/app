@@ -45,7 +45,7 @@ async function getNotifications(req, res, client, id) {
 
   try {
     // First, verify the player exists
-    const playerCheck = await client.query('SELECT id FROM players WHERE id = $1', [id]);
+    const playerCheck = await client.query('SELECT player_id FROM players WHERE player_id = $1', [id]);
     if (playerCheck.rows.length === 0) {
       return res.status(404).json({ error: 'Player not found' });
     }
@@ -54,7 +54,7 @@ async function getNotifications(req, res, client, id) {
     await client.query(`
       CREATE TABLE IF NOT EXISTS notifications (
         id SERIAL PRIMARY KEY,
-        player_id INTEGER REFERENCES players(id) ON DELETE CASCADE,
+        player_id INTEGER REFERENCES players(player_id) ON DELETE CASCADE,
         type VARCHAR(50) NOT NULL,
         title VARCHAR(200) NOT NULL,
         message TEXT NOT NULL,

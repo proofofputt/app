@@ -31,7 +31,7 @@ export default async function handler(req, res) {
 
   try {
     // First, verify the player exists
-    const playerCheck = await client.query('SELECT id FROM players WHERE id = $1', [id]);
+    const playerCheck = await client.query('SELECT player_id FROM players WHERE player_id = $1', [id]);
     if (playerCheck.rows.length === 0) {
       return res.status(404).json({ error: 'Player not found' });
     }
