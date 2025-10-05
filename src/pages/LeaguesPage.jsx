@@ -43,13 +43,7 @@ const LeagueTableRow = ({ league }) => {
       <td className="column-separator">
         <Link to={`/leagues/${league.league_id}`}>{league.name}</Link>
       </td>
-      <td className="league-description-cell column-separator">{league.description || 'No description provided.'}</td>
       <td style={{ textAlign: 'center' }} className="column-separator">{league.member_count}</td>
-      <td className="column-separator">
-        <span className={`privacy-badge ${league.privacy_type || 'public'}`}>
-          {(league.privacy_type || 'public') === 'private' ? 'Private' : 'Public'}
-        </span>
-      </td>
       <td className="column-separator">
         <span className={`status-badge status-${league.status}`}>{league.status}</span>
       </td>
@@ -188,11 +182,9 @@ const LeaguesPage = () => {
             <thead>
               <tr>
                 <th>Name</th>
-                <th>Description</th>
                 <th>Members</th>
-                <th>Privacy</th>
                 <th>Status</th>
-                <th>Start Date/Time</th>
+                <th>Start</th>
                 <th>Time Limit</th>
                 <th>Shoot-Out #</th>
                 <th>Rounds</th>
@@ -204,7 +196,7 @@ const LeaguesPage = () => {
                 myLeagues.map(league => <LeagueTableRow key={league.league_id} league={league} />)
               ) : (
                 <tr>
-                  <td colSpan="10" style={{ textAlign: 'center', padding: '2rem', fontStyle: 'italic' }}>You haven't joined any leagues yet.</td>
+                  <td colSpan="8" style={{ textAlign: 'center', padding: '2rem', fontStyle: 'italic' }}>You haven't joined any leagues yet.</td>
                 </tr>
               )}
             </tbody>
@@ -219,11 +211,9 @@ const LeaguesPage = () => {
             <thead>
               <tr>
                 <th>Name</th>
-                <th>Description</th>
                 <th>Members</th>
-                <th>Privacy</th>
                 <th>Status</th>
-                <th>Start Date/Time</th>
+                <th>Start</th>
                 <th>Time Limit</th>
                 <th>Shoot-Out #</th>
                 <th>Rounds</th>
@@ -235,7 +225,7 @@ const LeaguesPage = () => {
                 publicLeagues.map(league => <LeagueTableRow key={league.league_id} league={league} />)
               ) : (
                 <tr>
-                  <td colSpan="10" style={{ textAlign: 'center', padding: '2rem', fontStyle: 'italic' }}>No public leagues to join right now.</td>
+                  <td colSpan="8" style={{ textAlign: 'center', padding: '2rem', fontStyle: 'italic' }}>No public leagues to join right now.</td>
                 </tr>
               )}
             </tbody>

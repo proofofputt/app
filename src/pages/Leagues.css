@@ -722,7 +722,7 @@
 
 /* Column separators for leagues table */
 .leagues-table .column-separator {
-  border-right: 2px solid var(--primary-color);
+  border-right: 2px solid var(--masters-green-light);
 }
 
 .leagues-table .column-separator:last-child {
