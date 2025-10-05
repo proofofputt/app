@@ -181,13 +181,13 @@ const LeaguesPage = () => {
           <table className="leagues-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Members</th>
-                <th>Status</th>
-                <th>Start</th>
-                <th>Time Limit</th>
-                <th>Shoot-Out #</th>
-                <th>Rounds</th>
+                <th className="column-separator">Name</th>
+                <th className="column-separator">Members</th>
+                <th className="column-separator">Status</th>
+                <th className="column-separator">Start</th>
+                <th className="column-separator">Time Limit</th>
+                <th className="column-separator">Shoot-Out #</th>
+                <th className="column-separator">Rounds</th>
                 <th>Round Interval</th>
               </tr>
             </thead>
@@ -210,13 +210,13 @@ const LeaguesPage = () => {
           <table className="leagues-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Members</th>
-                <th>Status</th>
-                <th>Start</th>
-                <th>Time Limit</th>
-                <th>Shoot-Out #</th>
-                <th>Rounds</th>
+                <th className="column-separator">Name</th>
+                <th className="column-separator">Members</th>
+                <th className="column-separator">Status</th>
+                <th className="column-separator">Start</th>
+                <th className="column-separator">Time Limit</th>
+                <th className="column-separator">Shoot-Out #</th>
+                <th className="column-separator">Rounds</th>
                 <th>Round Interval</th>
               </tr>
             </thead>

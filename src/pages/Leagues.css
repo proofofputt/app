@@ -725,6 +725,10 @@
   border-right: 2px solid var(--masters-green-light);
 }
 
+.leagues-table th.column-separator {
+  border-right: 2px solid var(--masters-green-light) !important;
+}
+
 .leagues-table .column-separator:last-child {
   border-right: none;
 }
