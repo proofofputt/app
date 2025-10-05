@@ -109,21 +109,6 @@ const NotificationsPage = () => {
             </div>
           </div>
 
-          <div className="empty-state-actions">
-            <h4>Start earning notifications:</h4>
-            <div className="action-buttons">
-              <Link to="/practice" className="btn btn-primary">
-                Practice Session
-              </Link>
-              <Link to="/duels" className="btn btn-secondary">
-                Challenge Someone
-              </Link>
-              <Link to="/leagues" className="btn btn-secondary">
-                Join a League
-              </Link>
-            </div>
-          </div>
-
           {!isConnected && (
             <div className="connection-warning">
               <span className="connection-badge offline">⚠️ Reconnecting...</span>
