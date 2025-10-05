@@ -262,6 +262,8 @@ const SettingsPage = () => {
                       <a href="https://zaprite.com/p/proofofputt/subscription-link" target="_blank" rel="noopener noreferrer" className="btn">
                         Upgrade to Full Subscription ($2.10/mo)
                       </a>
+                      <Link to="/bundles" className="btn">Subscription Bundles</Link>
+                      <Link to="/gifts" className="btn">My Gifts</Link>
                     </div>
                   </div>
                 </div>
