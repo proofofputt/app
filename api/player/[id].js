@@ -49,7 +49,7 @@ export default async function handler(req, res) {
     return res.status(403).json({ success: false, message: 'Unauthorized to update this player' });
   }
 
-  const { name, phone, timezone } = req.body;
+  const { name, phone, timezone, display_name } = req.body;
 
   let client;
   try {
@@ -67,7 +67,7 @@ export default async function handler(req, res) {
     }
 
     if (phone !== undefined) {
-      updates.push(`phone = $${paramIndex}`);
+      updates.push(`phone_number = $${paramIndex}`);
       values.push(phone);
       paramIndex++;
     }
@@ -78,19 +78,25 @@ export default async function handler(req, res) {
       paramIndex++;
     }
 
+    if (display_name !== undefined) {
+      updates.push(`display_name = $${paramIndex}`);
+      values.push(display_name);
+      paramIndex++;
+    }
+
     if (updates.length === 0) {
       return res.status(400).json({ success: false, message: 'No fields to update provided' });
     }
 
     const query = `
-      UPDATE players 
+      UPDATE players
       SET ${updates.join(', ')}, updated_at = NOW()
       WHERE player_id = $${paramIndex}
-      RETURNING player_id, name, phone, email, timezone, membership_tier
+      RETURNING player_id, name, phone_number as phone, email, timezone, membership_tier, display_name
     `;
     values.push(playerId);
 
-    console.log(`[player/${id}] Updating player:`, { name, phone, timezone, playerId });
+    console.log(`[player/${id}] Updating player:`, { name, phone, timezone, display_name, playerId });
     
     const result = await client.query(query, values);
 
