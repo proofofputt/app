@@ -14,7 +14,7 @@ const ZAPRITE_BASE_URL = process.env.ZAPRITE_BASE_URL || 'https://api.zaprite.co
 // Bundle pricing - matches frontend
 const BUNDLE_PRICING = {
   1: { quantity: 3, price: 56.70, discount: 10 },
-  2: { quantity: 5, price: 84, discount: 20 },
+  2: { quantity: 5, price: 84, discount: 21 },
   3: { quantity: 10, price: 121, discount: 42 },
   4: { quantity: 21, price: 221, discount: 50 }
 };

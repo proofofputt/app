@@ -45,7 +45,7 @@ const SettingsPage = () => {
   useEffect(() => {
     const mockBundles = [
       { id: 1, name: '3-Pack', quantity: 3, price: 56.70, discount: 10 },
-      { id: 2, name: '5-Pack', quantity: 5, price: 84, discount: 20 },
+      { id: 2, name: '5-Pack', quantity: 5, price: 84, discount: 21 },
       { id: 3, name: '10-Pack', quantity: 10, price: 121, discount: 42 },
       { id: 4, name: '21-Pack', quantity: 21, price: 221, discount: 50 },
     ];
