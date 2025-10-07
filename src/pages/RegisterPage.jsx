@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { handleReferralTracking, getReferralContext, clearStoredReferralSession } from '../utils/referrals';
+import { handleOAuthCallback } from '../utils/oauth';
 import { apiRegister } from '../api';
+import OAuthButton from '../components/OAuthButton';
 import './RegisterPage.css';
 
 const RegisterPage = () => {
@@ -30,14 +32,72 @@ const RegisterPage = () => {
   const [referrerInfo, setReferrerInfo] = useState(null);
   const [referralContext, setReferralContext] = useState({ hasReferral: false });
 
-  // Handle referral tracking on component mount
+  // Handle OAuth callback and referral tracking on component mount
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
-    
+
     // Handle referral tracking first
     handleReferralTracking(urlParams);
     setReferralContext(getReferralContext(urlParams));
-  }, [location]);
+
+    // Then handle OAuth callback
+    const oauthResult = handleOAuthCallback(urlParams);
+
+    if (oauthResult.success && oauthResult.token) {
+      // OAuth registration/login successful
+      setIsLoading(true);
+      console.log('[OAuth] Registration/Login successful, storing token');
+      localStorage.setItem('authToken', oauthResult.token);
+
+      // Clear stored referral since OAuth doesn't need it
+      clearStoredReferralSession();
+
+      // Decode JWT to get player_id and fetch full player data
+      const payload = JSON.parse(atob(oauthResult.token.split('.')[1]));
+      console.log('[OAuth] Decoded payload:', payload);
+
+      if (payload.playerId) {
+        console.log(`[OAuth] Fetching player data for ID ${payload.playerId}`);
+        fetch(`/api/player/${payload.playerId}/data`, {
+          headers: {
+            'Authorization': `Bearer ${oauthResult.token}`
+          }
+        })
+          .then(res => {
+            console.log(`[OAuth] Player data response status: ${res.status}`);
+            if (!res.ok) {
+              throw new Error(`HTTP ${res.status}`);
+            }
+            return res.json();
+          })
+          .then(playerData => {
+            console.log('[OAuth] Player data received:', playerData);
+            if (playerData && playerData.player_id) {
+              localStorage.setItem('playerData', JSON.stringify(playerData));
+              console.log('[OAuth] Player data stored, navigating to dashboard');
+              navigate('/', { replace: true });
+            } else {
+              console.error('[OAuth] Invalid player data received');
+              setIsLoading(false);
+              setError('Authentication failed - invalid player data');
+            }
+          })
+          .catch(error => {
+            console.error('[OAuth] Failed to fetch player data:', error);
+            setIsLoading(false);
+            setError(`Authentication failed: ${error.message}`);
+          });
+      } else {
+        console.error('[OAuth] No playerId in JWT payload');
+        setIsLoading(false);
+        setError('Authentication failed - invalid token');
+      }
+    } else if (oauthResult.error) {
+      // OAuth failed
+      setError(`OAuth registration failed: ${oauthResult.error}`);
+      navigate('/register', { replace: true });
+    }
+  }, [location, navigate]);
 
   // Fetch referrer information
   useEffect(() => {
@@ -66,6 +126,61 @@ const RegisterPage = () => {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleOAuthSuccess = ({ token, provider }) => {
+    setIsLoading(true);
+    console.log(`[OAuth v2.0] Success callback received for ${provider}`);
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      console.log('[OAuth] Decoded payload:', payload);
+
+      if (payload.playerId) {
+        console.log(`[OAuth] Fetching player data for ID ${payload.playerId}`);
+        fetch(`/api/player/${payload.playerId}/data`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+          .then(res => {
+            console.log(`[OAuth] Player data response status: ${res.status}`);
+            if (!res.ok) {
+              throw new Error(`HTTP ${res.status}`);
+            }
+            return res.json();
+          })
+          .then(playerData => {
+            console.log('[OAuth] Player data received:', playerData);
+            if (playerData && playerData.player_id) {
+              localStorage.setItem('playerData', JSON.stringify(playerData));
+              console.log('[OAuth] Player data stored, navigating to dashboard');
+              window.location.href = '/';
+            } else {
+              console.error('[OAuth] Invalid player data received');
+              setIsLoading(false);
+              setError('Authentication failed - invalid player data');
+            }
+          })
+          .catch(error => {
+            console.error('[OAuth] Failed to fetch player data:', error);
+            setIsLoading(false);
+            setError(`Authentication failed: ${error.message}`);
+          });
+      } else {
+        console.error('[OAuth] No playerId in JWT payload');
+        setIsLoading(false);
+        setError('Authentication failed - invalid token');
+      }
+    } catch (error) {
+      console.error('[OAuth] Failed to decode JWT:', error);
+      setIsLoading(false);
+      setError('Authentication failed - invalid token');
+    }
+  };
+
+  const handleOAuthError = (errorMessage) => {
+    setError(errorMessage);
   };
 
   const handleSubmit = async (e) => {
@@ -237,16 +352,30 @@ const RegisterPage = () => {
             />
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="register-btn"
             disabled={isLoading}
           >
-            {isLoading ? 'Creating Account...' : 
+            {isLoading ? 'Creating Account...' :
              inviteType === 'duel' ? 'Accept Challenge & Create Account' :
              inviteType === 'league' ? 'Join League & Create Account' :
              'Create Account'}
           </button>
+
+          <div className="oauth-divider">
+            <span className="oauth-divider-text">or</span>
+          </div>
+
+          <div className="oauth-buttons">
+            <OAuthButton
+              provider="google"
+              mode="signup"
+              onSuccess={handleOAuthSuccess}
+              onError={handleOAuthError}
+              disabled={isLoading}
+            />
+          </div>
 
           <div className="login-link">
             <p>Already have an account? <a href="/login">Sign in here</a></p>

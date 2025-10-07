@@ -165,6 +165,37 @@
   transform: none;
 }
 
+/* OAuth Divider */
+.oauth-divider {
+  position: relative;
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.oauth-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: var(--border-color);
+}
+
+.oauth-divider-text {
+  position: relative;
+  background-color: var(--surface-color, #ffffff);
+  padding: 0 1rem;
+  color: var(--text-color-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* OAuth Buttons */
+.oauth-buttons {
+  margin-bottom: 1rem;
+}
+
 /* Login Link */
 .login-link {
   text-align: center;
