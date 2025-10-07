@@ -79,6 +79,8 @@ export default async function handler(req, res) {
       }
     };
 
+    console.log('Creating Zaprite order:', orderPayload);
+
     const zapriteResponse = await fetch(`${ZAPRITE_BASE_URL}/v1/order`, {
       method: 'POST',
       headers: {
@@ -90,18 +92,38 @@ export default async function handler(req, res) {
 
     const zapriteData = await zapriteResponse.json();
 
+    console.log('Zaprite response status:', zapriteResponse.status);
+    console.log('Zaprite response data:', zapriteData);
+
     if (!zapriteResponse.ok) {
       console.error('Zaprite API error:', zapriteData);
       return res.status(500).json({
         success: false,
-        message: 'Failed to create payment order. Please try again.'
+        message: `Failed to create payment order: ${zapriteData.message || 'Unknown error'}`
       });
     }
+
+    // Check multiple possible field names for checkout URL
+    const checkoutUrl = zapriteData.checkoutUrl ||
+                       zapriteData.checkout_url ||
+                       zapriteData.url ||
+                       zapriteData.paymentUrl ||
+                       zapriteData.payment_url;
+
+    if (!checkoutUrl) {
+      console.error('No checkout URL found in Zaprite response:', zapriteData);
+      return res.status(500).json({
+        success: false,
+        message: 'Payment order created but no checkout URL received'
+      });
+    }
+
+    console.log('Returning checkout URL:', checkoutUrl);
 
     // Return checkout URL for redirect
     return res.status(200).json({
       success: true,
-      checkoutUrl: zapriteData.checkoutUrl || zapriteData.checkout_url,
+      checkoutUrl: checkoutUrl,
       orderId: zapriteData.id
     });
 

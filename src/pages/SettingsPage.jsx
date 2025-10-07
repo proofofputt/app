@@ -208,6 +208,8 @@ const SettingsPage = () => {
   const handlePurchase = async (bundleId) => {
     try {
       const token = localStorage.getItem('token');
+      console.log('Initiating bundle purchase:', bundleId);
+
       const response = await fetch('/api/subscriptions/bundles/purchase', {
         method: 'POST',
         headers: {
@@ -217,17 +219,21 @@ const SettingsPage = () => {
         body: JSON.stringify({ bundleId }),
       });
 
+      console.log('Response status:', response.status);
       const data = await response.json();
+      console.log('Response data:', data);
 
       if (data.success && data.checkoutUrl) {
+        console.log('Redirecting to:', data.checkoutUrl);
         // Redirect to Zaprite checkout
         window.location.href = data.checkoutUrl;
       } else {
+        console.error('No checkout URL received:', data);
         showNotification(`Error: ${data.message || 'Failed to create checkout'}`, true);
       }
     } catch (error) {
       console.error('Purchase error:', error);
-      showNotification('An error occurred during purchase.', true);
+      showNotification(`An error occurred during purchase: ${error.message}`, true);
     }
   };
 
