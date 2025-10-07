@@ -647,6 +647,7 @@
   flex-direction: column;
   gap: 0.75rem;
   align-items: flex-start;
+  width: 100%;
 }
 
 .checkbox-label {
@@ -656,6 +657,9 @@
   font-size: 0.95rem;
   cursor: pointer;
   font-weight: normal;
+  justify-content: flex-start;
+  width: 100%;
+  text-align: left;
 }
 
 .checkbox-label input[type="checkbox"] {
@@ -663,12 +667,14 @@
   cursor: pointer;
   margin: 0;
   flex-shrink: 0;
+  align-self: flex-start;
 }
 
 .checkbox-label span {
   color: var(--text-color);
   text-align: left;
   line-height: 1.2;
+  flex: 1;
 }
 
 /* Responsive Design */
