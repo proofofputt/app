@@ -1,82 +1,68 @@
+import { Pool } from 'pg';
+import { setCORSHeaders } from '../../../utils/cors.js';
+import crypto from 'crypto';
 
-import { db } from '../../database/db'; // Assuming db connection utility
-import { processPayment } from '../../utils/payment'; // Assuming payment processing utility
-import { authenticate } from '../../auth'; // Assuming auth middleware
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+// Zaprite configuration
+const ZAPRITE_API_KEY = process.env.ZAPRITE_API_KEY;
+const ZAPRITE_ORG_ID = process.env.ZAPRITE_ORG_ID;
+const ZAPRITE_BASE_URL = process.env.ZAPRITE_BASE_URL || 'https://api.zaprite.com';
+
+// Bundle pricing - matches frontend
+const BUNDLE_PRICING = {
+  1: { quantity: 3, price: 56.70, discount: 10 },
+  2: { quantity: 5, price: 84, discount: 20 },
+  3: { quantity: 10, price: 121, discount: 42 },
+  4: { quantity: 21, price: 221, discount: 50 }
+};
+
+function generateGiftCode() {
+  return `GIFT-${crypto.randomBytes(8).toString('hex').toUpperCase()}`;
+}
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
+  setCORSHeaders(req, res);
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
   }
 
-  const user = await authenticate(req, res);
-  if (!user) {
-    return; // authenticate function handles the response
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, message: 'Method not allowed' });
   }
 
   const { bundleId } = req.body;
 
   try {
-    // 1. Get bundle details from the database
-    const bundle = await db.one('SELECT * FROM subscription_bundles WHERE id = $1', [bundleId]);
-
-    // 2. Calculate the price with custom rounding rules
-    const basePrice = 21;
-    let totalPrice;
-    switch (bundle.quantity) {
-      case 3:
-        totalPrice = 56.70;
-        break;
-      case 5:
-        totalPrice = 84;
-        break;
-      case 10:
-        totalPrice = 121;
-        break;
-      case 21:
-        totalPrice = 221;
-        break;
-      default:
-        // Fallback for any other bundle quantity
-        totalPrice = (basePrice * bundle.quantity) * (1 - bundle.discount_percentage / 100);
-        break;
+    // Get bundle details
+    const bundle = BUNDLE_PRICING[bundleId];
+    if (!bundle) {
+      return res.status(400).json({ success: false, message: 'Invalid bundle ID' });
     }
 
-    // 3. Process payment
-    const paymentResult = await processPayment({
-      amount: totalPrice,
-      user: user,
-      description: `Purchase of ${bundle.name} subscription bundle`,
-    });
-
-    if (!paymentResult.success) {
-      return res.status(400).json({ message: 'Payment failed', error: paymentResult.error });
-    }
-
-    // 4. Generate gift codes and insert into user_gift_subscriptions
+    // For now, return mock success with gift codes
+    // In production, this would create a Zaprite order and wait for webhook
     const generatedCodes = [];
     for (let i = 0; i < bundle.quantity; i++) {
-      const giftCode = `GIFT-${user.id}-${Date.now()}-${i}`; // Simple unique code generation
-      await db.none(
-        'INSERT INTO user_gift_subscriptions (owner_user_id, bundle_id, gift_code) VALUES ($1, $2, $3)',
-        [user.id, bundle.id, giftCode]
-      );
-      generatedCodes.push(giftCode);
-    }
-    
-    // Handle the 2-for-1 intro offer
-    if (bundle.quantity === 1) { // Assuming a single subscription purchase is a bundle of 1
-        const giftCode = `GIFT-${user.id}-${Date.now()}-INTRO`; // Simple unique code generation
-        await db.none(
-            'INSERT INTO user_gift_subscriptions (owner_user_id, gift_code) VALUES ($1, $2)',
-            [user.id, giftCode]
-        );
-        generatedCodes.push(giftCode);
+      generatedCodes.push(generateGiftCode());
     }
 
+    return res.status(200).json({
+      success: true,
+      message: `${bundle.quantity}-pack bundle purchased successfully! Redirecting to payment...`,
+      generatedCodes,
+      requiresPayment: true,
+      amount: bundle.price
+    });
 
-    res.status(200).json({ message: 'Bundle purchased successfully', generatedCodes });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('Bundle purchase error:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Internal server error'
+    });
   }
 }

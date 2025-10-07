@@ -30,6 +30,15 @@ const SettingsPage = () => {
     product_updates: true,
   });
   const [bundles, setBundles] = useState([]);
+  const [associationForm, setAssociationForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    comments: '',
+    club_name: '',
+    office_address: '',
+    number_of_users: 50
+  });
 
   useEffect(() => {
     const mockBundles = [
@@ -190,6 +199,56 @@ const SettingsPage = () => {
     }
   };
 
+  const handleAssociationFormChange = (e) => {
+    const { name, value } = e.target;
+    setAssociationForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleAssociationSubmit = async (e) => {
+    e.preventDefault();
+
+    // Validation
+    if (!associationForm.name.trim() || !associationForm.email.trim() || !associationForm.comments.trim()) {
+      showNotification('Please fill in all required fields.', true);
+      return;
+    }
+
+    if (!associationForm.number_of_users || associationForm.number_of_users < 1) {
+      showNotification('Number of users must be at least 1.', true);
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/subscriptions/association-pricing', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(associationForm),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        showNotification('Thank you! We will contact you soon about association pricing.');
+        setAssociationForm({
+          name: '',
+          email: '',
+          phone: '',
+          comments: '',
+          club_name: '',
+          office_address: '',
+          number_of_users: 50
+        });
+      } else {
+        showNotification(`Error: ${data.message}`, true);
+      }
+    } catch (error) {
+      console.error('Association form error:', error);
+      showNotification('An error occurred. Please try again.', true);
+    }
+  };
+
   if (!playerData) {
     return <div className="settings-page"><div className="settings-section">Loading...</div></div>;
   }
@@ -199,7 +258,62 @@ const SettingsPage = () => {
       <h2>Settings</h2>
 
       <div className="settings-grid">
-        {/* Account Info, Socials, Security, Notifications... */}
+        <div className="settings-section">
+          <h3>Account Information</h3>
+          <form onSubmit={handleInfoSubmit}>
+            <div className="form-group">
+              <label>Email</label>
+              <input type="email" value={playerData.email} disabled />
+            </div>
+            <div className="form-group">
+              <label>Display Name</label>
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label>Phone Number</label>
+              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 (555) 123-4567" />
+            </div>
+            <div className="form-group">
+              <label>Timezone</label>
+              <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className="form-control">
+                {availableTimezones.map(tz => (
+                  <option key={tz} value={tz}>{tz}</option>
+                ))}
+              </select>
+              <p className="form-hint">Select your local timezone.</p>
+            </div>
+            <button type="submit" className="btn">Save Account Info</button>
+          </form>
+        </div>
+
+        <div className="settings-section">
+          <h3>Social Links</h3>
+          <form onSubmit={handleSocialsSubmit}>
+            <div className="form-group"><label>X (Twitter)</label><input type="url" name="x_url" value={socials.x_url} onChange={handleSocialsChange} placeholder="https://x.com/yourprofile" /></div>
+            <div className="form-group"><label>TikTok</label><input type="url" name="tiktok_url" value={socials.tiktok_url} onChange={handleSocialsChange} placeholder="https://tiktok.com/@yourprofile" /></div>
+            <div className="form-group"><label>Telegram</label><input type="url" name="telegram_url" value={socials.telegram_url} onChange={handleSocialsChange} placeholder="https://t.me/yourusername" /></div>
+            <div className="form-group"><label>Website</label><input type="url" name="website_url" value={socials.website_url} onChange={handleSocialsChange} placeholder="https://yourwebsite.com" /></div>
+            <button type="submit" className="btn">Save Social Links</button>
+          </form>
+        </div>
+
+        <div className="settings-section">
+          <h3>Security</h3>
+          <ChangePassword />
+        </div>
+
+        <div className="settings-section">
+          <h3>Email Notifications</h3>
+          <div className="notification-toggles">
+            <label><input type="checkbox" checked={notificationPreferences.duel_requests} onChange={() => handlePreferenceToggle('duel_requests')} /> Duel Requests</label>
+            <label><input type="checkbox" checked={notificationPreferences.duel_updates} onChange={() => handlePreferenceToggle('duel_updates')} /> Duel Results & Updates</label>
+            <label><input type="checkbox" checked={notificationPreferences.league_invites} onChange={() => handlePreferenceToggle('league_invites')} /> League Invites</label>
+            <label><input type="checkbox" checked={notificationPreferences.league_updates} onChange={() => handlePreferenceToggle('league_updates')} /> League Results & Updates</label>
+            <label><input type="checkbox" checked={notificationPreferences.fundraiser_updates} onChange={() => handlePreferenceToggle('fundraiser_updates')} /> Fundraiser Updates</label>
+            <label><input type="checkbox" checked={notificationPreferences.product_updates} onChange={() => handlePreferenceToggle('product_updates')} /> Product News & Updates</label>
+          </div>
+          <button onClick={handlePreferencesSave} className="btn">Save Preferences</button>
+        </div>
       </div>
 
       <div className="settings-section full-width-section">
@@ -251,7 +365,7 @@ const SettingsPage = () => {
                             <span className="bundle-discount">{bundle.discount}% OFF</span>
                           </div>
                           <div className="bundle-details">
-                            <p className="bundle-quantity">{bundle.quantity} Year Subscriptions</p>
+                            <p className="bundle-quantity">{bundle.name} - 1 Year Subscriptions</p>
                             <p className="bundle-price">${bundle.price}</p>
                             <p className="bundle-unit-price">${(bundle.price / bundle.quantity).toFixed(2)}/each</p>
                           </div>
@@ -339,7 +453,7 @@ const SettingsPage = () => {
                             <span className="bundle-discount">{bundle.discount}% OFF</span>
                           </div>
                           <div className="bundle-details">
-                            <p className="bundle-quantity">{bundle.quantity} Year Subscriptions</p>
+                            <p className="bundle-quantity">{bundle.name} - 1 Year Subscriptions</p>
                             <p className="bundle-price">${bundle.price}</p>
                             <p className="bundle-unit-price">${(bundle.price / bundle.quantity).toFixed(2)}/each</p>
                           </div>
@@ -354,6 +468,110 @@ const SettingsPage = () => {
               );
           }
         })()}
+      </div>
+
+      <div className="settings-section full-width-section">
+        <h3>Association Pricing</h3>
+        <p className="association-intro">Need subscriptions for your golf club, association, or enterprise? Contact us for custom pricing on bulk subscriptions.</p>
+
+        <form onSubmit={handleAssociationSubmit} className="association-form">
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="assoc-name">Name <span className="required">*</span></label>
+              <input
+                id="assoc-name"
+                type="text"
+                name="name"
+                value={associationForm.name}
+                onChange={handleAssociationFormChange}
+                required
+                placeholder="Your full name"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="assoc-email">Email <span className="required">*</span></label>
+              <input
+                id="assoc-email"
+                type="email"
+                name="email"
+                value={associationForm.email}
+                onChange={handleAssociationFormChange}
+                required
+                placeholder="your.email@example.com"
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="assoc-phone">Phone</label>
+              <input
+                id="assoc-phone"
+                type="tel"
+                name="phone"
+                value={associationForm.phone}
+                onChange={handleAssociationFormChange}
+                placeholder="+1 (555) 123-4567"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="assoc-club-name">Club / Enterprise Name</label>
+              <input
+                id="assoc-club-name"
+                type="text"
+                name="club_name"
+                value={associationForm.club_name}
+                onChange={handleAssociationFormChange}
+                placeholder="Your organization name"
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="assoc-address">Office Address</label>
+              <input
+                id="assoc-address"
+                type="text"
+                name="office_address"
+                value={associationForm.office_address}
+                onChange={handleAssociationFormChange}
+                placeholder="123 Main St, City, State, ZIP"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="assoc-users">Number of Users <span className="required">*</span></label>
+              <input
+                id="assoc-users"
+                type="number"
+                name="number_of_users"
+                value={associationForm.number_of_users}
+                onChange={handleAssociationFormChange}
+                required
+                min="1"
+                placeholder="50"
+              />
+            </div>
+          </div>
+
+          <div className="form-group full-width">
+            <label htmlFor="assoc-comments">Comments / Requirements <span className="required">*</span></label>
+            <textarea
+              id="assoc-comments"
+              name="comments"
+              value={associationForm.comments}
+              onChange={handleAssociationFormChange}
+              required
+              rows="4"
+              placeholder="Tell us about your needs, timeline, and any specific requirements..."
+            />
+          </div>
+
+          <button type="submit" className="btn btn-primary btn-large">Request Association Pricing</button>
+        </form>
       </div>
     </div>
   );
