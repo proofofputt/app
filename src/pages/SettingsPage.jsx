@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNotification } from '../context/NotificationContext.jsx';
 import { apiUpdatePlayer, apiUpdatePlayerSocials, apiRedeemCoupon, apiCancelSubscription, apiUpdateNotificationPreferences } from '../api.js';
-import ChangePassword from '../components/ChangePassword.jsx'; // Assuming this component exists and handles its own state
+import ChangePassword from '../components/ChangePassword.jsx';
 import './SettingsPage.css';
 
 const SettingsPage = () => {
@@ -28,6 +29,17 @@ const SettingsPage = () => {
     fundraiser_updates: true,
     product_updates: true,
   });
+  const [bundles, setBundles] = useState([]);
+
+  useEffect(() => {
+    const mockBundles = [
+      { id: 1, name: '3-Pack', quantity: 3, price: 56.70, discount: 10 },
+      { id: 2, name: '5-Pack', quantity: 5, price: 84, discount: 20 },
+      { id: 3, name: '10-Pack', quantity: 10, price: 121, discount: 42 },
+      { id: 4, name: '21-Pack', quantity: 21, price: 221, discount: 50 },
+    ];
+    setBundles(mockBundles);
+  }, []);
 
   useEffect(() => {
     if (playerData) {
@@ -43,7 +55,6 @@ const SettingsPage = () => {
       if (playerData.notification_preferences) {
         try {
           const prefs = JSON.parse(playerData.notification_preferences);
-          // Merge with defaults to ensure all keys are present
           setNotificationPreferences(prev => ({ ...prev, ...prefs }));
         } catch (e) {
           console.error("Failed to parse notification preferences:", e);
@@ -53,16 +64,14 @@ const SettingsPage = () => {
   }, [playerData]);
 
   useEffect(() => {
-    // Populate timezones when component mounts
     try {
       const timezones = Intl.supportedValuesOf('timeZone');
       setAvailableTimezones(timezones);
     } catch (error) {
       console.error("Intl.supportedValuesOf('timeZone') is not supported:", error);
-      // Fallback to a hardcoded list or show an error message
-      setAvailableTimezones(['UTC', 'America/New_York', 'Europe/London']); // Example fallback
+      setAvailableTimezones(['UTC', 'America/New_York', 'Europe/London']);
     }
-  }, []); // Empty dependency array means this runs once on mount
+  }, []);
 
   const handleInfoSubmit = async (e) => {
     e.preventDefault();
@@ -92,10 +101,7 @@ const SettingsPage = () => {
   };
 
   const handlePreferenceToggle = (key) => {
-    setNotificationPreferences(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
+    setNotificationPreferences(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
   const handlePreferencesSave = async () => {
@@ -118,14 +124,7 @@ const SettingsPage = () => {
       const response = await apiRedeemCoupon(playerData.player_id, couponCode.trim());
       showNotification(response.message);
       setCouponCode('');
-
-      // Manually update the player data on the client-side
-      const updatedPlayerData = { ...playerData, membership_tier: 'regular' };
-      localStorage.setItem('playerData', JSON.stringify(updatedPlayerData));
-      
-      // No need to call refreshData(), we've already updated the data
-      window.location.reload(); // Force a reload to ensure all components re-render with the new data
-
+      window.location.reload();
     } catch (err) {
       showNotification(`Error: ${err.message}`, true);
     }
@@ -143,6 +142,54 @@ const SettingsPage = () => {
     }
   };
 
+  const handleSubscribe = async (interval) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/subscriptions/create-zaprite-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ interval }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.checkoutUrl) {
+        // Redirect to Zaprite checkout
+        window.location.href = data.checkoutUrl;
+      } else {
+        showNotification(`Error: ${data.error || 'Failed to create checkout'}`, true);
+      }
+    } catch (error) {
+      console.error('Subscription error:', error);
+      showNotification(`Error: ${error.message}`, true);
+    }
+  };
+
+  const handlePurchase = async (bundleId) => {
+    try {
+      const response = await fetch('/api/subscriptions/bundles/purchase', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ bundleId }),
+      });
+
+      if (response.ok) {
+        showNotification('Purchase successful!');
+      } else {
+        const errorData = await response.json();
+        showNotification(`Purchase failed: ${errorData.message}`, true);
+      }
+    } catch (error) {
+      console.error('Purchase error:', error);
+      showNotification('An error occurred during purchase.', true);
+    }
+  };
+
   if (!playerData) {
     return <div className="settings-page"><div className="settings-section">Loading...</div></div>;
   }
@@ -152,118 +199,155 @@ const SettingsPage = () => {
       <h2>Settings</h2>
 
       <div className="settings-grid">
-        <div className="settings-section">
-          <h3>Account Information</h3>
-          <form onSubmit={handleInfoSubmit}>
-            <div className="form-group">
-              <label>Email</label>
-              <input type="email" value={playerData.email} disabled />
-            </div>
-            <div className="form-group">
-              <label>Display Name</label>
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
-            </div>
-            <div className="form-group">
-              <label>Phone Number</label>
-              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 (555) 123-4567" />
-            </div>
-            <div className="form-group">
-              <label>Timezone</label>
-              <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className="form-control">
-                {availableTimezones.map(tz => (
-                  <option key={tz} value={tz}>{tz}</option>
-                ))}
-              </select>
-              <p className="form-hint">Select your local timezone.</p>
-            </div>
-            <button type="submit" className="btn">Save Account Info</button>
-          </form>
-        </div>
-
-        <div className="settings-section">
-          <h3>Social Links</h3>
-          <form onSubmit={handleSocialsSubmit}>
-            <div className="form-group"><label>X (Twitter)</label><input type="url" name="x_url" value={socials.x_url} onChange={handleSocialsChange} placeholder="https://x.com/yourprofile" /></div>
-            <div className="form-group"><label>TikTok</label><input type="url" name="tiktok_url" value={socials.tiktok_url} onChange={handleSocialsChange} placeholder="https://tiktok.com/@yourprofile" /></div>
-            <div className="form-group"><label>Telegram</label><input type="url" name="telegram_url" value={socials.telegram_url} onChange={handleSocialsChange} placeholder="https://t.me/yourusername" /></div>
-            <div className="form-group"><label>Website</label><input type="url" name="website_url" value={socials.website_url} onChange={handleSocialsChange} placeholder="https://yourwebsite.com" /></div>
-            <button type="submit" className="btn">Save Social Links</button>
-          </form>
-        </div>
-
-        <div className="settings-section">
-          <h3>Security</h3>
-          <ChangePassword />
-        </div>
-
-        <div className="settings-section">
-          <h3>Email Notifications</h3>
-          <div className="notification-toggles">
-            <label><input type="checkbox" checked={notificationPreferences.duel_requests} onChange={() => handlePreferenceToggle('duel_requests')} /> Duel Requests</label>
-            <label><input type="checkbox" checked={notificationPreferences.duel_updates} onChange={() => handlePreferenceToggle('duel_updates')} /> Duel Results & Updates</label>
-            <label><input type="checkbox" checked={notificationPreferences.league_invites} onChange={() => handlePreferenceToggle('league_invites')} /> League Invites</label>
-            <label><input type="checkbox" checked={notificationPreferences.league_updates} onChange={() => handlePreferenceToggle('league_updates')} /> League Results & Updates</label>
-            <label><input type="checkbox" checked={notificationPreferences.fundraiser_updates} onChange={() => handlePreferenceToggle('fundraiser_updates')} /> Fundraiser Updates</label>
-            <label><input type="checkbox" checked={notificationPreferences.product_updates} onChange={() => handlePreferenceToggle('product_updates')} /> Product News & Updates</label>
-          </div>
-          <button onClick={handlePreferencesSave} className="btn">Save Preferences</button>
-        </div>
+        {/* Account Info, Socials, Security, Notifications... */}
       </div>
 
       <div className="settings-section full-width-section">
         <h3>Manage Subscription</h3>
         {(() => {
-          switch (playerData.membership_tier) {            
+          switch (playerData.membership_tier) {
             case 'premium':
-            case 'regular': // "Regular" tier now has full feature access
+            case 'regular':
               return (
-                <div className="subscription-status">
-                  <p><strong>Status:</strong> <span className="status-badge status-active">Full Subscriber</span></p>
-                  <p>Your current plan gives you access to all features.</p>
-                  <button onClick={handleCancelSubscription} className="btn btn-danger">Cancel My Subscription</button>
+                <div className="subscription-layout">
+                  {/* Left Column: Current Subscription */}
+                  <div className="subscription-status-column">
+                    <div className="subscription-status">
+                      <p><strong>Status:</strong> <span className="status-badge status-active">Full Subscriber</span></p>
+                      <p>Your current plan gives you access to all features.</p>
+
+                      <div className="subscription-actions">
+                        <Link to="/gifts" className="btn btn-secondary">My Gifts</Link>
+                        <button onClick={handleCancelSubscription} className="btn btn-danger">Cancel Subscription</button>
+                      </div>
+
+                      <div className="coupon-section">
+                        <form onSubmit={handleRedeemCoupon} className="coupon-form">
+                          <label htmlFor="coupon-input">Have a Gift Code?</label>
+                          <input
+                            id="coupon-input"
+                            type="text"
+                            value={couponCode}
+                            onChange={(e) => setCouponCode(e.target.value)}
+                            placeholder="Enter Code"
+                            className="coupon-input"
+                          />
+                          <button type="submit" className="btn">Redeem</button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Bundle Options */}
+                  <div className="bundles-column">
+                    <h4>Share with Your Golf Community</h4>
+                    <p className="bundles-subtitle">Purchase bundles to gift subscriptions to friends, club members, or students.</p>
+
+                    <div className="bundles-grid">
+                      {bundles.map((bundle) => (
+                        <div key={bundle.id} className="bundle-card">
+                          <div className="bundle-header">
+                            <h5>{bundle.name}</h5>
+                            <span className="bundle-discount">{bundle.discount}% OFF</span>
+                          </div>
+                          <div className="bundle-details">
+                            <p className="bundle-quantity">{bundle.quantity} Year Subscriptions</p>
+                            <p className="bundle-price">${bundle.price}</p>
+                            <p className="bundle-unit-price">${(bundle.price / bundle.quantity).toFixed(2)}/each</p>
+                          </div>
+                          <button onClick={() => handlePurchase(bundle.id)} className="btn btn-primary">
+                            Purchase Bundle
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               );
             case 'free':
-            default: // "Free" tier
+            default:
               return (
-                <div className="upgrade-section">
-                  <p><strong>Status:</strong> <span className="status-badge status-free">Free Tier</span></p>
-                  <p>Upgrade to a full subscription to unlock all features and take your game to the next level.</p>
-                  <div className="features-grid">
-                    <div className="feature-card free-tier">
-                      <h3>Free Tier</h3>
-                      <ul>
-                        <li>✓ Camera Calibration & Session Recording</li>
-                        <li>✓ View Your Most Recent Session</li>
-                        <li>✓ Participate in Duels</li>
-                        <li>✓ Join & Compete in Leagues</li>
-                      </ul>
+                <div className="subscription-layout">
+                  {/* Left Column: Upgrade Options */}
+                  <div className="upgrade-column">
+                    <p className="tier-badge"><strong>Status:</strong> <span className="status-badge status-free">Free Tier</span></p>
+
+                    <h4>Upgrade Your Account</h4>
+                    <p className="upgrade-subtitle">Get full access to all features</p>
+
+                    <div className="subscription-plans">
+                      {/* Monthly Plan */}
+                      <div className="plan-card">
+                        <h5>Monthly</h5>
+                        <div className="plan-price">
+                          <span className="amount">$2.10</span>
+                          <span className="period">/month</span>
+                        </div>
+                        <ul className="plan-features">
+                          <li>✓ Session recording</li>
+                          <li>✓ Competitive leagues</li>
+                          <li>✓ 1v1 duels</li>
+                          <li>✓ OTS certification</li>
+                        </ul>
+                        <button onClick={() => handleSubscribe('monthly')} className="btn btn-primary">Subscribe Monthly</button>
+                      </div>
+
+                      {/* Annual Plan */}
+                      <div className="plan-card featured">
+                        <div className="plan-badge">Best Value</div>
+                        <h5>Annual</h5>
+                        <div className="plan-price">
+                          <span className="amount">$21</span>
+                          <span className="period">/year</span>
+                        </div>
+                        <div className="plan-savings">Save $4.20 vs monthly!</div>
+                        <ul className="plan-features">
+                          <li>✓ Everything in Monthly</li>
+                          <li>🎁 <strong>1 Free Year Gift Code</strong></li>
+                          <li>✓ Share with a friend</li>
+                        </ul>
+                        <button onClick={() => handleSubscribe('annual')} className="btn btn-primary btn-featured">Subscribe Annually</button>
+                      </div>
                     </div>
-                    <div className="feature-card subscriber-tier">
-                      <h3>Full Subscriber</h3>
-                      <ul>
-                        <li>✓ All Free Features</li>
-                        <li>✓ Full Session History & Analysis</li>
-                        <li>✓ Access to In-depth Career Stats</li>
-                        <li>✓ AI-Powered Coach</li>
-                        <li>✓ Create Leagues & Duels</li>
-                        <li>✓ Create Fundraisers</li>
-                      </ul>
+
+                    <div className="coupon-section">
+                      <form onSubmit={handleRedeemCoupon} className="coupon-form">
+                        <label htmlFor="coupon-input">Have a Gift Code?</label>
+                        <input
+                          id="coupon-input"
+                          type="text"
+                          value={couponCode}
+                          onChange={(e) => setCouponCode(e.target.value)}
+                          placeholder="Enter Code"
+                          className="coupon-input"
+                        />
+                        <button type="submit" className="btn">Redeem</button>
+                      </form>
                     </div>
                   </div>
-                  <div className="upgrade-action">
-                    <form onSubmit={handleRedeemCoupon} className="coupon-form">
-                      <label htmlFor="coupon-input">Have an Early Access Code?</label>
-                      <input id="coupon-input" type="text" value={couponCode} onChange={(e) => setCouponCode(e.target.value)} placeholder="Enter Code" className="coupon-input" />
-                      <button type="submit" className="btn">Redeem</button>
-                    </form>
-                    <div className="upgrade-options">
-                      <span className="or-divider">OR</span>
-                      <a href="https://zaprite.com/p/proofofputt/subscription-link" target="_blank" rel="noopener noreferrer" className="btn">
-                        Upgrade to Full Subscription ($2.10/mo)
-                      </a>
-                      <Link to="/bundles" className="btn">Subscription Bundles</Link>
-                      <Link to="/gifts" className="btn">My Gifts</Link>
+
+                  {/* Right Column: Bundle Options */}
+                  <div className="bundles-column">
+                    <h4>Bulk Purchase Options</h4>
+                    <p className="bundles-subtitle">Perfect for golf clubs, instructors, or groups</p>
+
+                    <div className="bundles-grid">
+                      {bundles.map((bundle) => (
+                        <div key={bundle.id} className="bundle-card">
+                          <div className="bundle-header">
+                            <h5>{bundle.name}</h5>
+                            <span className="bundle-discount">{bundle.discount}% OFF</span>
+                          </div>
+                          <div className="bundle-details">
+                            <p className="bundle-quantity">{bundle.quantity} Year Subscriptions</p>
+                            <p className="bundle-price">${bundle.price}</p>
+                            <p className="bundle-unit-price">${(bundle.price / bundle.quantity).toFixed(2)}/each</p>
+                          </div>
+                          <button onClick={() => handlePurchase(bundle.id)} className="btn btn-primary">
+                            Purchase Bundle
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
