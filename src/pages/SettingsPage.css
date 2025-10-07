@@ -1,6 +1,6 @@
 .settings-page {
   width: 100%;
-  padding: 2rem 10.5%;
+  padding: 1rem 10.5%;
   box-sizing: border-box;
 }
 
@@ -19,7 +19,7 @@
 
 .settings-section {
   background-color: var(--surface-color);
-  padding: 2rem;
+  padding: 1.5rem;
   border-radius: 12px;
   margin-bottom: 0; /* Remove bottom margin as gap is handled by grid */
 }
@@ -27,8 +27,8 @@
 .settings-section h3 {
   margin-top: 0;
   border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.75rem;
-  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .notification-toggles {
@@ -53,8 +53,7 @@
 
 .settings-section .form-hint {
   font-size: 0.85rem;
-  color: var(--text-color-secondary);
-  opacity: 0.8;
+  color: var(--text-color);
   margin-top: 0.5rem;
 }
 
@@ -101,7 +100,7 @@
 
 .upgrade-section > p {
   font-size: 1.2rem;
-  color: var(--text-color-secondary);
+  color: var(--text-color);
   margin-bottom: 3rem;
 }
 
@@ -117,7 +116,7 @@
   background-color: var(--surface-color);
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  padding: 2rem;
+  padding: 1.5rem;
 }
 
 .feature-card h3 {
@@ -144,7 +143,7 @@
 
 .upgrade-action {
   background-color: var(--surface-color);
-  padding: 2rem;
+  padding: 1.5rem;
   border-radius: 12px;
   text-align: center;
 }
@@ -168,7 +167,7 @@
 
 .or-divider {
   font-weight: bold;
-  color: var(--text-color-secondary);
+  color: var(--text-color);
 }
 
 /* --- New Two-Column Subscription Layout --- */
@@ -197,7 +196,7 @@
 
 .upgrade-subtitle,
 .bundles-subtitle {
-  color: var(--text-color-secondary);
+  color: var(--text-color);
   font-size: 0.9rem;
   margin-bottom: 1.5rem;
 }
@@ -261,7 +260,7 @@
 
 .plan-price .period {
   font-size: 0.9rem;
-  color: var(--text-color-secondary);
+  color: var(--text-color);
 }
 
 .plan-savings {
@@ -377,7 +376,7 @@
 
 .bundle-unit-price {
   font-size: 0.8rem;
-  color: var(--text-color-secondary);
+  color: var(--text-color);
   margin: 0;
 }
 
@@ -446,7 +445,7 @@
 
 .status-badge.status-free {
   background-color: rgba(128, 128, 128, 0.2);
-  color: #666;
+  color: var(--text-color);
 }
 
 /* Free Year Invites Section */
@@ -463,7 +462,7 @@
 }
 
 .gift-invites-intro {
-  color: var(--text-color-secondary);
+  color: var(--text-color);
   font-size: 0.9rem;
   margin-bottom: 1rem;
 }
@@ -537,14 +536,14 @@
 }
 
 .no-gift-codes p {
-  color: var(--text-color-secondary);
+  color: var(--text-color);
   margin: 0;
   font-size: 0.95rem;
 }
 
 /* Association Pricing Form */
 .association-intro {
-  color: var(--text-color-secondary);
+  color: var(--text-color);
   margin-bottom: 2rem;
   font-size: 1rem;
   line-height: 1.5;
@@ -587,7 +586,7 @@
 
 .form-group label {
   display: block;
-  font-weight: 600;
+  font-weight: bold;
   margin-bottom: 0.5rem;
   color: var(--text-color);
 }
@@ -599,7 +598,7 @@
 .form-group input,
 .form-group textarea {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.5rem;
   background-color: var(--background-color);
   border: 1px solid var(--border-color);
   border-radius: 4px;
@@ -751,7 +750,7 @@
 
 .stat-label {
   font-size: 0.9rem;
-  color: var(--text-color-secondary);
+  color: var(--text-color);
   font-weight: 500;
 }
 
@@ -822,13 +821,13 @@
 .loading-stats {
   text-align: center;
   padding: 3rem;
-  color: var(--text-color-secondary);
+  color: var(--text-color);
 }
 
 .empty-referrals {
   text-align: center;
   padding: 2rem;
-  color: var(--text-color-secondary);
+  color: var(--text-color);
   background-color: var(--background-color);
   border-radius: 8px;
   margin-top: 1.5rem;
