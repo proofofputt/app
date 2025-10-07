@@ -819,6 +819,20 @@
   color: var(--text-color-secondary);
 }
 
+.empty-referrals {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-color-secondary);
+  background-color: var(--background-color);
+  border-radius: 8px;
+  margin-top: 1.5rem;
+}
+
+.empty-referrals p {
+  margin: 0;
+  font-size: 1rem;
+}
+
 @media (max-width: 768px) {
   .stats-summary {
     grid-template-columns: 1fr 1fr;

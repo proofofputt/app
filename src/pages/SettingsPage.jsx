@@ -352,6 +352,15 @@ const SettingsPage = () => {
       }
     } catch (error) {
       console.error('Error fetching referral stats:', error);
+      // Set empty stats on error to avoid infinite loading
+      setReferralStats({
+        totalInvites: 0,
+        viewed: 0,
+        rejected: 0,
+        accountsCreated: 0,
+        upgraded: 0,
+        invites: []
+      });
     }
   };
 
@@ -647,7 +656,7 @@ const SettingsPage = () => {
                 </div>
               </div>
 
-              {referralStats.invites && referralStats.invites.length > 0 && (
+              {referralStats.invites && referralStats.invites.length > 0 ? (
                 <div className="referrals-list">
                   <h4>Recent Invites</h4>
                   <table className="referrals-table">
@@ -678,6 +687,10 @@ const SettingsPage = () => {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              ) : (
+                <div className="empty-referrals">
+                  <p>No referrals yet. Share your gift codes above to invite friends!</p>
                 </div>
               )}
             </div>
