@@ -590,6 +590,20 @@ const SettingsPage = () => {
             </div>
 
             <div className="form-group">
+              <label htmlFor="assoc-phone">Phone</label>
+              <input
+                id="assoc-phone"
+                type="tel"
+                name="phone"
+                value={associationForm.phone}
+                onChange={handleAssociationFormChange}
+                placeholder="+1 (555) 123-4567"
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
               <label htmlFor="assoc-email">Email <span className="required">*</span></label>
               <input
                 id="assoc-email"
@@ -599,20 +613,6 @@ const SettingsPage = () => {
                 onChange={handleAssociationFormChange}
                 required
                 placeholder="your.email@example.com"
-              />
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="assoc-phone">Phone</label>
-              <input
-                id="assoc-phone"
-                type="tel"
-                name="phone"
-                value={associationForm.phone}
-                onChange={handleAssociationFormChange}
-                placeholder="+1 (555) 123-4567"
               />
             </div>
 
@@ -670,7 +670,7 @@ const SettingsPage = () => {
             />
           </div>
 
-          <button type="submit" className="btn btn-primary btn-large">Request Association Pricing</button>
+          <button type="submit" className="btn btn-primary btn-large">Send</button>
         </form>
       </div>
     </div>
