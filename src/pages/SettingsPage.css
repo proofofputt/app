@@ -656,7 +656,6 @@
   font-size: 0.95rem;
   cursor: pointer;
   font-weight: normal;
-  text-align: left;
 }
 
 .checkbox-label input[type="checkbox"] {
@@ -669,8 +668,7 @@
 .checkbox-label span {
   color: var(--text-color);
   text-align: left;
-  display: block;
-  width: 100%;
+  line-height: 1.2;
 }
 
 /* Responsive Design */
