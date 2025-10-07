@@ -402,12 +402,12 @@ const SettingsPage = () => {
                       </div>
 
                       {/* Free Year Invites Section */}
-                      {giftCodes.length > 0 && (
-                        <div className="gift-invites-section">
-                          <h4>Free Year Invites</h4>
-                          <p className="gift-invites-intro">Share your free year subscriptions with friends or colleagues.</p>
+                      <div className="gift-invites-section">
+                        <h4>Free Year Invites</h4>
+                        <p className="gift-invites-intro">Share your free year subscriptions with friends or colleagues.</p>
 
-                          {giftCodes.map((giftCode) => (
+                        {giftCodes.length > 0 ? (
+                          giftCodes.map((giftCode) => (
                             <div key={giftCode.id} className="gift-invite-row">
                               <div className="gift-code-label">
                                 <span className="gift-code-text">{giftCode.gift_code}</span>
@@ -431,9 +431,13 @@ const SettingsPage = () => {
                                 </div>
                               )}
                             </div>
-                          ))}
-                        </div>
-                      )}
+                          ))
+                        ) : (
+                          <div className="no-gift-codes">
+                            <p>You don't have any gift codes yet. Annual subscribers receive 1 free year gift code to share!</p>
+                          </div>
+                        )}
+                      </div>
 
                       <div className="coupon-section">
                         <form onSubmit={handleRedeemCoupon} className="coupon-form">

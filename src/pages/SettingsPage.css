@@ -501,6 +501,20 @@
   font-size: 0.9rem;
 }
 
+.no-gift-codes {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.no-gift-codes p {
+  color: var(--text-color-secondary);
+  margin: 0;
+  font-size: 0.95rem;
+}
+
 /* Association Pricing Form */
 .association-intro {
   color: var(--text-color-secondary);
