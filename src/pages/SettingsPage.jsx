@@ -37,7 +37,10 @@ const SettingsPage = () => {
     comments: '',
     club_name: '',
     office_address: '',
-    number_of_users: 50
+    number_of_users: 50,
+    onboarding_support: false,
+    implementation_support: false,
+    event_management: false
   });
   const [giftCodes, setGiftCodes] = useState([]);
   const [giftRecipients, setGiftRecipients] = useState({});
@@ -229,8 +232,11 @@ const SettingsPage = () => {
   };
 
   const handleAssociationFormChange = (e) => {
-    const { name, value } = e.target;
-    setAssociationForm(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setAssociationForm(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
   };
 
   const handleAssociationSubmit = async (e) => {
@@ -580,7 +586,7 @@ const SettingsPage = () => {
 
         <form onSubmit={handleAssociationSubmit} className="association-form association-form-two-col">
           <div className="form-col-left">
-            <div className="form-group">
+            <div className="form-group form-group-compact">
               <label htmlFor="assoc-name">Name <span className="required">*</span></label>
               <input
                 id="assoc-name"
@@ -593,7 +599,7 @@ const SettingsPage = () => {
               />
             </div>
 
-            <div className="form-group">
+            <div className="form-group form-group-compact">
               <label htmlFor="assoc-phone">Phone</label>
               <input
                 id="assoc-phone"
@@ -605,7 +611,7 @@ const SettingsPage = () => {
               />
             </div>
 
-            <div className="form-group">
+            <div className="form-group form-group-compact">
               <label htmlFor="assoc-email">Email <span className="required">*</span></label>
               <input
                 id="assoc-email"
@@ -618,19 +624,7 @@ const SettingsPage = () => {
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="assoc-club-name">Club / Enterprise Name</label>
-              <input
-                id="assoc-club-name"
-                type="text"
-                name="club_name"
-                value={associationForm.club_name}
-                onChange={handleAssociationFormChange}
-                placeholder="Your organization name"
-              />
-            </div>
-
-            <div className="form-group">
+            <div className="form-group form-group-compact">
               <label htmlFor="assoc-address">Office Address</label>
               <input
                 id="assoc-address"
@@ -652,8 +646,20 @@ const SettingsPage = () => {
                 value={associationForm.comments}
                 onChange={handleAssociationFormChange}
                 required
-                rows="8"
+                rows="6"
                 placeholder="Tell us about your needs, timeline, and any specific requirements..."
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="assoc-club-name">Club / Enterprise Name</label>
+              <input
+                id="assoc-club-name"
+                type="text"
+                name="club_name"
+                value={associationForm.club_name}
+                onChange={handleAssociationFormChange}
+                placeholder="Your organization name"
               />
             </div>
 
@@ -669,6 +675,39 @@ const SettingsPage = () => {
                 min="1"
                 placeholder="50"
               />
+            </div>
+
+            <div className="form-group">
+              <label>Additional Services</label>
+              <div className="checkbox-group">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    name="onboarding_support"
+                    checked={associationForm.onboarding_support}
+                    onChange={handleAssociationFormChange}
+                  />
+                  <span>Onboarding Support For Community</span>
+                </label>
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    name="implementation_support"
+                    checked={associationForm.implementation_support}
+                    onChange={handleAssociationFormChange}
+                  />
+                  <span>Implementation Support For Administration</span>
+                </label>
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    name="event_management"
+                    checked={associationForm.event_management}
+                    onChange={handleAssociationFormChange}
+                  />
+                  <span>Event Management On Site</span>
+                </label>
+              </div>
             </div>
 
             <button type="submit" className="btn btn-primary btn-large btn-send-orange">Send</button>
