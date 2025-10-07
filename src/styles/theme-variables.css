@@ -15,14 +15,14 @@
   
   /* === TEXT COLORS === */
   --text-white: #ffffff;                           /* Primary text on dark bg */
-  --text-white-secondary: #adb5bd;                 /* Secondary text on dark bg */
+  --text-white-secondary: #ffffff;                 /* Secondary text on dark bg - changed to white */
   --text-dark: #333333;                           /* Primary text on light bg */
   --text-dark-secondary: #666666;                 /* Secondary text on light bg */
-  
+
   /* === SURFACE COLORS === */
   --sand-color: #f0e6d6;                          /* Light surface (dropdowns) */
   --sand-color-hover: #e1d5c3;                    /* Hover state for sand */
-  
+
   /* === SEMANTIC THEME MAPPING === */
   --background-color: var(--masters-green-dark);
   --surface-color: var(--masters-green-medium);
