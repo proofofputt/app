@@ -578,8 +578,8 @@ const SettingsPage = () => {
         <h3>Association Pricing</h3>
         <p className="association-intro">Need subscriptions for your golf club, association, or enterprise? Contact us for custom pricing on bulk subscriptions.</p>
 
-        <form onSubmit={handleAssociationSubmit} className="association-form">
-          <div className="form-row">
+        <form onSubmit={handleAssociationSubmit} className="association-form association-form-two-col">
+          <div className="form-col-left">
             <div className="form-group">
               <label htmlFor="assoc-name">Name <span className="required">*</span></label>
               <input
@@ -604,9 +604,7 @@ const SettingsPage = () => {
                 placeholder="+1 (555) 123-4567"
               />
             </div>
-          </div>
 
-          <div className="form-row">
             <div className="form-group">
               <label htmlFor="assoc-email">Email <span className="required">*</span></label>
               <input
@@ -631,9 +629,7 @@ const SettingsPage = () => {
                 placeholder="Your organization name"
               />
             </div>
-          </div>
 
-          <div className="form-row">
             <div className="form-group">
               <label htmlFor="assoc-address">Office Address</label>
               <input
@@ -645,7 +641,9 @@ const SettingsPage = () => {
                 placeholder="123 Main St, City, State, ZIP"
               />
             </div>
+          </div>
 
+          <div className="form-col-right">
             <div className="form-group">
               <label htmlFor="assoc-comments">Comments / Requirements <span className="required">*</span></label>
               <textarea
@@ -654,13 +652,11 @@ const SettingsPage = () => {
                 value={associationForm.comments}
                 onChange={handleAssociationFormChange}
                 required
-                rows="4"
+                rows="8"
                 placeholder="Tell us about your needs, timeline, and any specific requirements..."
               />
             </div>
-          </div>
 
-          <div className="form-row">
             <div className="form-group">
               <label htmlFor="assoc-users">Number of Users <span className="required">*</span></label>
               <input
@@ -675,9 +671,7 @@ const SettingsPage = () => {
               />
             </div>
 
-            <div className="form-group">
-              <button type="submit" className="btn btn-primary btn-large btn-send-orange">Send</button>
-            </div>
+            <button type="submit" className="btn btn-primary btn-large btn-send-orange">Send</button>
           </div>
         </form>
       </div>

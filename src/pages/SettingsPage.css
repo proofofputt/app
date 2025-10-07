@@ -529,6 +529,20 @@
   gap: 1.5rem;
 }
 
+.association-form-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.form-col-left,
+.form-col-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -617,6 +631,10 @@
   }
 
   .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .association-form-two-col {
     grid-template-columns: 1fr;
   }
 
