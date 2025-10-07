@@ -643,6 +643,21 @@ const SettingsPage = () => {
             </div>
 
             <div className="form-group">
+              <label htmlFor="assoc-comments">Comments / Requirements <span className="required">*</span></label>
+              <textarea
+                id="assoc-comments"
+                name="comments"
+                value={associationForm.comments}
+                onChange={handleAssociationFormChange}
+                required
+                rows="4"
+                placeholder="Tell us about your needs, timeline, and any specific requirements..."
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
               <label htmlFor="assoc-users">Number of Users <span className="required">*</span></label>
               <input
                 id="assoc-users"
@@ -655,22 +670,11 @@ const SettingsPage = () => {
                 placeholder="50"
               />
             </div>
-          </div>
 
-          <div className="form-group full-width">
-            <label htmlFor="assoc-comments">Comments / Requirements <span className="required">*</span></label>
-            <textarea
-              id="assoc-comments"
-              name="comments"
-              value={associationForm.comments}
-              onChange={handleAssociationFormChange}
-              required
-              rows="4"
-              placeholder="Tell us about your needs, timeline, and any specific requirements..."
-            />
+            <div className="form-group">
+              <button type="submit" className="btn btn-primary btn-large btn-send-orange">Send</button>
+            </div>
           </div>
-
-          <button type="submit" className="btn btn-primary btn-large">Send</button>
         </form>
       </div>
     </div>

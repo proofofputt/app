@@ -568,6 +568,20 @@
   align-self: flex-start;
 }
 
+.btn-send-orange {
+  background: linear-gradient(135deg, #ff8c00 0%, #ff6b00 100%);
+  border: none;
+  color: white;
+  font-weight: bold;
+  margin-top: 1.75rem;
+}
+
+.btn-send-orange:hover {
+  background: linear-gradient(135deg, #ff9500 0%, #ff7700 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 140, 0, 0.3);
+}
+
 /* Responsive Design */
 @media (max-width: 1200px) {
   .subscription-layout {
