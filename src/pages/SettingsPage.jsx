@@ -625,6 +625,18 @@ const SettingsPage = () => {
             </div>
 
             <div className="form-group form-group-compact">
+              <label htmlFor="assoc-club-name">Club / Enterprise Name</label>
+              <input
+                id="assoc-club-name"
+                type="text"
+                name="club_name"
+                value={associationForm.club_name}
+                onChange={handleAssociationFormChange}
+                placeholder="Your organization name"
+              />
+            </div>
+
+            <div className="form-group form-group-compact">
               <label htmlFor="assoc-address">Office Address</label>
               <input
                 id="assoc-address"
@@ -648,18 +660,6 @@ const SettingsPage = () => {
                 required
                 rows="6"
                 placeholder="Tell us about your needs, timeline, and any specific requirements..."
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="assoc-club-name">Club / Enterprise Name</label>
-              <input
-                id="assoc-club-name"
-                type="text"
-                name="club_name"
-                value={associationForm.club_name}
-                onChange={handleAssociationFormChange}
-                placeholder="Your organization name"
               />
             </div>
 
