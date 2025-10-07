@@ -44,6 +44,8 @@ const SettingsPage = () => {
   });
   const [giftCodes, setGiftCodes] = useState([]);
   const [giftRecipients, setGiftRecipients] = useState({});
+  const [showReferralsDashboard, setShowReferralsDashboard] = useState(false);
+  const [referralStats, setReferralStats] = useState(null);
 
   useEffect(() => {
     const mockBundles = [
@@ -328,6 +330,31 @@ const SettingsPage = () => {
     }
   };
 
+  const toggleReferralsDashboard = async () => {
+    if (!showReferralsDashboard && !referralStats) {
+      // Fetch referral stats when opening dashboard for first time
+      await fetchReferralStats();
+    }
+    setShowReferralsDashboard(!showReferralsDashboard);
+  };
+
+  const fetchReferralStats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/referrals/stats', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (data.success) {
+        setReferralStats(data.stats);
+      }
+    } catch (error) {
+      console.error('Error fetching referral stats:', error);
+    }
+  };
+
   if (!playerData) {
     return <div className="settings-page"><div className="settings-section">Loading...</div></div>;
   }
@@ -452,18 +479,23 @@ const SettingsPage = () => {
                       </div>
 
                       <div className="coupon-section">
-                        <form onSubmit={handleRedeemCoupon} className="coupon-form">
-                          <label htmlFor="coupon-input">Have a Gift Code?</label>
-                          <input
-                            id="coupon-input"
-                            type="text"
-                            value={couponCode}
-                            onChange={(e) => setCouponCode(e.target.value)}
-                            placeholder="Enter Code"
-                            className="coupon-input"
-                          />
-                          <button type="submit" className="btn">Redeem</button>
-                        </form>
+                        <div className="coupon-header">
+                          <form onSubmit={handleRedeemCoupon} className="coupon-form">
+                            <label htmlFor="coupon-input">Have a Gift Code?</label>
+                            <input
+                              id="coupon-input"
+                              type="text"
+                              value={couponCode}
+                              onChange={(e) => setCouponCode(e.target.value)}
+                              placeholder="Enter Code"
+                              className="coupon-input"
+                            />
+                            <button type="submit" className="btn">Redeem</button>
+                          </form>
+                          <button onClick={toggleReferralsDashboard} className="btn btn-secondary">
+                            {showReferralsDashboard ? 'Hide' : 'Referrals Dashboard'}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -585,6 +617,77 @@ const SettingsPage = () => {
           }
         })()}
       </div>
+
+      {/* Referrals Dashboard */}
+      {showReferralsDashboard && (
+        <div className="settings-section full-width-section">
+          <h3>Referrals Dashboard</h3>
+          {referralStats ? (
+            <div className="referrals-stats">
+              <div className="stats-summary">
+                <div className="stat-card">
+                  <div className="stat-number">{referralStats.totalInvites || 0}</div>
+                  <div className="stat-label">Total Invites Sent</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-number">{referralStats.viewed || 0}</div>
+                  <div className="stat-label">Viewed Invites</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-number">{referralStats.rejected || 0}</div>
+                  <div className="stat-label">Rejected/Declined</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-number">{referralStats.accountsCreated || 0}</div>
+                  <div className="stat-label">Accounts Created</div>
+                </div>
+                <div className="stat-card stat-card-highlight">
+                  <div className="stat-number">{referralStats.upgraded || 0}</div>
+                  <div className="stat-label">Upgraded to Subscriber</div>
+                </div>
+              </div>
+
+              {referralStats.invites && referralStats.invites.length > 0 && (
+                <div className="referrals-list">
+                  <h4>Recent Invites</h4>
+                  <table className="referrals-table">
+                    <thead>
+                      <tr>
+                        <th>Recipient</th>
+                        <th>Sent Date</th>
+                        <th>Status</th>
+                        <th>Viewed</th>
+                        <th>Account Created</th>
+                        <th>Subscriber</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {referralStats.invites.map((invite, index) => (
+                        <tr key={index}>
+                          <td>{invite.recipient}</td>
+                          <td>{new Date(invite.sent_at).toLocaleDateString()}</td>
+                          <td>
+                            <span className={`status-badge status-${invite.status}`}>
+                              {invite.status}
+                            </span>
+                          </td>
+                          <td>{invite.viewed ? '✓' : '—'}</td>
+                          <td>{invite.account_created ? '✓' : '—'}</td>
+                          <td>{invite.is_subscriber ? '✓' : '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="loading-stats">
+              <p>Loading referral statistics...</p>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="settings-section full-width-section">
         <h3>Association Pricing</h3>
