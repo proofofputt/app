@@ -1,0 +1,109 @@
+import { Pool } from 'pg';
+import { setCORSHeaders } from '../../../utils/cors.js';
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+export default async function handler(req, res) {
+  setCORSHeaders(req, res);
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, message: 'Method not allowed' });
+  }
+
+  // Get user from auth token
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'Authentication required' });
+  }
+
+  const { giftCodeId, recipient } = req.body;
+
+  if (!giftCodeId || !recipient) {
+    return res.status(400).json({
+      success: false,
+      message: 'Gift code ID and recipient are required'
+    });
+  }
+
+  try {
+    // Verify token and get user
+    const userResult = await pool.query(
+      'SELECT player_id, email, username FROM players WHERE player_id = (SELECT player_id FROM sessions WHERE token = $1 LIMIT 1)',
+      [token]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(401).json({ success: false, message: 'Invalid authentication token' });
+    }
+
+    const user = userResult.rows[0];
+
+    // Verify ownership of gift code
+    const giftCodeResult = await pool.query(
+      `SELECT gift_code, is_redeemed, owner_user_id
+       FROM user_gift_subscriptions
+       WHERE id = $1`,
+      [giftCodeId]
+    );
+
+    if (giftCodeResult.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Gift code not found' });
+    }
+
+    const giftCode = giftCodeResult.rows[0];
+
+    if (giftCode.owner_user_id !== user.player_id) {
+      return res.status(403).json({ success: false, message: 'You do not own this gift code' });
+    }
+
+    if (giftCode.is_redeemed) {
+      return res.status(400).json({ success: false, message: 'This gift code has already been redeemed' });
+    }
+
+    // TODO: Send email or SMS with gift code
+    // For now, just log it
+    console.log(`📧 Sending gift code ${giftCode.gift_code} to ${recipient} from ${user.username}`);
+
+    // In production, integrate with email service (SendGrid, AWS SES) or SMS service (Twilio)
+    // Example:
+    // if (recipient.includes('@')) {
+    //   await sendEmail({
+    //     to: recipient,
+    //     subject: 'You received a free year of Proof of Putt!',
+    //     body: `${user.username} has gifted you a free year subscription. Use code: ${giftCode.gift_code}`
+    //   });
+    // } else {
+    //   await sendSMS({
+    //     to: recipient,
+    //     message: `${user.username} gifted you Proof of Putt! Code: ${giftCode.gift_code}`
+    //   });
+    // }
+
+    // Log the send attempt
+    await pool.query(
+      `INSERT INTO gift_code_sends (gift_code_id, recipient, sent_at, sent_by_user_id)
+       VALUES ($1, $2, NOW(), $3)
+       ON CONFLICT DO NOTHING`,
+      [giftCodeId, recipient, user.player_id]
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Gift invitation sent successfully!',
+      giftCode: giftCode.gift_code
+    });
+
+  } catch (error) {
+    console.error('Error sending gift code:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to send gift invitation'
+    });
+  }
+}

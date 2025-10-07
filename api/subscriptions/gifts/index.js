@@ -1,26 +1,59 @@
+import { Pool } from 'pg';
+import { setCORSHeaders } from '../../../utils/cors.js';
 
-import { db } from '../../database/db'; // Assuming db connection utility
-import { authenticate } from '../../auth'; // Assuming auth middleware
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
 export default async function handler(req, res) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ message: 'Method not allowed' });
+  setCORSHeaders(req, res);
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
   }
 
-  const user = await authenticate(req, res);
-  if (!user) {
-    return; // authenticate function handles the response
+  if (req.method !== 'GET') {
+    return res.status(405).json({ success: false, message: 'Method not allowed' });
+  }
+
+  // Get user from auth token
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'Authentication required' });
   }
 
   try {
-    const giftSubscriptions = await db.any(
-      'SELECT * FROM user_gift_subscriptions WHERE owner_user_id = $1 AND is_redeemed = FALSE',
-      [user.id]
+    // Verify token and get user
+    const userResult = await pool.query(
+      'SELECT player_id FROM players WHERE player_id = (SELECT player_id FROM sessions WHERE token = $1 LIMIT 1)',
+      [token]
     );
 
-    res.status(200).json({ giftSubscriptions });
+    if (userResult.rows.length === 0) {
+      return res.status(401).json({ success: false, message: 'Invalid authentication token' });
+    }
+
+    const userId = userResult.rows[0].player_id;
+
+    // Get all gift codes owned by this user
+    const giftCodesResult = await pool.query(
+      `SELECT id, gift_code, is_redeemed, redeemed_by_user_id, redeemed_at, created_at
+       FROM user_gift_subscriptions
+       WHERE owner_user_id = $1
+       ORDER BY created_at DESC`,
+      [userId]
+    );
+
+    return res.status(200).json({
+      success: true,
+      giftCodes: giftCodesResult.rows
+    });
+
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('Error fetching gift codes:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
   }
 }

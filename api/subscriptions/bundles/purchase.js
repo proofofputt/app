@@ -36,26 +36,73 @@ export default async function handler(req, res) {
 
   const { bundleId } = req.body;
 
+  // Get user from auth token
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'Authentication required' });
+  }
+
   try {
+    // Verify token and get user
+    const userResult = await pool.query(
+      'SELECT player_id, email, username FROM players WHERE player_id = (SELECT player_id FROM sessions WHERE token = $1 LIMIT 1)',
+      [token]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(401).json({ success: false, message: 'Invalid authentication token' });
+    }
+
+    const user = userResult.rows[0];
+
     // Get bundle details
     const bundle = BUNDLE_PRICING[bundleId];
     if (!bundle) {
       return res.status(400).json({ success: false, message: 'Invalid bundle ID' });
     }
 
-    // For now, return mock success with gift codes
-    // In production, this would create a Zaprite order and wait for webhook
-    const generatedCodes = [];
-    for (let i = 0; i < bundle.quantity; i++) {
-      generatedCodes.push(generateGiftCode());
+    // Create Zaprite order for bundle purchase
+    const orderPayload = {
+      organizationId: ZAPRITE_ORG_ID,
+      customerId: user.player_id.toString(),
+      customerEmail: user.email,
+      customerName: user.username,
+      amount: bundle.price,
+      currency: 'USD',
+      description: `Proof of Putt ${bundle.quantity}-Pack Bundle - ${bundle.quantity} Year Subscriptions`,
+      metadata: {
+        userId: user.player_id.toString(),
+        username: user.username,
+        bundleId: bundleId.toString(),
+        bundleQuantity: bundle.quantity.toString(),
+        type: 'bundle'
+      }
+    };
+
+    const zapriteResponse = await fetch(`${ZAPRITE_BASE_URL}/v1/order`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ZAPRITE_API_KEY}`
+      },
+      body: JSON.stringify(orderPayload)
+    });
+
+    const zapriteData = await zapriteResponse.json();
+
+    if (!zapriteResponse.ok) {
+      console.error('Zaprite API error:', zapriteData);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to create payment order. Please try again.'
+      });
     }
 
+    // Return checkout URL for redirect
     return res.status(200).json({
       success: true,
-      message: `${bundle.quantity}-pack bundle purchased successfully! Redirecting to payment...`,
-      generatedCodes,
-      requiresPayment: true,
-      amount: bundle.price
+      checkoutUrl: zapriteData.checkoutUrl || zapriteData.checkout_url,
+      orderId: zapriteData.id
     });
 
   } catch (error) {

@@ -39,6 +39,8 @@ const SettingsPage = () => {
     office_address: '',
     number_of_users: 50
   });
+  const [giftCodes, setGiftCodes] = useState([]);
+  const [giftRecipients, setGiftRecipients] = useState({});
 
   useEffect(() => {
     const mockBundles = [
@@ -49,6 +51,29 @@ const SettingsPage = () => {
     ];
     setBundles(mockBundles);
   }, []);
+
+  useEffect(() => {
+    if (playerData && playerData.player_id) {
+      fetchGiftCodes();
+    }
+  }, [playerData]);
+
+  const fetchGiftCodes = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/subscriptions/gifts', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (data.success) {
+        setGiftCodes(data.giftCodes || []);
+      }
+    } catch (error) {
+      console.error('Error fetching gift codes:', error);
+    }
+  };
 
   useEffect(() => {
     if (playerData) {
@@ -179,19 +204,23 @@ const SettingsPage = () => {
 
   const handlePurchase = async (bundleId) => {
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch('/api/subscriptions/bundles/purchase', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ bundleId }),
       });
 
-      if (response.ok) {
-        showNotification('Purchase successful!');
+      const data = await response.json();
+
+      if (data.success && data.checkoutUrl) {
+        // Redirect to Zaprite checkout
+        window.location.href = data.checkoutUrl;
       } else {
-        const errorData = await response.json();
-        showNotification(`Purchase failed: ${errorData.message}`, true);
+        showNotification(`Error: ${data.message || 'Failed to create checkout'}`, true);
       }
     } catch (error) {
       console.error('Purchase error:', error);
@@ -246,6 +275,44 @@ const SettingsPage = () => {
     } catch (error) {
       console.error('Association form error:', error);
       showNotification('An error occurred. Please try again.', true);
+    }
+  };
+
+  const handleRecipientChange = (giftCodeId, value) => {
+    setGiftRecipients(prev => ({ ...prev, [giftCodeId]: value }));
+  };
+
+  const handleSendGift = async (giftCode) => {
+    const recipient = giftRecipients[giftCode.id];
+    if (!recipient || !recipient.trim()) {
+      showNotification('Please enter a phone number or email.', true);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/subscriptions/gifts/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          giftCodeId: giftCode.id,
+          recipient: recipient
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        showNotification('Gift invitation sent successfully!');
+        setGiftRecipients(prev => ({ ...prev, [giftCode.id]: '' }));
+      } else {
+        showNotification(`Error: ${data.message}`, true);
+      }
+    } catch (error) {
+      console.error('Error sending gift:', error);
+      showNotification('Failed to send gift invitation.', true);
     }
   };
 
@@ -331,9 +398,42 @@ const SettingsPage = () => {
                       <p>Your current plan gives you access to all features.</p>
 
                       <div className="subscription-actions">
-                        <Link to="/gifts" className="btn btn-secondary">My Gifts</Link>
                         <button onClick={handleCancelSubscription} className="btn btn-danger">Cancel Subscription</button>
                       </div>
+
+                      {/* Free Year Invites Section */}
+                      {giftCodes.length > 0 && (
+                        <div className="gift-invites-section">
+                          <h4>Free Year Invites</h4>
+                          <p className="gift-invites-intro">Share your free year subscriptions with friends or colleagues.</p>
+
+                          {giftCodes.map((giftCode) => (
+                            <div key={giftCode.id} className="gift-invite-row">
+                              <div className="gift-code-label">
+                                <span className="gift-code-text">{giftCode.gift_code}</span>
+                                {giftCode.is_redeemed && <span className="redeemed-badge">Redeemed</span>}
+                              </div>
+                              {!giftCode.is_redeemed && (
+                                <div className="gift-send-form">
+                                  <input
+                                    type="text"
+                                    value={giftRecipients[giftCode.id] || ''}
+                                    onChange={(e) => handleRecipientChange(giftCode.id, e.target.value)}
+                                    placeholder="Phone number or email"
+                                    className="gift-recipient-input"
+                                  />
+                                  <button
+                                    onClick={() => handleSendGift(giftCode)}
+                                    className="btn btn-primary btn-sm"
+                                  >
+                                    Send
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
 
                       <div className="coupon-section">
                         <form onSubmit={handleRedeemCoupon} className="coupon-form">
