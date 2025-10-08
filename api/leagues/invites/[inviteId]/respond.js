@@ -63,12 +63,12 @@ export default async function handler(req, res) {
     
     // Get the invitation and verify the player is the invited player
     const invitationResult = await client.query(`
-      SELECT 
+      SELECT
         li.invitation_id,
         li.league_id,
-        li.league_inviter_id,
-        li.league_invited_player_id,
-        li.invitation_status,
+        li.inviting_user_id,
+        li.invited_user_id,
+        li.status,
         li.expires_at,
         l.name as league_name,
         l.status as league_status,
@@ -76,8 +76,8 @@ export default async function handler(req, res) {
         invited.name as invited_player_name
       FROM league_invitations li
       JOIN leagues l ON li.league_id = l.league_id
-      JOIN players inviter ON li.league_inviter_id = inviter.player_id
-      JOIN players invited ON li.league_invited_player_id = invited.player_id
+      JOIN players inviter ON li.inviting_user_id = inviter.player_id
+      JOIN players invited ON li.invited_user_id = invited.player_id
       WHERE li.invitation_id = $1
     `, [inviteId]);
 
@@ -91,18 +91,18 @@ export default async function handler(req, res) {
     const invitation = invitationResult.rows[0];
 
     // Verify the player is the invited player
-    if (parseInt(player_id) !== invitation.league_invited_player_id) {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'Only the invited player can respond to this invitation' 
+    if (parseInt(player_id) !== invitation.invited_user_id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Only the invited player can respond to this invitation'
       });
     }
 
     // Verify the invitation is pending
-    if (invitation.invitation_status !== 'pending') {
-      return res.status(400).json({ 
-        success: false, 
-        message: `Cannot respond to invitation with status: ${invitation.invitation_status}` 
+    if (invitation.status !== 'pending') {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot respond to invitation with status: ${invitation.status}`
       });
     }
 
@@ -110,8 +110,8 @@ export default async function handler(req, res) {
     if (new Date(invitation.expires_at) < new Date()) {
       // Update invitation to expired
       await client.query(`
-        UPDATE league_invitations 
-        SET invitation_status = 'expired', responded_at = NOW()
+        UPDATE league_invitations
+        SET status = 'expired', responded_at = NOW()
         WHERE invitation_id = $1
       `, [inviteId]);
 
@@ -124,9 +124,9 @@ export default async function handler(req, res) {
     // Update the invitation status
     const newStatus = action === 'accept' ? 'accepted' : 'declined';
     await client.query(`
-      UPDATE league_invitations 
-      SET 
-        invitation_status = $1,
+      UPDATE league_invitations
+      SET
+        status = $1,
         responded_at = NOW()
       WHERE invitation_id = $2
     `, [newStatus, inviteId]);
@@ -146,7 +146,7 @@ export default async function handler(req, res) {
       // Add player to league membership
       await client.query(`
         INSERT INTO league_memberships (
-          league_id, 
+          league_id,
           player_id,
           league_member_id,
           league_inviter_id,
@@ -156,7 +156,7 @@ export default async function handler(req, res) {
         )
         VALUES ($1, $2, $2, $3, 'member', true, NOW())
         ON CONFLICT (league_id, player_id) DO NOTHING
-      `, [invitation.league_id, invitation.league_invited_player_id, invitation.league_inviter_id]);
+      `, [invitation.league_id, invitation.invited_user_id, invitation.inviting_user_id]);
 
       responseMessage = `Successfully joined ${invitation.league_name}`;
     }
