@@ -9,7 +9,7 @@
   --text-white: #ffffff;              /* Primary text color */
   --sand-color: #f0e6d6;              /* A light sandy color for dropdowns */
   --sand-color-hover: #e1d5c3;        /* A darker sand for hover states */
-  --text-white-secondary: #adb5bd;    /* Lighter gray for secondary text */
+  --text-white-secondary: #ffffff;    /* Changed to white for better contrast */
 
   /* Theme Mapping */
   --background-color: var(--masters-green-dark);
