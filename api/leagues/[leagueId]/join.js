@@ -166,24 +166,21 @@ export default async function handler(req, res) {
         // Continue to notification creation below
       }
     } else {
-      // Create new membership with fallback for different table structures
-      try {
-        await client.query(`
-          INSERT INTO league_memberships (league_id, player_id, joined_at, is_active)
-          VALUES ($1, $2, NOW(), true)
-        `, [leagueId, playerId]);
-        
-        console.log(`[join-league] Created new membership for player ${playerId} in league ${leagueId}`);
-      } catch (membershipError) {
-        // Try simpler structure if the first attempt fails
-        console.log(`[join-league] Attempting alternative membership creation...`);
-        await client.query(`
-          INSERT INTO league_memberships (league_id, player_id, joined_at)
-          VALUES ($1, $2, NOW())
-        `, [leagueId, playerId]);
-        
-        console.log(`[join-league] Created membership with alternative structure for player ${playerId} in league ${leagueId}`);
-      }
+      // Create new membership - use league creator as inviter for direct joins
+      await client.query(`
+        INSERT INTO league_memberships (
+          league_id,
+          player_id,
+          league_member_id,
+          league_inviter_id,
+          member_role,
+          is_active,
+          joined_at
+        )
+        VALUES ($1, $2, $2, $3, 'member', true, NOW())
+      `, [leagueId, playerId, league.created_by]);
+
+      console.log(`[join-league] Created new membership for player ${playerId} in league ${leagueId}`);
     }
 
     // Get player details for notifications

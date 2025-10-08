@@ -311,10 +311,12 @@ export default async function handler(req, res) {
       return res.status(200).json({
         sessions,
         player_id: parseInt(playerId),
-        total_sessions: totalSessions,
-        current_page: currentPage,
-        total_pages: totalPages,
-        per_page: itemsPerPage
+        pagination: {
+          totalSessions,
+          currentPage,
+          totalPages,
+          perPage: itemsPerPage
+        }
       });
       
     } catch (error) {
