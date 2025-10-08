@@ -158,8 +158,13 @@ export const apiStartSession = async (player_id, duel_id = null, league_round_id
 // Calibration functions removed - now handled by desktop app
 
 // --- Duels ---
-export const apiListDuels = (playerId) => 
-  fetch(`${API_BASE_URL}/duels?player_id=${playerId}`, { headers: getHeaders() })
+export const apiListDuels = (playerId) => {
+  console.log('[apiListDuels] Called with playerId:', playerId);
+  if (!playerId) {
+    console.warn('[apiListDuels] playerId is missing, returning empty array');
+    return Promise.resolve({ duels: [] });
+  }
+  return fetch(`${API_BASE_URL}/duels?player_id=${playerId}`, { headers: getHeaders() })
     .then(handleResponse)
     .then(response => {
       // Handle the response structure from duels API
@@ -169,6 +174,7 @@ export const apiListDuels = (playerId) =>
       // Fallback to empty array if no duels
       return [];
     });
+};
 
 export const apiGetPlayerVsPlayerDuels = (player1Id, player2Id) => 
   fetch(`${API_BASE_URL}/players/${player1Id}/vs/${player2Id}/duels`, { headers: getHeaders() }).then(handleResponse);
