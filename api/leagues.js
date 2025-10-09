@@ -394,16 +394,10 @@ async function handleCreateLeague(req, res, client) {
           invited_player_id: tempPlayerId
         };
         newPlayerInvitations.push(playerInvitation);
-        
-        // Update league to reference the first invited player (for consistency with duels)
-        if (newPlayerInvitations.length === 1) {
-          await client.query(`
-            UPDATE leagues 
-            SET league_creator_id = $1, league_invited_player_id = $2 
-            WHERE league_id = $3
-          `, [user.playerId, tempPlayerId, league.league_id]);
-        }
-        
+
+        // Note: League creator is already stored in leagues.created_by field
+        // Invited player info is tracked in newPlayerInvitations array
+
         console.log(`[DEBUG] Created temporary player ${tempPlayerId} and league invitation for ${contact.type}: ${contact.value}`);
       } catch (inviteError) {
         console.error(`[ERROR] Failed to create invitation for ${contact.type}: ${contact.value}`, inviteError.message);
