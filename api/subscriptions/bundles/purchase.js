@@ -45,7 +45,7 @@ export default async function handler(req, res) {
   try {
     // Verify token and get user
     const userResult = await pool.query(
-      'SELECT player_id, email, username FROM players WHERE player_id = (SELECT player_id FROM sessions WHERE token = $1 LIMIT 1)',
+      'SELECT player_id, email, display_name FROM players WHERE player_id = (SELECT player_id FROM sessions WHERE token = $1 LIMIT 1)',
       [token]
     );
 
@@ -66,13 +66,13 @@ export default async function handler(req, res) {
       organizationId: ZAPRITE_ORG_ID,
       customerId: user.player_id.toString(),
       customerEmail: user.email,
-      customerName: user.username,
+      customerName: user.display_name,
       amount: bundle.price,
       currency: 'USD',
       description: `Proof of Putt ${bundle.quantity}-Pack Bundle - ${bundle.quantity} Year Subscriptions`,
       metadata: {
         userId: user.player_id.toString(),
-        username: user.username,
+        displayName: user.display_name,
         bundleId: bundleId.toString(),
         bundleQuantity: bundle.quantity.toString(),
         type: 'bundle'

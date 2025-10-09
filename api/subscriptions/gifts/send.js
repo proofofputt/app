@@ -34,7 +34,7 @@ export default async function handler(req, res) {
   try {
     // Verify token and get user
     const userResult = await pool.query(
-      'SELECT player_id, email, username FROM players WHERE player_id = (SELECT player_id FROM sessions WHERE token = $1 LIMIT 1)',
+      'SELECT player_id, email, display_name FROM players WHERE player_id = (SELECT player_id FROM sessions WHERE token = $1 LIMIT 1)',
       [token]
     );
 
@@ -68,7 +68,7 @@ export default async function handler(req, res) {
 
     // TODO: Send email or SMS with gift code
     // For now, just log it
-    console.log(`📧 Sending gift code ${giftCode.gift_code} to ${recipient} from ${user.username}`);
+    console.log(`📧 Sending gift code ${giftCode.gift_code} to ${recipient} from ${user.display_name}`);
 
     // In production, integrate with email service (SendGrid, AWS SES) or SMS service (Twilio)
     // Example:
@@ -76,12 +76,12 @@ export default async function handler(req, res) {
     //   await sendEmail({
     //     to: recipient,
     //     subject: 'You received a free year of Proof of Putt!',
-    //     body: `${user.username} has gifted you a free year subscription. Use code: ${giftCode.gift_code}`
+    //     body: `${user.display_name} has gifted you a free year subscription. Use code: ${giftCode.gift_code}`
     //   });
     // } else {
     //   await sendSMS({
     //     to: recipient,
-    //     message: `${user.username} gifted you Proof of Putt! Code: ${giftCode.gift_code}`
+    //     message: `${user.display_name} gifted you Proof of Putt! Code: ${giftCode.gift_code}`
     //   });
     // }
 

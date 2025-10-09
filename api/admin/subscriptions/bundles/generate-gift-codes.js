@@ -92,7 +92,7 @@ export default async function handler(req, res) {
 
     // 1. Verify user exists
     const userCheck = await client.query(
-      'SELECT player_id, username FROM players WHERE player_id = $1',
+      'SELECT player_id, display_name FROM players WHERE player_id = $1',
       [userId]
     );
 
@@ -155,7 +155,7 @@ export default async function handler(req, res) {
 
     await client.query('COMMIT');
 
-    console.log(`[Admin] Generated ${bundle.quantity} gift codes for user ${userId} (${user.username})`);
+    console.log(`[Admin] Generated ${bundle.quantity} gift codes for user ${userId} (${user.display_name})`);
     console.log(`[Admin] Custom label: ${customLabel}`);
     console.log(`[Admin] Reason: ${grantReason || 'Not specified'}`);
 
@@ -164,7 +164,7 @@ export default async function handler(req, res) {
       message: `Successfully generated ${bundle.quantity} gift codes`,
       data: {
         userId: userId,
-        username: user.username,
+        displayName: user.display_name,
         bundleName: bundle.name,
         quantity: bundle.quantity,
         customLabel: customLabel,

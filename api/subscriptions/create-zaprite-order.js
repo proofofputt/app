@@ -52,7 +52,7 @@ export default async function handler(req, res) {
   try {
     // Get user details
     const userResult = await pool.query(
-      'SELECT id, username, email FROM players WHERE id = $1',
+      'SELECT player_id, display_name, email FROM players WHERE player_id = $1',
       [userId]
     );
 
@@ -66,16 +66,16 @@ export default async function handler(req, res) {
     // Create Zaprite Order
     const orderPayload = {
       organizationId: process.env.ZAPRITE_ORG_ID,
-      customerId: user.id.toString(),
+      customerId: user.player_id.toString(),
       customerEmail: user.email,
-      customerName: user.username,
+      customerName: user.display_name,
       amount: pricing.amount,
       currency: 'USD',
       description: pricing.description,
       // Metadata to track subscription details
       metadata: {
-        userId: user.id.toString(),
-        username: user.username,
+        userId: user.player_id.toString(),
+        displayName: user.display_name,
         interval: interval,
         includesGift: interval === 'annual' ? 'true' : 'false',
         subscriptionType: 'proof-of-putt'
@@ -133,7 +133,7 @@ export default async function handler(req, res) {
         status
       ) VALUES ($1, $2, $3, $4, $5)`,
       [
-        user.id,
+        user.player_id,
         'order.created',
         orderData.id || orderData.orderId || `order_${Date.now()}`,
         JSON.stringify({
