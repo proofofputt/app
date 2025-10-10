@@ -87,6 +87,8 @@ const LeaguesPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [debugInfo, setDebugInfo] = useState(null);
+  const [showDebug, setShowDebug] = useState(false);
 
   const fetchLeagues = useCallback(async () => {
     if (!playerData?.player_id) return;
@@ -142,6 +144,24 @@ const LeaguesPage = () => {
     }
   };
 
+  const handleDebugCheck = async () => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('https://app.proofofputt.com/api/debug/check-player', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      const data = await response.json();
+      setDebugInfo(data);
+      setShowDebug(true);
+    } catch (err) {
+      showNotification('Failed to fetch debug info: ' + err.message, true);
+    }
+  };
+
   if (isLoading) return <p style={{textAlign: 'center', padding: '2rem'}}>Loading leagues...</p>;
   if (error) return <p className="error-message" style={{textAlign: 'center', padding: '2rem'}}>{error}</p>;
 
@@ -149,10 +169,45 @@ const LeaguesPage = () => {
     <div className="leagues-page">
       <div className="leagues-header page-header">
         <h1>Leagues</h1>
-        <button onClick={handleCreateLeagueClick} className="btn btn-primary">+ Create League</button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={handleDebugCheck} className="btn btn-secondary" style={{ fontSize: '0.9em' }}>🐛 Debug Info</button>
+          <button onClick={handleCreateLeagueClick} className="btn btn-primary">+ Create League</button>
+        </div>
       </div>
 
       {showCreateModal && <CreateLeagueModal onClose={() => setShowCreateModal(false)} onLeagueCreated={handleLeagueCreated} />}
+
+      {showDebug && debugInfo && (
+        <div style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          backgroundColor: '#1a1a1a',
+          padding: '20px',
+          borderRadius: '8px',
+          border: '2px solid #333',
+          maxWidth: '90%',
+          maxHeight: '90%',
+          overflow: 'auto',
+          zIndex: 1000,
+          color: 'white'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+            <h2>Debug Information</h2>
+            <button onClick={() => setShowDebug(false)} style={{ fontSize: '1.5em', background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}>×</button>
+          </div>
+          {!debugInfo.player_exists && (
+            <div style={{ backgroundColor: '#ff4444', padding: '15px', borderRadius: '5px', marginBottom: '15px' }}>
+              <strong>⚠️ PROBLEM FOUND:</strong> Player ID {debugInfo.jwt_payload?.playerId} does not exist in the players table!
+            </div>
+          )}
+          <pre style={{ fontSize: '12px', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+            {JSON.stringify(debugInfo, null, 2)}
+          </pre>
+        </div>
+      )}
+      {showDebug && <div onClick={() => setShowDebug(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 999 }} />}
 
       {pendingInvites.length > 0 && (
         <div className="leagues-section">
