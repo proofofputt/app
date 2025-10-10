@@ -249,10 +249,23 @@ main {
 
 @media (max-width: 540px) {
   .dashboard-grid {
-    /* On small screens, stack cards vertically and let them fill the width */
-    grid-template-columns: 1fr;
-    max-width: 300px;
-    gap: 0.75rem;
+    /* On small screens, wrap in 2x2 grid to minimize empty space */
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 100%;
+    gap: 0.5rem;
+  }
+
+  .stats-card {
+    padding: 0.5rem 0.6rem;
+  }
+
+  .stats-card h3 {
+    font-size: 0.85rem;
+  }
+
+  .stat-value {
+    font-size: 1rem;
+    padding: 0.2rem;
   }
 
   .dashboard-actions {
