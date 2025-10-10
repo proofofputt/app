@@ -9,6 +9,7 @@ import DuelsPage from './components/DuelsPage';
 import SettingsPage from './pages/SettingsPage';
 import LeagueDetailPage from './components/LeagueDetailPage';
 import LeaguesPage from './pages/LeaguesPage';
+import DebugPlayerPage from './pages/DebugPlayerPage';
 import SessionHistoryPage from './components/SessionHistoryPage';
 import PlayerCareerPage from './pages/PlayerCareerPage';
 import CoachPage from './components/CoachPage';
@@ -135,6 +136,7 @@ const AppContent = () => {
           <Route path="/player/:playerId/stats" element={<ProtectedRoute><PlayerCareerPage /></ProtectedRoute>} />
           <Route path="/leagues/:leagueId" element={<ProtectedRoute><LeagueDetailPage /></ProtectedRoute>} />
           <Route path="/leagues" element={<ProtectedRoute><LeaguesPage /></ProtectedRoute>} />
+          <Route path="/debug/player" element={<ProtectedRoute><DebugPlayerPage /></ProtectedRoute>} />
           <Route path="/coach" element={<ProtectedRoute><CoachPage /></ProtectedRoute>} />
           <Route path="/coach/:conversationId" element={<ProtectedRoute><CoachPage /></ProtectedRoute>} />
           <Route path="/players/:player1Id/vs/:player2Id" element={<ProtectedRoute><PlayerVsPlayerPage /></ProtectedRoute>} />
