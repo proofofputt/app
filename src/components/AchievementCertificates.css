@@ -294,3 +294,14 @@
 .certificates-error {
   color: var(--error-color, #dc3545);
 }
+
+.encouragement-text {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: var(--masters-green-light);
+  border-left: 4px solid var(--primary-color);
+  border-radius: 4px;
+  font-weight: 600;
+  color: var(--text-color-primary);
+  font-size: 1rem;
+}

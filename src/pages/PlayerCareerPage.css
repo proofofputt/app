@@ -13,6 +13,167 @@
   gap: 1.5rem;
 }
 
+/* Profile Section with Handicap Display */
+.profile-section {
+  display: flex;
+  gap: 2rem;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+
+.profile-info {
+  flex: 1;
+  display: flex;
+  gap: 1.5rem;
+}
+
+.profile-avatar {
+  flex-shrink: 0;
+}
+
+.avatar-image {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 2px solid var(--primary-color);
+}
+
+.avatar-placeholder {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--primary-color), var(--masters-green));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  font-weight: bold;
+  color: white;
+  border: 2px solid var(--primary-color);
+}
+
+.profile-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.profile-details h3 {
+  margin: 0;
+  color: var(--primary-color);
+  font-size: 1.5rem;
+}
+
+.profile-bio {
+  margin: 0;
+  color: var(--text-color-secondary);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.social-links {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.social-links a {
+  color: var(--sand-color);
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.social-links a:hover {
+  background-color: var(--masters-green-light);
+  color: var(--sand-color-hover);
+}
+
+/* Handicap Display - Square on Right */
+.handicap-display {
+  width: 200px;
+  height: 200px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--masters-green), var(--primary-color));
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 3px solid var(--primary-color);
+}
+
+.handicap-label {
+  color: white;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.handicap-value {
+  color: white;
+  font-size: 3.5rem;
+  font-weight: bold;
+  line-height: 1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.handicap-pending {
+  color: white;
+  font-size: 4rem;
+  font-weight: bold;
+  line-height: 1;
+  opacity: 0.5;
+}
+
+.handicap-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.75rem;
+  text-align: center;
+  margin-top: 0.5rem;
+  line-height: 1.2;
+}
+
+.handicap-info {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.7rem;
+  text-align: center;
+  margin-top: 0.5rem;
+  line-height: 1.2;
+  max-width: 150px;
+}
+
+.recalculate-btn {
+  margin-top: 1rem;
+  padding: 0.4rem 0.8rem;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+  color: white;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.recalculate-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-color: white;
+}
+
 .career-stats-page .career-stats-table {
   border: 1px solid var(--border-color);
   background-color: var(--surface-color);
@@ -264,5 +425,20 @@
   .certificates-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
+  }
+
+  .profile-section {
+    flex-direction: column;
+  }
+
+  .profile-info {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .handicap-display {
+    width: 100%;
+    height: 180px;
   }
 }

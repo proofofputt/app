@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext.jsx';
 import AchievementCertificates from '../components/AchievementCertificates.jsx';
 import './PlayerCareerPage.css';
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 const StatRow = ({ label, best, cumulative, isSubscribed, unit = '' }) => {
   const formatValue = (value) => {
     if (value === null || value === undefined || Number.isNaN(value)) return 'N/A';
@@ -31,13 +33,60 @@ const UpgradePrompt = () => (
 
 const PlayerCareerPage = () => {
   const { playerId } = useParams();
-  const { playerData } = useAuth(); // Get current user's data
+  const { playerData, getAuthToken } = useAuth(); // Get current user's data
   const isSubscribed = playerData?.membership_tier === 'premium' || playerData?.membership_tier === 'regular';
   const [stats, setStats] = useState(null);
   const [duels, setDuels] = useState([]);
   const [leagues, setLeagues] = useState([]);
+  const [profileData, setProfileData] = useState(null);
+  const [handicap, setHandicap] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    bio: '',
+    social_links: {
+      twitter: '',
+      instagram: '',
+      youtube: '',
+      website: ''
+    }
+  });
+
+  const fetchHandicap = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/calculate-handicap?player_id=${playerId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setHandicap(data);
+      }
+    } catch (err) {
+      console.warn('Could not fetch handicap:', err);
+    }
+  }, [playerId]);
+
+  const recalculateHandicap = async () => {
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_URL}/api/calculate-handicap`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ force: true })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setHandicap(data);
+        alert(data.message || 'Handicap recalculated successfully');
+      }
+    } catch (err) {
+      console.error('Error recalculating handicap:', err);
+      alert('Failed to recalculate handicap');
+    }
+  };
 
   const fetchAllData = useCallback(async () => {
       setIsLoading(true);
@@ -48,6 +97,9 @@ const PlayerCareerPage = () => {
         apiListDuels(playerId),
         apiListLeagues(playerId),
       ]);
+
+      // Fetch handicap separately
+      fetchHandicap();
 
       if (statsResult.status === 'fulfilled') {
         setStats(statsResult.value);
@@ -103,6 +155,73 @@ const PlayerCareerPage = () => {
       <div className="page-header">
         <h2>Career Stats: {player_name}</h2>
       </div>
+
+      {/* Profile Section with Handicap */}
+      <div className="profile-section">
+        <div className="profile-info">
+          <div className="profile-avatar">
+            {profileData?.profile_picture_url ? (
+              <img src={profileData.profile_picture_url} alt={player_name} className="avatar-image" />
+            ) : (
+              <div className="avatar-placeholder">{player_name?.charAt(0) || 'P'}</div>
+            )}
+          </div>
+          <div className="profile-details">
+            <h3>{player_name}</h3>
+            {profileData?.bio && <p className="profile-bio">{profileData.bio}</p>}
+            {profileData?.social_links && (
+              <div className="social-links">
+                {profileData.social_links.twitter && (
+                  <a href={`https://twitter.com/${profileData.social_links.twitter}`} target="_blank" rel="noopener noreferrer">
+                    🐦 Twitter
+                  </a>
+                )}
+                {profileData.social_links.instagram && (
+                  <a href={`https://instagram.com/${profileData.social_links.instagram}`} target="_blank" rel="noopener noreferrer">
+                    📷 Instagram
+                  </a>
+                )}
+                {profileData.social_links.youtube && (
+                  <a href={profileData.social_links.youtube} target="_blank" rel="noopener noreferrer">
+                    ▶️ YouTube
+                  </a>
+                )}
+                {profileData.social_links.website && (
+                  <a href={profileData.social_links.website} target="_blank" rel="noopener noreferrer">
+                    🌐 Website
+                  </a>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="handicap-display">
+          <div className="handicap-label">Handicap</div>
+          {handicap?.handicap !== null && handicap?.handicap !== undefined ? (
+            <>
+              <div className="handicap-value">{handicap.handicap.toFixed(2)}</div>
+              <div className="handicap-subtitle">Makes Per Minute</div>
+              {isViewingOwnProfile && (
+                <button className="recalculate-btn" onClick={recalculateHandicap}>
+                  Recalculate
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="handicap-pending">—</div>
+              <div className="handicap-subtitle">
+                {handicap?.qualifyingSessions || 0} / 21 sessions
+              </div>
+              <div className="handicap-info">
+                Complete {21 - (handicap?.qualifyingSessions || 0)} more 5+ minute practice/timed sessions
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
       {isViewingOwnProfile && !isSubscribed && <UpgradePrompt />}
       
       <div className="stats-split-grid">

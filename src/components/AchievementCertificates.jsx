@@ -279,24 +279,25 @@ const AchievementCertificates = ({ playerId, playerName, isSubscribed }) => {
     return <div className="certificates-loading">Loading certificates...</div>;
   }
 
-  if (error) {
-    return <div className="certificates-error">⚠️ {error}</div>;
-  }
-
-  if (certificates.length === 0) {
+  // Gracefully handle errors - show encouraging message instead
+  if (error || certificates.length === 0) {
     return (
       <div className="certificates-empty">
         <h3>🏆 Achievement Certificates</h3>
         <p>Complete major achievements to earn blockchain-verified certificates!</p>
         <div className="upcoming-achievements">
-          <h4>Upcoming Milestones:</h4>
+          <h4>🎯 Get Started:</h4>
           <ul>
-            <li>📈 Complete 10 sessions (practice, duels, leagues)</li>
-            <li>🎯 Make 21 consecutive putts</li>
-            <li>💯 Complete a perfect session (10+ putts)</li>
+            <li>📈 Complete practice sessions to build your skills</li>
+            <li>🥊 Challenge friends to duels and prove your abilities</li>
+            <li>🎯 Make 21 consecutive putts for your first milestone</li>
+            <li>💯 Complete a perfect session (10+ putts, 100% accuracy)</li>
             <li>🏆 Reach 1,000 career makes</li>
             <li>👑 Win your first duel</li>
           </ul>
+          <p className="encouragement-text">
+            Start practicing now to unlock your first achievement certificate!
+          </p>
         </div>
       </div>
     );

@@ -1,6 +1,7 @@
 import { Pool } from 'pg';
 import jwt from 'jsonwebtoken';
 import { setCORSHeaders } from '../utils/cors.js';
+import { applyTimedHandicap, applyShootoutHandicap, shouldApplyHandicap } from '../utils/handicap.js';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -24,17 +25,53 @@ function verifyToken(req) {
 }
 
 /**
- * Score a completed duel between two sessions
+ * Score a completed duel between two sessions (with optional handicap adjustment)
  */
-function scoreDuel(challengerSession, challengedSession, rules) {
+async function scoreDuel(challengerSession, challengedSession, rules, client) {
   const scoring = rules.scoring_method || 'total_makes';
-  
+  const competitionMode = rules.competition_mode || 'time_limit';
+
   let challengerScore, challengedScore;
-  
+  let challengerHandicap = 0, challengedHandicap = 0;
+
+  // Fetch handicaps if enabled
+  if (shouldApplyHandicap(rules)) {
+    try {
+      const challengerHandicapResult = await client.query(
+        'SELECT handicap FROM users WHERE id = (SELECT player_id FROM sessions WHERE session_id = $1)',
+        [challengerSession.session_id]
+      );
+      const challengedHandicapResult = await client.query(
+        'SELECT handicap FROM users WHERE id = (SELECT player_id FROM sessions WHERE session_id = $1)',
+        [challengedSession.session_id]
+      );
+
+      challengerHandicap = challengerHandicapResult.rows[0]?.handicap || 0;
+      challengedHandicap = challengedHandicapResult.rows[0]?.handicap || 0;
+    } catch (err) {
+      console.warn('[scoreDuel] Could not fetch handicaps:', err);
+    }
+  }
+
   switch(scoring) {
     case 'total_makes':
       challengerScore = challengerSession.total_makes || 0;
       challengedScore = challengedSession.total_makes || 0;
+
+      // Apply handicap adjustment if enabled
+      if (shouldApplyHandicap(rules)) {
+        if (competitionMode === 'shoot_out') {
+          const maxAttempts = rules.max_attempts || 50;
+          challengerScore = applyShootoutHandicap(challengerScore, maxAttempts, challengerHandicap);
+          challengedScore = applyShootoutHandicap(challengedScore, maxAttempts, challengedHandicap);
+        } else {
+          // Time limit mode
+          const duration = challengerSession.session_duration || rules.session_duration_limit_minutes * 60;
+          challengerScore = applyTimedHandicap(challengerScore, duration, challengerHandicap);
+          const duration2 = challengedSession.session_duration || rules.session_duration_limit_minutes * 60;
+          challengedScore = applyTimedHandicap(challengedScore, duration2, challengedHandicap);
+        }
+      }
       break;
     case 'make_percentage':
       challengerScore = challengerSession.make_percentage || 0;
@@ -53,11 +90,11 @@ function scoreDuel(challengerSession, challengedSession, rules) {
       challengerScore = challengerSession.total_makes || 0;
       challengedScore = challengedSession.total_makes || 0;
   }
-  
+
   if (challengerScore === challengedScore) {
     return 'tie';
   }
-  
+
   return challengerScore > challengedScore ? 'challenger' : 'challenged';
 }
 
@@ -329,10 +366,11 @@ export default async function handler(req, res) {
         
         if (updatedDuel.duel_creator_session_id && updatedDuel.duel_invited_player_session_id) {
           // Both submitted - score the duel
-          const winner = scoreDuel(
+          const winner = await scoreDuel(
             updatedDuel.creator_session_data,
             updatedDuel.invited_player_session_data,
-            updatedDuel.rules
+            updatedDuel.rules,
+            client
           );
           
           let winnerId = null;
