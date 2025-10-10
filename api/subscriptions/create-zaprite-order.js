@@ -64,18 +64,21 @@ export default async function handler(req, res) {
     const pricing = PRICING[interval];
 
     // Create Zaprite Order
+    // Use player_id for customerName to avoid issues with special characters in display names
+    // Full name is preserved in metadata for reference if needed
     const orderPayload = {
       organizationId: process.env.ZAPRITE_ORG_ID,
       customerId: user.player_id.toString(),
       customerEmail: user.email,
-      customerName: user.display_name,
+      customerName: `Player ${user.player_id}`,
       amount: pricing.amount,
       currency: 'USD',
       description: pricing.description,
       // Metadata to track subscription details
       metadata: {
         userId: user.player_id.toString(),
-        displayName: user.display_name,
+        userEmail: user.email,
+        displayName: user.display_name || 'Anonymous',
         interval: interval,
         includesGift: interval === 'annual' ? 'true' : 'false',
         subscriptionType: 'proof-of-putt'

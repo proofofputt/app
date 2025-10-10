@@ -62,17 +62,20 @@ export default async function handler(req, res) {
     }
 
     // Create Zaprite order for bundle purchase
+    // Use player_id for customerName to avoid issues with special characters in display names
+    // Full name is preserved in metadata for reference if needed
     const orderPayload = {
       organizationId: ZAPRITE_ORG_ID,
       customerId: user.player_id.toString(),
       customerEmail: user.email,
-      customerName: user.display_name,
+      customerName: `Player ${user.player_id}`,
       amount: bundle.price,
       currency: 'USD',
       description: `Proof of Putt ${bundle.quantity}-Pack Bundle - ${bundle.quantity} Year Subscriptions`,
       metadata: {
         userId: user.player_id.toString(),
-        displayName: user.display_name,
+        userEmail: user.email,
+        displayName: user.display_name || 'Anonymous',
         bundleId: bundleId.toString(),
         bundleQuantity: bundle.quantity.toString(),
         type: 'bundle'

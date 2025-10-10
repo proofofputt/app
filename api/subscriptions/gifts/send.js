@@ -68,7 +68,8 @@ export default async function handler(req, res) {
 
     // TODO: Send email or SMS with gift code
     // For now, just log it
-    console.log(`📧 Sending gift code ${giftCode.gift_code} to ${recipient} from ${user.display_name}`);
+    const senderName = user.display_name || `Player ${user.player_id}`;
+    console.log(`📧 Sending gift code ${giftCode.gift_code} to ${recipient} from ${senderName}`);
 
     // In production, integrate with email service (SendGrid, AWS SES) or SMS service (Twilio)
     // Example:
@@ -76,12 +77,12 @@ export default async function handler(req, res) {
     //   await sendEmail({
     //     to: recipient,
     //     subject: 'You received a free year of Proof of Putt!',
-    //     body: `${user.display_name} has gifted you a free year subscription. Use code: ${giftCode.gift_code}`
+    //     body: `${senderName} has gifted you a free year subscription. Use code: ${giftCode.gift_code}`
     //   });
     // } else {
     //   await sendSMS({
     //     to: recipient,
-    //     message: `${user.display_name} gifted you Proof of Putt! Code: ${giftCode.gift_code}`
+    //     message: `${senderName} gifted you Proof of Putt! Code: ${giftCode.gift_code}`
     //   });
     // }
 
