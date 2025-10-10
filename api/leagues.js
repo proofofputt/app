@@ -255,13 +255,22 @@ async function handleCreateLeague(req, res, client) {
   const isIRL = defaultSettings.is_irl || false;
 
   // First verify the user exists in the players table
+  console.log(`[DEBUG] Checking if player ${user.playerId} exists in players table`);
   const playerCheck = await client.query(`
-    SELECT player_id FROM players WHERE player_id = $1
+    SELECT player_id, name, email FROM players WHERE player_id = $1
   `, [user.playerId]);
 
+  console.log(`[DEBUG] Player check result:`, playerCheck.rows);
+
   if (playerCheck.rows.length === 0) {
-    return res.status(400).json({ success: false, message: 'Player not found' });
+    console.error(`[ERROR] Player ${user.playerId} not found in players table`);
+    return res.status(400).json({
+      success: false,
+      message: `Player not found: ${user.playerId}. Please try logging out and logging back in.`
+    });
   }
+
+  console.log(`[DEBUG] Player ${user.playerId} exists: ${playerCheck.rows[0].name} (${playerCheck.rows[0].email})`);
 
   let temporaryPlayerIds = [];
   
@@ -287,11 +296,21 @@ async function handleCreateLeague(req, res, client) {
   }
 
   // Try to create league with minimal required fields first
+  console.log(`[DEBUG] Creating league with created_by=${user.playerId}, name="${name}"`);
+  console.log(`[DEBUG] Full INSERT params:`, {
+    name,
+    description,
+    created_by: user.playerId,
+    privacy_level: defaultSettings.privacy || 'public'
+  });
+
   const leagueResult = await client.query(`
     INSERT INTO leagues (name, description, created_by, rules, privacy_level, status, created_at)
     VALUES ($1, $2, $3, $4, $5, 'setup', NOW())
     RETURNING league_id, name, description, rules, privacy_level, created_by
   `, [name, description, user.playerId, JSON.stringify(defaultSettings), defaultSettings.privacy || 'public']);
+
+  console.log(`[DEBUG] League created successfully:`, leagueResult.rows[0]);
 
   const league = leagueResult.rows[0];
 
