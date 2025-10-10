@@ -46,7 +46,8 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Leagues API error:', error);
-    
+    console.error('Error stack:', error.stack);
+
     // Always ensure we return the expected structure for GET requests
     if (req.method === 'GET') {
       return res.status(200).json({
@@ -55,14 +56,17 @@ export default async function handler(req, res) {
         my_leagues: [],
         public_leagues: [],
         pending_invites: [],
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        error: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
       });
     }
-    
+
     return res.status(500).json({
       success: false,
-      message: 'Internal server error',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: error.message || 'Internal server error',
+      error: error.message,
+      details: error.detail || undefined,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   } finally {
     if (client) {
@@ -154,7 +158,7 @@ async function handleCreateLeague(req, res, client) {
     return res.status(401).json({ success: false, message: 'Authentication required' });
   }
 
-  const { name, description, settings, invite_new_players, new_player_contacts } = req.body;
+  const { name, description, settings, start_time, invite_new_players, new_player_contacts } = req.body;
 
   if (!name) {
     return res.status(400).json({ success: false, message: 'League name is required' });
@@ -324,33 +328,41 @@ async function handleCreateLeague(req, res, client) {
   try {
     const numRounds = defaultSettings.num_rounds || 4;
     const roundDurationHours = defaultSettings.round_duration_hours || 168; // 1 week default
-    
+
+    // Use provided start_time or default to now
+    const leagueStartTime = start_time ? new Date(start_time) : new Date();
+
+    console.log(`[DEBUG] Creating ${numRounds} rounds starting at ${leagueStartTime.toISOString()}`);
+
     for (let roundNum = 1; roundNum <= numRounds; roundNum++) {
-      const roundStart = new Date(Date.now() + ((roundNum - 1) * roundDurationHours * 60 * 60 * 1000));
+      const roundStart = new Date(leagueStartTime.getTime() + ((roundNum - 1) * roundDurationHours * 60 * 60 * 1000));
       const roundEnd = new Date(roundStart.getTime() + (roundDurationHours * 60 * 60 * 1000));
-      
+
+      console.log(`[DEBUG] Round ${roundNum}: ${roundStart.toISOString()} to ${roundEnd.toISOString()}`);
+
       await client.query(`
         INSERT INTO league_rounds (league_id, round_number, start_time, end_time, status, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
       `, [
-        league.league_id, 
-        roundNum, 
-        roundStart, 
-        roundEnd, 
+        league.league_id,
+        roundNum,
+        roundStart,
+        roundEnd,
         roundNum === 1 ? 'active' : 'scheduled'
       ]);
     }
-    
+
     // Update league status to active
     await client.query(`
-      UPDATE leagues 
+      UPDATE leagues
       SET status = 'active', updated_at = NOW()
       WHERE league_id = $1
     `, [league.league_id]);
-    
+
     console.log(`[DEBUG] Created ${numRounds} rounds for league ${league.league_id}`);
   } catch (roundsError) {
     console.error(`[ERROR] Failed to create league rounds:`, roundsError.message);
+    console.error(`[ERROR] Full error:`, roundsError);
     // Don't fail the league creation if rounds fail - can be created later
   }
 
