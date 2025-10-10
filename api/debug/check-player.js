@@ -45,7 +45,8 @@ export default async function handler(req, res) {
 
     // Check if player exists
     const playerCheck = await client.query(`
-      SELECT player_id, name, email, created_at, google_id, provider
+      SELECT player_id, name, email, display_name, created_at, google_id,
+             linkedin_id, nostr_pubkey, oauth_providers, avatar_url
       FROM players
       WHERE player_id = $1
     `, [user.playerId]);
