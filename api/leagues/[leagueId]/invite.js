@@ -134,13 +134,13 @@ export default async function handler(req, res) {
     // Check for existing pending invitation
     const existingInviteResult = await client.query(`
       SELECT invitation_id FROM league_invitations
-      WHERE league_id = $1 AND league_invited_player_id = $2 AND invitation_status = 'pending'
+      WHERE league_id = $1 AND invited_user_id = $2 AND status = 'pending'
     `, [leagueId, inviteeId]);
 
     if (existingInviteResult.rows.length > 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Player already has a pending invitation to this league' 
+      return res.status(400).json({
+        success: false,
+        message: 'Player already has a pending invitation to this league'
       });
     }
 
@@ -148,21 +148,22 @@ export default async function handler(req, res) {
     const invitationResult = await client.query(`
       INSERT INTO league_invitations (
         league_id,
-        league_inviter_id,
-        league_invited_player_id,
-        invitation_status,
-        invitation_message,
-        invited_at,
-        expires_at
+        inviting_user_id,
+        invited_user_id,
+        status,
+        message,
+        invitation_method,
+        expires_at,
+        created_at
       )
-      VALUES ($1, $2, $3, 'pending', $4, NOW(), NOW() + INTERVAL '7 days')
+      VALUES ($1, $2, $3, 'pending', $4, 'direct', NOW() + INTERVAL '7 days', NOW())
       RETURNING
         invitation_id,
         league_id,
-        league_inviter_id as inviting_player_id,
-        league_invited_player_id as invited_player_id,
-        invitation_status as status,
-        invited_at as created_at,
+        inviting_user_id as inviting_player_id,
+        invited_user_id as invited_player_id,
+        status,
+        created_at,
         expires_at
     `, [leagueId, inviterId, inviteeId, invitation_message || null]);
 
