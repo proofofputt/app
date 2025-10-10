@@ -146,7 +146,7 @@ const LeaguesPage = () => {
 
   const handleDebugCheck = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('authToken');
       const response = await fetch('https://app.proofofputt.com/api/debug/check-player', {
         method: 'GET',
         headers: {
