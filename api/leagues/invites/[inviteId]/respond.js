@@ -66,8 +66,8 @@ export default async function handler(req, res) {
       SELECT
         li.invitation_id,
         li.league_id,
-        li.inviting_user_id,
-        li.invited_user_id,
+        li.inviting_player_id,
+        li.invited_player_id,
         li.status,
         li.expires_at,
         l.name as league_name,
@@ -76,8 +76,8 @@ export default async function handler(req, res) {
         invited.name as invited_player_name
       FROM league_invitations li
       JOIN leagues l ON li.league_id = l.league_id
-      JOIN players inviter ON li.inviting_user_id = inviter.player_id
-      JOIN players invited ON li.invited_user_id = invited.player_id
+      JOIN players inviter ON li.inviting_player_id = inviter.player_id
+      JOIN players invited ON li.invited_player_id = invited.player_id
       WHERE li.invitation_id = $1
     `, [inviteId]);
 
@@ -91,7 +91,7 @@ export default async function handler(req, res) {
     const invitation = invitationResult.rows[0];
 
     // Verify the player is the invited player
-    if (parseInt(player_id) !== invitation.invited_user_id) {
+    if (parseInt(player_id) !== invitation.invited_player_id) {
       return res.status(403).json({
         success: false,
         message: 'Only the invited player can respond to this invitation'
@@ -156,7 +156,7 @@ export default async function handler(req, res) {
         )
         VALUES ($1, $2, $2, $3, 'member', true, NOW())
         ON CONFLICT (league_id, player_id) DO NOTHING
-      `, [invitation.league_id, invitation.invited_user_id, invitation.inviting_user_id]);
+      `, [invitation.league_id, invitation.invited_player_id, invitation.inviting_player_id]);
 
       responseMessage = `Successfully joined ${invitation.league_name}`;
     }

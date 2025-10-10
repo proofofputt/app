@@ -46,7 +46,7 @@ async function checkRateLimit(client, userId) {
       COUNT(CASE WHEN created_at > $2 THEN 1 END) as last_hour,
       COUNT(CASE WHEN created_at > $3 THEN 1 END) as last_day
     FROM user_lookup_logs 
-    WHERE inviting_user_id = $4
+    WHERE inviting_player_id = $4
   `, [oneMinuteAgo, oneHourAgo, oneDayAgo, userId]);
 
   const counts = recentLookups.rows[0];
@@ -69,7 +69,7 @@ async function checkRateLimit(client, userId) {
  */
 async function logLookupAttempt(client, invitingUserId, lookupType, success) {
   await client.query(`
-    INSERT INTO user_lookup_logs (inviting_user_id, lookup_method, lookup_success, created_at)
+    INSERT INTO user_lookup_logs (inviting_player_id, lookup_method, lookup_success, created_at)
     VALUES ($1, $2, $3, NOW())
   `, [invitingUserId, lookupType, success]);
 }
@@ -165,7 +165,7 @@ async function detectAbusiveLookup(client, userId) {
         END
       ) as unique_domains_or_prefixes
     FROM user_lookup_logs 
-    WHERE inviting_user_id = $1 AND created_at > $2
+    WHERE inviting_player_id = $1 AND created_at > $2
   `, [userId, oneHourAgo]);
 
   const activity = recentActivity.rows[0];

@@ -541,7 +541,7 @@ export default async function handler(req, res) {
           }
 
           const pendingInvite = await client.query(
-            'SELECT * FROM league_invitations WHERE league_id = $1 AND invited_user_id = $2 AND status = $3',
+            'SELECT * FROM league_invitations WHERE league_id = $1 AND invited_player_id = $2 AND status = $3',
             [league_id, existingUser.id, 'pending']
           );
 
@@ -556,7 +556,7 @@ export default async function handler(req, res) {
 
         const invitationResult = await client.query(`
           INSERT INTO league_invitations 
-          (league_id, inviting_user_id, invited_user_id, invitation_method, external_contact, 
+          (league_id, inviting_player_id, invited_player_id, invitation_method, external_contact, 
            invitation_token, message, expires_at, status, created_at, updated_at)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
           RETURNING invitation_id

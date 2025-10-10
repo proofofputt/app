@@ -189,7 +189,7 @@ export default async function handler(req, res) {
     // Create invitation record
     const invitationResult = await client.query(`
       INSERT INTO duel_invitations (
-        duel_id, inviting_user_id, invited_user_id, invitation_method, 
+        duel_id, inviting_player_id, invited_player_id, invitation_method, 
         external_contact, invitation_token, message, expires_at, status, created_at, updated_at
       )
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())

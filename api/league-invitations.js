@@ -44,7 +44,7 @@ async function getInvitationByToken(client, token) {
       (SELECT COUNT(*) FROM league_memberships lm WHERE lm.league_id = li.league_id AND lm.is_active = true) as current_members
     FROM league_invitations li
     JOIN leagues l ON li.league_id = l.league_id
-    LEFT JOIN users inviter ON li.inviting_user_id = inviter.id
+    LEFT JOIN users inviter ON li.inviting_player_id = inviter.id
     WHERE li.invitation_token = $1
   `, [token]);
   
@@ -173,7 +173,7 @@ export default async function handler(req, res) {
           personal_message: invitation.message,
           invitation_method: invitation.invitation_method,
           expires_at: invitation.expires_at,
-          needs_registration: !invitation.invited_user_id,
+          needs_registration: !invitation.invited_player_id,
           current_members: invitation.current_members,
           max_members: invitation.max_members,
           spaces_remaining: invitation.max_members - invitation.current_members,
@@ -241,7 +241,7 @@ export default async function handler(req, res) {
       }
 
       if (action === 'accept') {
-        let acceptingUserId = invitation.invited_user_id;
+        let acceptingUserId = invitation.invited_player_id;
         
         // Check if league is full
         if (invitation.current_members >= invitation.max_members) {
@@ -251,7 +251,7 @@ export default async function handler(req, res) {
           });
         }
         
-        // If no invited_user_id, this is an external invitation - need to create account
+        // If no invited_player_id, this is an external invitation - need to create account
         if (!acceptingUserId) {
           if (!registration_data) {
             return res.status(400).json({
@@ -313,7 +313,7 @@ export default async function handler(req, res) {
         );
         
         // Create welcome notification for new users
-        if (!invitation.invited_user_id) {
+        if (!invitation.invited_player_id) {
           try {
             await notificationService.createSystemNotification({
               playerId: acceptingUserId,
@@ -323,7 +323,7 @@ export default async function handler(req, res) {
               data: {
                 league_id: invitation.league_id,
                 from_invitation: true,
-                inviter_id: invitation.inviting_user_id,
+                inviter_id: invitation.inviting_player_id,
                 expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
               }
             });
@@ -363,7 +363,7 @@ export default async function handler(req, res) {
 
         return res.status(200).json({
           success: true,
-          message: invitation.invited_user_id 
+          message: invitation.invited_player_id 
             ? 'League invitation accepted - welcome to the league!' 
             : 'Account created and league joined!',
           action: 'accepted',
@@ -373,7 +373,7 @@ export default async function handler(req, res) {
             league_type: invitation.league_type,
             current_members: invitation.current_members + 1
           },
-          user_created: !invitation.invited_user_id,
+          user_created: !invitation.invited_player_id,
           user_id: acceptingUserId,
           next_steps: [
             'Check the league schedule and current round',

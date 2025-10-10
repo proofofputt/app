@@ -85,7 +85,7 @@ async function getInvitationTimer(client, invitationId) {
       challenger.display_name as challenger_name
     FROM duel_invitations di
     JOIN duels d ON di.duel_id = d.duel_id
-    LEFT JOIN users challenger ON di.inviting_user_id = challenger.id
+    LEFT JOIN users challenger ON di.inviting_player_id = challenger.id
     WHERE di.invitation_id = $1
   `, [invitationId]);
   
@@ -253,14 +253,14 @@ export default async function handler(req, res) {
             d.rules as duel_rules,
             challenger.display_name as challenger_name,
             CASE 
-              WHEN di.inviting_user_id = $1 THEN 'sender'
-              WHEN di.invited_user_id = $1 THEN 'recipient'
+              WHEN di.inviting_player_id = $1 THEN 'sender'
+              WHEN di.invited_player_id = $1 THEN 'recipient'
               ELSE 'unknown'
             END as user_role
           FROM duel_invitations di
           JOIN duels d ON di.duel_id = d.duel_id
-          LEFT JOIN users challenger ON di.inviting_user_id = challenger.id
-          WHERE (di.inviting_user_id = $1 OR di.invited_user_id = $1)
+          LEFT JOIN users challenger ON di.inviting_player_id = challenger.id
+          WHERE (di.inviting_player_id = $1 OR di.invited_player_id = $1)
             AND di.status = 'pending'
           ORDER BY di.created_at DESC
         `, [playerId]);
@@ -378,7 +378,7 @@ export default async function handler(req, res) {
             UPDATE duel_invitations 
             SET status = 'cancelled', updated_at = NOW()
             WHERE invitation_id = $1 
-              AND inviting_user_id = $2 
+              AND inviting_player_id = $2 
               AND status = 'pending'
             RETURNING invitation_id, duel_id
           `, [timer_id, playerId]);

@@ -37,7 +37,7 @@ async function getInvitationByToken(client, token) {
       challenger.username as challenger_username
     FROM duel_invitations di
     JOIN duels d ON di.duel_id = d.duel_id
-    LEFT JOIN users challenger ON di.inviting_user_id = challenger.id
+    LEFT JOIN users challenger ON di.inviting_player_id = challenger.id
     WHERE di.invitation_token = $1
   `, [token]);
   
@@ -153,7 +153,7 @@ export default async function handler(req, res) {
           personal_message: invitation.message,
           invitation_method: invitation.invitation_method,
           expires_at: invitation.expires_at,
-          needs_registration: !invitation.invited_user_id
+          needs_registration: !invitation.invited_player_id
         }
       });
     }
@@ -219,9 +219,9 @@ export default async function handler(req, res) {
       }
 
       if (action === 'accept') {
-        let acceptingUserId = invitation.invited_user_id;
+        let acceptingUserId = invitation.invited_player_id;
         
-        // If no invited_user_id, this is an external invitation - need to create account
+        // If no invited_player_id, this is an external invitation - need to create account
         if (!acceptingUserId) {
           if (!registration_data) {
             return res.status(400).json({
@@ -263,7 +263,7 @@ export default async function handler(req, res) {
         `, [acceptingUserId, 'active', invitation.duel_id]);
         
         // Create welcome notification for new users
-        if (!invitation.invited_user_id) {
+        if (!invitation.invited_player_id) {
           try {
             await notificationService.createSystemNotification({
               playerId: acceptingUserId,
@@ -285,7 +285,7 @@ export default async function handler(req, res) {
 
         return res.status(200).json({
           success: true,
-          message: invitation.invited_user_id 
+          message: invitation.invited_player_id 
             ? 'Invitation accepted - duel is now active!' 
             : 'Account created and duel accepted!',
           action: 'accepted',
@@ -294,7 +294,7 @@ export default async function handler(req, res) {
             status: 'active',
             challenger_name: invitation.challenger_name || invitation.challenger_username
           },
-          user_created: !invitation.invited_user_id,
+          user_created: !invitation.invited_player_id,
           user_id: acceptingUserId,
           next_step: 'Complete a putting session to participate in the duel'
         });
