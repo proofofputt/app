@@ -279,8 +279,8 @@ export const apiCreateLeague = (leagueData) =>
 export const apiJoinLeague = (leagueId, playerId) => 
   fetch(`${API_BASE_URL}/leagues/${leagueId}/join`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ player_id: playerId }) }).then(handleResponse);
 
-export const apiInviteToLeague = (leagueId, inviteeId, inviterId = null) => 
-  fetch(`${API_BASE_URL}/leagues/${leagueId}/invite`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ league_invited_player_id: inviteeId, league_inviter_id: inviterId }) }).then(handleResponse);
+export const apiInviteToLeague = (leagueId, inviteeId, inviterId = null) =>
+  fetch(`${API_BASE_URL}/leagues/${leagueId}/invite`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ invitee_id: inviteeId, inviter_id: inviterId }) }).then(handleResponse);
 
 export const apiRespondToLeagueInvite = (inviteId, playerId, action) => 
   fetch(`${API_BASE_URL}/leagues/invites/${inviteId}/respond`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ player_id: playerId, action }) }).then(handleResponse);

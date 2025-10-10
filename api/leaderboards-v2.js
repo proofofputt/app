@@ -71,27 +71,28 @@ async function handleGetLeaderboard(req, res, client) {
   } = req.query;
 
   let resolvedContextId = context_id;
+  let isDirectLeagueId = false;
 
   // If no context_id provided, try to resolve from context_type
   if (!context_id) {
     if (context_type === 'global') {
       // Get the default global context
       const contextResult = await client.query(
-        `SELECT context_id FROM leaderboard_contexts 
-         WHERE context_type = 'global' AND context_name = 'All Players' 
+        `SELECT context_id FROM leaderboard_contexts
+         WHERE context_type = 'global' AND context_name = 'All Players'
          LIMIT 1`
       );
       resolvedContextId = contextResult.rows[0]?.context_id;
     } else if (context_type === 'friends' && player_id) {
       // Create or get friends context for this player
       const contextResult = await client.query(
-        `SELECT context_id FROM leaderboard_contexts 
-         WHERE context_type = 'friends' 
-         AND context_config->>'player_id' = $1 
+        `SELECT context_id FROM leaderboard_contexts
+         WHERE context_type = 'friends'
+         AND context_config->>'player_id' = $1
          LIMIT 1`,
         [player_id]
       );
-      
+
       if (contextResult.rows.length === 0) {
         // Create friends context
         const createResult = await client.query(
@@ -103,12 +104,16 @@ async function handleGetLeaderboard(req, res, client) {
         resolvedContextId = contextResult.rows[0].context_id;
       }
     }
+  } else if (context_type === 'leagues') {
+    // For leagues, the context_id is actually the league_id passed directly
+    // Mark this so we skip context lookup later
+    isDirectLeagueId = true;
   }
 
-  if (!resolvedContextId) {
-    return res.status(400).json({ 
-      success: false, 
-      message: 'Could not resolve leaderboard context' 
+  if (!resolvedContextId && !isDirectLeagueId) {
+    return res.status(400).json({
+      success: false,
+      message: 'Could not resolve leaderboard context'
     });
   }
 
@@ -127,30 +132,55 @@ async function handleGetLeaderboard(req, res, client) {
 
   const metricInfo = metricResult.rows[0];
 
-  // Get context info to determine if we need league filtering
-  const contextInfo = await client.query(
-    'SELECT context_type, context_config FROM leaderboard_contexts WHERE context_id = $1',
-    [resolvedContextId]
-  );
-  const isLeagueContext = contextInfo.rows[0]?.context_type === 'leagues';
-  const leagueId = isLeagueContext ? context_id : null;
+  // Determine league filtering based on whether we have a direct league ID or context
+  let isLeagueContext = false;
+  let leagueId = null;
+
+  if (isDirectLeagueId) {
+    // Using league_id directly - no context lookup needed
+    isLeagueContext = true;
+    leagueId = context_id;
+    console.log(`[Leaderboard] Direct league query - league_id: ${leagueId}`);
+  } else if (resolvedContextId) {
+    // Get context info from leaderboard_contexts table
+    const contextInfo = await client.query(
+      'SELECT context_type, context_config FROM leaderboard_contexts WHERE context_id = $1',
+      [resolvedContextId]
+    );
+    isLeagueContext = contextInfo.rows[0]?.context_type === 'leagues';
+    leagueId = isLeagueContext ? contextInfo.rows[0]?.context_config?.league_id : null;
+    console.log(`[Leaderboard] Context lookup - isLeagueContext: ${isLeagueContext}, league_id: ${leagueId}`);
+  }
 
   // Calculate leaderboard - try stored procedure first, fallback to direct query
   let leaderboardResult;
-  try {
-    leaderboardResult = await client.query(
-      'SELECT * FROM calculate_leaderboard($1, $2) LIMIT $3',
-      [resolvedContextId, metricInfo.metric_id, limit]
-    );
-  } catch (err) {
-    // Fallback to direct query if stored procedure doesn't exist
-    console.log('Stored procedure not found, using direct query');
+
+  // For direct league IDs, skip stored procedure and use direct query
+  // because the stored procedure expects leaderboard context IDs, not league IDs
+  let useDirectQuery = isDirectLeagueId;
+
+  if (!useDirectQuery) {
+    try {
+      leaderboardResult = await client.query(
+        'SELECT * FROM calculate_leaderboard($1, $2) LIMIT $3',
+        [resolvedContextId, metricInfo.metric_id, limit]
+      );
+    } catch (err) {
+      // Fallback to direct query if stored procedure doesn't exist
+      console.log('Stored procedure not found, using direct query');
+      useDirectQuery = true;
+    }
+  }
+
+  if (useDirectQuery) {
 
     // Build league membership filter if needed
     const leagueJoin = isLeagueContext
       ? 'JOIN league_memberships lm ON s.player_id = lm.player_id AND lm.league_id = $2 AND lm.is_active = true'
       : '';
     const queryParams = isLeagueContext ? [limit, leagueId] : [limit];
+
+    console.log(`[Leaderboard] Using direct query - isLeagueContext: ${isLeagueContext}, leagueId: ${leagueId}, queryParams:`, queryParams);
 
     // Build the appropriate query based on metric
     let query;
@@ -276,18 +306,34 @@ async function handleGetLeaderboard(req, res, client) {
   }
 
   // Get context info
-  const contextResult = await client.query(
-    'SELECT context_name, context_type, description FROM leaderboard_contexts WHERE context_id = $1',
-    [resolvedContextId]
-  );
+  let contextData;
+  if (isDirectLeagueId) {
+    // For direct league queries, create a synthetic context response
+    const leagueInfo = await client.query(
+      'SELECT name FROM leagues WHERE league_id = $1',
+      [leagueId]
+    );
+    contextData = {
+      context_id: leagueId,
+      context_name: leagueInfo.rows[0]?.name || `League ${leagueId}`,
+      context_type: 'leagues',
+      description: 'League member leaderboard'
+    };
+  } else {
+    const contextResult = await client.query(
+      'SELECT context_name, context_type, description FROM leaderboard_contexts WHERE context_id = $1',
+      [resolvedContextId]
+    );
+    contextData = {
+      context_id: resolvedContextId,
+      ...contextResult.rows[0]
+    };
+  }
 
   return res.status(200).json({
     success: true,
     leaderboard,
-    context: {
-      context_id: resolvedContextId,
-      ...contextResult.rows[0]
-    },
+    context: contextData,
     metric: {
       name: metric,
       display_name: metricInfo.display_name,
