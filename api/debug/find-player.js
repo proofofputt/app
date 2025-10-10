@@ -34,12 +34,6 @@ export default async function handler(req, res) {
         player_id,
         name,
         email,
-        display_name,
-        google_id,
-        linkedin_id,
-        nostr_pubkey,
-        oauth_providers,
-        avatar_url,
         created_at,
         updated_at
       FROM players

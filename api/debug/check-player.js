@@ -43,10 +43,9 @@ export default async function handler(req, res) {
 
     client = await pool.connect();
 
-    // Check if player exists
+    // Check if player exists - using only guaranteed columns
     const playerCheck = await client.query(`
-      SELECT player_id, name, email, display_name, created_at, google_id,
-             linkedin_id, nostr_pubkey, oauth_providers, avatar_url
+      SELECT player_id, name, email, created_at
       FROM players
       WHERE player_id = $1
     `, [user.playerId]);
