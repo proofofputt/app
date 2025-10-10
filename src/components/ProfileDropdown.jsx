@@ -79,6 +79,9 @@ const ProfileDropdown = () => {
           <NavLink to="/notifications" className={`dropdown-item ${unreadCount > 0 ? 'unread' : ''}`} onClick={() => setIsOpen(false)}>
             Notifications {unreadCount > 0 && `(${unreadCount})`}
           </NavLink>
+          <NavLink to="/comments" className="dropdown-item" onClick={() => setIsOpen(false)}>
+            Comments & Feedback
+          </NavLink>
           <div className="dropdown-divider"></div>
           <button onClick={handleLogout} className="dropdown-item">Logout</button>
         </div>

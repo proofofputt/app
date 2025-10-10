@@ -424,5 +424,30 @@ export const apiRespondToFriendRequest = (playerId, requestId, action) =>
     body: JSON.stringify({ action })
   }).then(handleResponse);
 
-export const apiGetFriendRequests = (playerId) => 
+export const apiGetFriendRequests = (playerId) =>
   fetch(`${API_BASE_URL}/player/${playerId}/friends/requests`, { headers: getHeaders() }).then(handleResponse);
+
+// --- User Feedback & Comments ---
+export const apiGetFeedbackThreads = (status = null) => {
+  const url = status
+    ? `${API_BASE_URL}/user-feedback?status=${status}`
+    : `${API_BASE_URL}/user-feedback`;
+  return fetch(url, { headers: getHeaders() }).then(handleResponse);
+};
+
+export const apiGetFeedbackThread = (threadId) =>
+  fetch(`${API_BASE_URL}/user-feedback?thread_id=${threadId}`, { headers: getHeaders() }).then(handleResponse);
+
+export const apiCreateFeedbackThread = (feedbackData) =>
+  fetch(`${API_BASE_URL}/user-feedback`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(feedbackData)
+  }).then(handleResponse);
+
+export const apiAddFeedbackMessage = (threadId, messageText) =>
+  fetch(`${API_BASE_URL}/user-feedback`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify({ thread_id: threadId, message_text: messageText })
+  }).then(handleResponse);

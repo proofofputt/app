@@ -16,6 +16,7 @@ import CoachPage from './components/CoachPage';
 import PlayerVsPlayerPage from './pages/PlayerVsPlayerPage';
 import NotificationsPage from './pages/NotificationsPage';
 import ContactsPage from './pages/ContactsPage';
+import CommentsPage from './pages/CommentsPage';
 import MyGifts from './components/MyGifts';
 import Header from './components/Header';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -141,6 +142,7 @@ const AppContent = () => {
           <Route path="/coach/:conversationId" element={<ProtectedRoute><CoachPage /></ProtectedRoute>} />
           <Route path="/players/:player1Id/vs/:player2Id" element={<ProtectedRoute><PlayerVsPlayerPage /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+          <Route path="/comments" element={<ProtectedRoute><CommentsPage /></ProtectedRoute>} />
           <Route path="/contacts" element={<ProtectedRoute><ContactsPage /></ProtectedRoute>} />
           <Route path="/gifts" element={<ProtectedRoute><MyGifts /></ProtectedRoute>} />
         </Routes>
