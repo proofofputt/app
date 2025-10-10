@@ -127,6 +127,14 @@ async function handleGetLeaderboard(req, res, client) {
 
   const metricInfo = metricResult.rows[0];
 
+  // Get context info to determine if we need league filtering
+  const contextInfo = await client.query(
+    'SELECT context_type, context_config FROM leaderboard_contexts WHERE context_id = $1',
+    [resolvedContextId]
+  );
+  const isLeagueContext = contextInfo.rows[0]?.context_type === 'leagues';
+  const leagueId = isLeagueContext ? context_id : null;
+
   // Calculate leaderboard - try stored procedure first, fallback to direct query
   let leaderboardResult;
   try {
@@ -137,12 +145,18 @@ async function handleGetLeaderboard(req, res, client) {
   } catch (err) {
     // Fallback to direct query if stored procedure doesn't exist
     console.log('Stored procedure not found, using direct query');
-    
+
+    // Build league membership filter if needed
+    const leagueJoin = isLeagueContext
+      ? 'JOIN league_memberships lm ON s.player_id = lm.player_id AND lm.league_id = $2 AND lm.is_active = true'
+      : '';
+    const queryParams = isLeagueContext ? [limit, leagueId] : [limit];
+
     // Build the appropriate query based on metric
     let query;
     if (metric === 'total_makes' || metric === 'makes') {
       query = `
-        SELECT 
+        SELECT
           s.player_id,
           p.name as player_name,
           MAX(CAST(s.data->>'total_makes' AS INTEGER)) as metric_value,
@@ -150,16 +164,17 @@ async function handleGetLeaderboard(req, res, client) {
           ROW_NUMBER() OVER (ORDER BY MAX(CAST(s.data->>'total_makes' AS INTEGER)) DESC) as player_rank
         FROM sessions s
         JOIN players p ON s.player_id = p.player_id
+        ${leagueJoin}
         WHERE s.data->>'total_makes' IS NOT NULL
         GROUP BY s.player_id, p.name
         HAVING MAX(CAST(s.data->>'total_makes' AS INTEGER)) > 0
         ORDER BY metric_value DESC
         LIMIT $1
       `;
-      leaderboardResult = await client.query(query, [limit]);
+      leaderboardResult = await client.query(query, queryParams);
     } else if (metric === 'best_streak') {
       query = `
-        SELECT 
+        SELECT
           s.player_id,
           p.name as player_name,
           COALESCE(
@@ -177,6 +192,7 @@ async function handleGetLeaderboard(req, res, client) {
           ) DESC) as player_rank
         FROM sessions s
         JOIN players p ON s.player_id = p.player_id
+        ${leagueJoin}
         WHERE (s.data->>'best_streak' IS NOT NULL OR s.data->'consecutive_stats'->>'max_consecutive' IS NOT NULL)
         GROUP BY s.player_id, p.name
         HAVING COALESCE(
@@ -188,10 +204,10 @@ async function handleGetLeaderboard(req, res, client) {
         ORDER BY metric_value DESC
         LIMIT $1
       `;
-      leaderboardResult = await client.query(query, [limit]);
+      leaderboardResult = await client.query(query, queryParams);
     } else if (metric === 'makes_per_minute') {
       query = `
-        SELECT 
+        SELECT
           s.player_id,
           p.name as player_name,
           MAX(CAST(s.data->>'makes_per_minute' AS DECIMAL)) as metric_value,
@@ -199,16 +215,17 @@ async function handleGetLeaderboard(req, res, client) {
           ROW_NUMBER() OVER (ORDER BY MAX(CAST(s.data->>'makes_per_minute' AS DECIMAL)) DESC) as player_rank
         FROM sessions s
         JOIN players p ON s.player_id = p.player_id
+        ${leagueJoin}
         WHERE s.data->>'makes_per_minute' IS NOT NULL
         GROUP BY s.player_id, p.name
         HAVING MAX(CAST(s.data->>'makes_per_minute' AS DECIMAL)) > 0
         ORDER BY metric_value DESC
         LIMIT $1
       `;
-      leaderboardResult = await client.query(query, [limit]);
+      leaderboardResult = await client.query(query, queryParams);
     } else if (metric === 'fastest_21_makes_seconds' || metric === 'fastest_21') {
       query = `
-        SELECT 
+        SELECT
           s.player_id,
           p.name as player_name,
           MIN(CAST(s.data->>'fastest_21_makes_seconds' AS DECIMAL)) as metric_value,
@@ -216,13 +233,14 @@ async function handleGetLeaderboard(req, res, client) {
           ROW_NUMBER() OVER (ORDER BY MIN(CAST(s.data->>'fastest_21_makes_seconds' AS DECIMAL)) ASC) as player_rank
         FROM sessions s
         JOIN players p ON s.player_id = p.player_id
-        WHERE s.data->>'fastest_21_makes_seconds' IS NOT NULL 
+        ${leagueJoin}
+        WHERE s.data->>'fastest_21_makes_seconds' IS NOT NULL
         AND CAST(s.data->>'fastest_21_makes_seconds' AS DECIMAL) > 0
         GROUP BY s.player_id, p.name
         ORDER BY metric_value ASC
         LIMIT $1
       `;
-      leaderboardResult = await client.query(query, [limit]);
+      leaderboardResult = await client.query(query, queryParams);
     } else {
       // Default fallback for unknown metrics
       leaderboardResult = { rows: [] };
