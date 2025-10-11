@@ -46,9 +46,9 @@ export default async function handler(req, res) {
 
     // Get all gift codes owned by this user
     const giftCodesResult = await pool.query(
-      `SELECT id, gift_code, is_redeemed, redeemed_by_user_id, redeemed_at, created_at
+      `SELECT id, gift_code, is_redeemed, redeemed_by_player_id, redeemed_at, created_at
        FROM user_gift_subscriptions
-       WHERE owner_user_id = $1
+       WHERE owner_player_id = $1
        ORDER BY created_at DESC`,
       [userId]
     );
