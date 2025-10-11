@@ -1,7 +1,6 @@
 import { Pool } from 'pg';
 import jwt from 'jsonwebtoken';
 import { setCORSHeaders } from '../../../utils/cors.js';
-import { sendLeagueInviteEmail } from '../../../utils/emailService.js';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -50,9 +49,9 @@ export default async function handler(req, res) {
   const inviteeId = invitee_id || league_invited_player_id;
 
   if (!leagueId || !inviteeId) {
-    return res.status(400).json({
-      success: false,
-      message: 'leagueId and invitee player ID are required'
+    return res.status(400).json({ 
+      success: false, 
+      message: 'leagueId and invitee player ID are required' 
     });
   }
 
@@ -111,9 +110,9 @@ export default async function handler(req, res) {
     `, [inviteeId]);
 
     if (inviteeResult.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Invited player not found'
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Invited player not found' 
       });
     }
 
@@ -126,9 +125,9 @@ export default async function handler(req, res) {
     `, [leagueId, inviteeId]);
 
     if (membershipResult.rows.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Player is already a member of this league'
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Player is already a member of this league' 
       });
     }
 
@@ -172,31 +171,8 @@ export default async function handler(req, res) {
 
     // Get inviter name for response
     const inviterResult = await client.query(`
-      SELECT name, email FROM players WHERE player_id = $1
+      SELECT name FROM players WHERE player_id = $1
     `, [inviterId]);
-
-    const inviterName = inviterResult.rows[0]?.name || 'A player';
-
-    // Send email notification to invited player
-    if (invitee?.email) {
-      try {
-        await sendLeagueInviteEmail(
-          invitee.email,
-          invitee.name || 'Player',
-          inviterName,
-          {
-            name: league.name,
-            description: league.description,
-            status: league.status,
-            memberCount: league.member_count || 0
-          }
-        );
-        console.log(`League invitation email sent to ${invitee.email}`);
-      } catch (emailError) {
-        console.error('Failed to send invitation email:', emailError);
-        // Don't fail the invitation if email fails
-      }
-    }
 
     return res.status(201).json({
       success: true,
@@ -206,7 +182,7 @@ export default async function handler(req, res) {
         league_id: invitation.league_id,
         league_name: league.name,
         inviter_id: invitation.inviting_player_id,
-        inviter_name: inviterName,
+        inviter_name: inviterResult.rows[0]?.name,
         invited_player_id: invitation.invited_player_id,
         invited_player_name: invitee.name,
         invitation_status: invitation.status,
