@@ -49,6 +49,7 @@ export default async function handler(req, res) {
 
     const oauthSession = sessionResult.rows[0];
     const intentMode = oauthSession.mode || 'login'; // 'login' or 'signup'
+    const referralCode = oauthSession.referral_code; // Preserve referral code from init
 
     // Clean up the session
     await pool.query('DELETE FROM oauth_sessions WHERE state = $1', [state]);
@@ -211,6 +212,34 @@ export default async function handler(req, res) {
     // Handle referral assignment if this is a new signup
     let referralResult = null;
     try {
+      // If we have a referral code from the OAuth flow, create a referral session first
+      if (referralCode) {
+        console.log(`[OAuth] Creating referral session for code: ${referralCode}`);
+
+        // Find referrer by their referral code
+        const referrerResult = await pool.query(
+          'SELECT player_id FROM players WHERE referral_code = $1',
+          [referralCode]
+        );
+
+        if (referrerResult.rows.length > 0) {
+          const referrerId = referrerResult.rows[0].player_id;
+
+          // Create referral session entry
+          const sessionId = require('uuid').v4();
+          await pool.query(
+            `INSERT INTO referral_sessions (
+              session_id, referrer_id, invited_email, invited_name,
+              referral_source, expires_at, created_at
+            ) VALUES ($1, $2, $3, $4, 'oauth_link', NOW() + INTERVAL '7 days', NOW())
+            ON CONFLICT DO NOTHING`,
+            [sessionId, referrerId, email, name]
+          );
+
+          console.log(`[OAuth] Created referral session ${sessionId} for referrer ${referrerId}`);
+        }
+      }
+
       // Check if there's a referral session to process using database function
       const referralQuery = await pool.query(
         `SELECT auto_match_referral($1, $2, $3, $4, $5, $6) as result`,
@@ -223,7 +252,7 @@ export default async function handler(req, res) {
           true // consent_contact_info - OAuth users consent to sharing profile info
         ]
       );
-      
+
       const referralData = referralQuery.rows[0].result;
       if (referralData.success) {
         referralResult = referralData;

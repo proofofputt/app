@@ -49,7 +49,7 @@ const RegisterPage = () => {
       console.log('[OAuth] Registration/Login successful, storing token');
       localStorage.setItem('authToken', oauthResult.token);
 
-      // Clear stored referral since OAuth doesn't need it
+      // Clear stored referral after successful OAuth (referral is handled server-side)
       clearStoredReferralSession();
 
       // Decode JWT to get player_id and fetch full player data
@@ -374,6 +374,7 @@ const RegisterPage = () => {
               onSuccess={handleOAuthSuccess}
               onError={handleOAuthError}
               disabled={isLoading}
+              referral_code={referralContext.sessionId || null}
             />
           </div>
 

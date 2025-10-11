@@ -3,7 +3,7 @@ import { initiateGoogleOAuth, /* initiateLinkedInOAuth, */ openOAuthPopup, OAUTH
 // import { authenticateWithNostr, isNostrAvailable } from '../utils/nostr';
 import './OAuthButton.css';
 
-const OAuthButton = ({ provider, onSuccess, onError, disabled = false, mode = 'signin' }) => {
+const OAuthButton = ({ provider, onSuccess, onError, disabled = false, mode = 'signin', referral_code = null }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleOAuthClick = async () => {
@@ -16,7 +16,7 @@ const OAuthButton = ({ provider, onSuccess, onError, disabled = false, mode = 's
 
       // Get authorization URL from backend
       if (provider === 'google') {
-        authData = await initiateGoogleOAuth(mode === 'signup' ? 'signup' : 'login');
+        authData = await initiateGoogleOAuth(mode === 'signup' ? 'signup' : 'login', referral_code);
       }
       // LinkedIn and Nostr authentication temporarily disabled
       // else if (provider === 'linkedin') {

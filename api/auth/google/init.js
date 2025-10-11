@@ -29,7 +29,7 @@ export default async function handler(req, res) {
     }
 
     // Get mode from request body ('login' or 'signup')
-    const { mode = 'login' } = req.body;
+    const { mode = 'login', referral_code = null } = req.body;
 
     const oauth2Client = new OAuth2Client(
       process.env.GOOGLE_CLIENT_ID,
@@ -41,13 +41,13 @@ export default async function handler(req, res) {
     const state = uuidv4();
     const sessionId = uuidv4();
 
-    // Store OAuth session in database with mode
+    // Store OAuth session in database with mode and referral code
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     await pool.query(
-      `INSERT INTO oauth_sessions (session_id, provider, state, mode, expires_at)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [sessionId, 'google', state, mode, expiresAt]
+      `INSERT INTO oauth_sessions (session_id, provider, state, mode, referral_code, expires_at)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [sessionId, 'google', state, mode, referral_code, expiresAt]
     );
 
     // Generate authorization URL

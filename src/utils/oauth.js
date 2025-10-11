@@ -5,16 +5,17 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 /**
  * Initiate Google OAuth flow
  * @param {string} mode - 'login' or 'signup'
+ * @param {string} referral_code - Optional referral code for attribution
  * @returns {Promise<{authUrl: string, sessionId: string}>}
  */
-export async function initiateGoogleOAuth(mode = 'login') {
+export async function initiateGoogleOAuth(mode = 'login', referral_code = null) {
   try {
     const response = await fetch(`${API_BASE_URL}/auth/google/init`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ mode }),
+      body: JSON.stringify({ mode, referral_code }),
     });
 
     const data = await response.json();
