@@ -53,11 +53,22 @@ export default async function handler(req, res) {
   const token = authHeader.replace('Bearer ', '');
 
   try {
+    // Log token format for debugging
+    logger.info('Token format check', {
+      tokenLength: token.length,
+      hasDots: (token.match(/\./g) || []).length,
+      firstChars: token.substring(0, 20)
+    });
+
     // Verify JWT token
     const decoded = await new Promise((resolve, reject) => {
       jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
         if (err) {
-          logger.warn('JWT verification failed', { error: err.message });
+          logger.warn('JWT verification failed', {
+            error: err.message,
+            errorName: err.name,
+            tokenPreview: token.substring(0, 30) + '...'
+          });
           reject(err);
         } else {
           resolve(decoded);

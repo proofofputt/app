@@ -64,8 +64,19 @@ export const AuthProvider = ({ children }) => {
       // Check for existing auth token and player data
       const token = localStorage.getItem('authToken');
       const storedPlayerData = localStorage.getItem('playerData');
-      
+
       if (token && storedPlayerData) {
+        // Validate that token is a proper JWT (has 3 parts separated by dots)
+        const tokenParts = token.split('.');
+        if (tokenParts.length !== 3) {
+          console.warn('[AuthContext] Invalid token format detected (not a JWT). Clearing auth data and forcing re-login.');
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('playerData');
+          setPlayerData(null);
+          setIsLoading(false);
+          return;
+        }
+
         try {
           const parsedPlayerData = JSON.parse(storedPlayerData);
           setPlayerData(parsedPlayerData);
