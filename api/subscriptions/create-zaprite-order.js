@@ -1,5 +1,9 @@
 import pg from 'pg';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import { createZapriteOrder, extractCheckoutUrl, extractOrderId, ZapriteApiError } from '../../utils/zaprite-client.js';
+import { logApiRequest, logApiResponse, logPaymentEvent, createRequestLogger } from '../../utils/logger.js';
+
 const { Pool } = pg;
 
 // Database connection
@@ -23,13 +27,23 @@ const PRICING = {
 };
 
 export default async function handler(req, res) {
+  const requestId = crypto.randomUUID();
+  const logger = createRequestLogger(requestId);
+
   if (req.method !== 'POST') {
+    logApiResponse('/api/subscriptions/create-zaprite-order', 'POST', 405, { requestId });
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  logApiRequest('/api/subscriptions/create-zaprite-order', 'POST', { requestId });
 
   // Authenticate user
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    logApiResponse('/api/subscriptions/create-zaprite-order', 'POST', 401, {
+      requestId,
+      reason: 'missing_auth_header'
+    });
     return res.status(401).json({ error: 'Unauthorized - No token provided' });
   }
 
@@ -38,14 +52,26 @@ export default async function handler(req, res) {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    userId = decoded.userId || decoded.id;
+    userId = decoded.userId || decoded.playerId || decoded.id;
+    logger.info('User authenticated', { userId });
   } catch (error) {
+    logger.error('JWT verification failed', error);
+    logApiResponse('/api/subscriptions/create-zaprite-order', 'POST', 401, {
+      requestId,
+      reason: 'invalid_jwt'
+    });
     return res.status(401).json({ error: 'Unauthorized - Invalid token' });
   }
 
   const { interval } = req.body; // 'monthly' or 'annual'
 
   if (!interval || !['monthly', 'annual'].includes(interval)) {
+    logger.warn('Invalid interval provided', { interval });
+    logApiResponse('/api/subscriptions/create-zaprite-order', 'POST', 400, {
+      requestId,
+      userId,
+      reason: 'invalid_interval'
+    });
     return res.status(400).json({ error: 'Invalid interval. Must be "monthly" or "annual"' });
   }
 
@@ -57,76 +83,81 @@ export default async function handler(req, res) {
     );
 
     if (userResult.rows.length === 0) {
+      logger.warn('User not found in database', { userId });
+      logApiResponse('/api/subscriptions/create-zaprite-order', 'POST', 404, {
+        requestId,
+        userId,
+        reason: 'user_not_found'
+      });
       return res.status(404).json({ error: 'User not found' });
     }
 
     const user = userResult.rows[0];
     const pricing = PRICING[interval];
 
+    logger.info('Processing subscription order', {
+      userId: user.player_id,
+      interval,
+      amount: pricing.amount
+    });
+
     // Create Zaprite Order
-    // Use player_id for customerName to avoid issues with special characters in display names
-    // Full name is preserved in metadata for reference if needed
     const orderPayload = {
-      organizationId: process.env.ZAPRITE_ORG_ID,
       customerId: user.player_id.toString(),
       customerEmail: user.email,
       customerName: `Player ${user.player_id}`,
       amount: pricing.amount,
       currency: 'USD',
       description: pricing.description,
-      // Metadata to track subscription details
       metadata: {
         userId: user.player_id.toString(),
         userEmail: user.email,
         displayName: user.display_name || 'Anonymous',
         interval: interval,
         includesGift: interval === 'annual' ? 'true' : 'false',
-        subscriptionType: 'proof-of-putt'
+        subscriptionType: 'proof-of-putt',
+        requestId
       },
-      // Redirect URLs
       successUrl: `${process.env.FRONTEND_URL}/subscription/success?session_id={ORDER_ID}`,
       cancelUrl: `${process.env.FRONTEND_URL}/settings?canceled=true`
     };
 
-    console.log('Creating Zaprite order:', JSON.stringify(orderPayload, null, 2));
-
-    const zapriteResponse = await fetch(`${process.env.ZAPRITE_BASE_URL}/v1/order`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.ZAPRITE_API_KEY}`
-      },
-      body: JSON.stringify(orderPayload)
+    logPaymentEvent('subscription_order_initiated', {
+      userId: user.player_id,
+      interval,
+      amount: pricing.amount,
+      requestId
     });
 
-    const responseText = await zapriteResponse.text();
-    console.log('Zaprite API Response:', responseText);
-
-    if (!zapriteResponse.ok) {
-      console.error('Zaprite API Error:', {
-        status: zapriteResponse.status,
-        statusText: zapriteResponse.statusText,
-        body: responseText
-      });
-      return res.status(500).json({
-        error: 'Failed to create order',
-        details: responseText,
-        status: zapriteResponse.status
-      });
-    }
-
-    let orderData;
+    // Use Zaprite client with retry logic
+    let zapriteData;
     try {
-      orderData = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error('Failed to parse Zaprite response:', parseError);
-      return res.status(500).json({
-        error: 'Invalid response from Zaprite',
-        details: responseText
-      });
+      zapriteData = await createZapriteOrder(orderPayload);
+    } catch (zapriteError) {
+      if (zapriteError instanceof ZapriteApiError) {
+        logger.error('Zaprite API error', zapriteError, {
+          statusCode: zapriteError.statusCode,
+          response: zapriteError.response
+        });
+
+        logApiResponse('/api/subscriptions/create-zaprite-order', 'POST', 500, {
+          requestId,
+          userId: user.player_id,
+          reason: 'zaprite_api_error',
+          zapriteStatus: zapriteError.statusCode
+        });
+
+        return res.status(500).json({
+          error: 'Failed to create order',
+          details: zapriteError.message,
+          status: zapriteError.statusCode
+        });
+      }
+      throw zapriteError; // Re-throw if not a Zaprite API error
     }
 
     // Store order in database for tracking
+    const orderId = extractOrderId(zapriteData);
     await pool.query(
       `INSERT INTO zaprite_payment_events (
         player_id,
@@ -138,45 +169,66 @@ export default async function handler(req, res) {
       [
         user.player_id,
         'order.created',
-        orderData.id || orderData.orderId || `order_${Date.now()}`,
+        orderId || `order_${Date.now()}`,
         JSON.stringify({
           interval,
           amount: pricing.amount,
-          orderData: orderData
+          orderData: zapriteData,
+          requestId
         }),
         'pending'
       ]
     );
 
     // Extract checkout URL from response
-    // Zaprite might return different field names
-    const checkoutUrl = orderData.checkoutUrl
-      || orderData.url
-      || orderData.hostedUrl
-      || orderData.paymentUrl
-      || orderData.checkoutLink;
+    const checkoutUrl = extractCheckoutUrl(zapriteData);
 
     if (!checkoutUrl) {
-      console.error('No checkout URL in Zaprite response:', orderData);
+      logger.error('No checkout URL in Zaprite response', null, { zapriteData });
+      logApiResponse('/api/subscriptions/create-zaprite-order', 'POST', 500, {
+        requestId,
+        userId: user.player_id,
+        reason: 'missing_checkout_url'
+      });
       return res.status(500).json({
         error: 'No checkout URL received from Zaprite',
-        orderData: orderData
+        orderData: zapriteData
       });
     }
+
+    logPaymentEvent('subscription_order_created', {
+      userId: user.player_id,
+      interval,
+      orderId,
+      checkoutUrl,
+      requestId
+    });
+
+    logApiResponse('/api/subscriptions/create-zaprite-order', 'POST', 200, {
+      requestId,
+      userId: user.player_id,
+      interval,
+      orderId
+    });
 
     res.status(200).json({
       success: true,
       checkoutUrl: checkoutUrl,
-      orderId: orderData.id || orderData.orderId,
+      orderId: orderId,
       interval: interval,
       amount: pricing.amount,
       currency: 'USD',
-      includesGift: interval === 'annual',
-      orderData: orderData // Include full response for debugging
+      includesGift: interval === 'annual'
     });
 
   } catch (error) {
-    console.error('Error creating Zaprite order:', error);
+    logger.error('Error creating Zaprite order', error);
+    logApiResponse('/api/subscriptions/create-zaprite-order', 'POST', 500, {
+      requestId,
+      userId,
+      reason: 'internal_error',
+      error: error.message
+    });
     res.status(500).json({
       error: 'Internal server error',
       message: error.message

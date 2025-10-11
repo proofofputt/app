@@ -1,5 +1,8 @@
 import pg from 'pg';
 import crypto from 'crypto';
+import { logWebhookEvent, logSubscriptionEvent, error as logError, warn as logWarn, critical as logCritical } from '../../utils/logger.js';
+import { isProduction } from '../../utils/validate-env.js';
+
 const { Pool } = pg;
 
 // Database connection
@@ -20,10 +23,17 @@ const pool = new Pool({
  * - subscription.expired: Subscription period ended
  */
 
-// Verify Zaprite webhook signature
+/**
+ * Verify Zaprite webhook signature using timing-safe comparison
+ */
 function verifyZapriteSignature(payload, signature, secret) {
-  if (!signature || !secret) {
-    console.warn('Missing signature or secret for webhook verification');
+  if (!signature) {
+    logWarn('Webhook signature missing from request');
+    return false;
+  }
+
+  if (!secret) {
+    logCritical('ZAPRITE_WEBHOOK_SECRET not configured', new Error('Missing webhook secret'));
     return false;
   }
 
@@ -33,20 +43,30 @@ function verifyZapriteSignature(payload, signature, secret) {
       .update(JSON.stringify(payload))
       .digest('hex');
 
-    // Use timing-safe comparison
-    return crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(computedSignature)
-    );
+    // Use timing-safe comparison to prevent timing attacks
+    const signatureBuffer = Buffer.from(signature);
+    const computedBuffer = Buffer.from(computedSignature);
+
+    if (signatureBuffer.length !== computedBuffer.length) {
+      return false;
+    }
+
+    return crypto.timingSafeEqual(signatureBuffer, computedBuffer);
   } catch (error) {
-    console.error('Error verifying webhook signature:', error);
+    logError('Error verifying webhook signature', error);
     return false;
   }
 }
 
-// Extract player ID from Zaprite event metadata
+/**
+ * Extract player ID from Zaprite event metadata
+ */
 function extractPlayerIdFromEvent(eventData) {
   // Check for player_id in metadata (should be set during checkout creation)
+  if (eventData.metadata && eventData.metadata.userId) {
+    return parseInt(eventData.metadata.userId, 10);
+  }
+
   if (eventData.metadata && eventData.metadata.player_id) {
     return parseInt(eventData.metadata.player_id, 10);
   }
@@ -56,16 +76,13 @@ function extractPlayerIdFromEvent(eventData) {
     return parseInt(eventData.customer.metadata.player_id, 10);
   }
 
-  // If no player_id found, try to match by email
-  if (eventData.customer && eventData.customer.email) {
-    // This will be handled asynchronously
-    return null;
-  }
-
+  // If no player_id found, will need to match by email
   return null;
 }
 
-// Find player by email if player_id not in metadata
+/**
+ * Find player by email if player_id not in metadata
+ */
 async function findPlayerByEmail(email) {
   if (!email) return null;
 
@@ -75,7 +92,9 @@ async function findPlayerByEmail(email) {
   return result.rows[0]?.player_id || null;
 }
 
-// Map Zaprite subscription tier to Proof of Putt tier
+/**
+ * Map Zaprite subscription tier to Proof of Putt tier
+ */
 function mapZapriteTierToApp(zapriteProductId) {
   const tierMapping = {
     [process.env.ZAPRITE_PLAN_BASIC]: 'basic',
@@ -83,14 +102,19 @@ function mapZapriteTierToApp(zapriteProductId) {
     [process.env.ZAPRITE_PLAN_FULL]: 'full_subscriber'
   };
 
-  return tierMapping[zapriteProductId] || 'basic';
+  return tierMapping[zapriteProductId] || 'full_subscriber';
 }
 
-// Calculate subscription period end based on billing cycle
-function calculatePeriodEnd(billingCycle) {
+/**
+ * Calculate subscription period end based on billing cycle
+ */
+function calculatePeriodEnd(billingCycle, metadata) {
   const now = new Date();
 
-  if (billingCycle === 'annual' || billingCycle === 'yearly') {
+  // Check metadata for interval if billing cycle not provided
+  const interval = billingCycle || metadata?.interval || 'monthly';
+
+  if (interval === 'annual' || interval === 'yearly') {
     return new Date(now.setFullYear(now.getFullYear() + 1));
   } else {
     // Default to monthly
@@ -98,7 +122,9 @@ function calculatePeriodEnd(billingCycle) {
   }
 }
 
-// Store webhook event in database
+/**
+ * Store webhook event in database for audit trail and idempotency
+ */
 async function storeWebhookEvent(eventData, signature) {
   const query = `
     INSERT INTO zaprite_events (
@@ -137,7 +163,183 @@ async function storeWebhookEvent(eventData, signature) {
   return result.rows[0].event_id;
 }
 
-// Process webhook event and update subscription
+/**
+ * Handle order.paid event - Activate subscription
+ */
+async function handleOrderPaid(playerId, eventData) {
+  const subscriptionId = eventData.subscription?.id || eventData.order?.subscription_id;
+  const customerId = eventData.customer?.id;
+  const paymentMethod = eventData.payment_method || 'unknown';
+  const productId = eventData.product?.id || eventData.items?.[0]?.product_id;
+  const billingCycle = eventData.billing_cycle || eventData.subscription?.billing_cycle || eventData.metadata?.interval;
+
+  const tier = mapZapriteTierToApp(productId);
+  const periodEnd = calculatePeriodEnd(billingCycle, eventData.metadata);
+
+  const query = `
+    UPDATE players
+    SET
+      zaprite_customer_id = $1,
+      zaprite_subscription_id = $2,
+      zaprite_payment_method = $3,
+      subscription_status = 'active',
+      subscription_tier = $4,
+      subscription_billing_cycle = $5,
+      subscription_started_at = COALESCE(subscription_started_at, NOW()),
+      subscription_current_period_start = NOW(),
+      subscription_current_period_end = $6,
+      subscription_cancel_at_period_end = FALSE,
+      is_subscribed = TRUE,
+      updated_at = NOW()
+    WHERE player_id = $7
+  `;
+
+  await pool.query(query, [
+    customerId,
+    subscriptionId,
+    paymentMethod,
+    tier,
+    billingCycle || 'monthly',
+    periodEnd,
+    playerId
+  ]);
+
+  logSubscriptionEvent('subscription_activated', {
+    playerId,
+    tier,
+    billingCycle,
+    periodEnd,
+    subscriptionId
+  });
+
+  // If this was an annual subscription or bundle, generate gift codes
+  const metadata = eventData.metadata || {};
+  if (metadata.type === 'bundle' && metadata.bundleQuantity) {
+    const quantity = parseInt(metadata.bundleQuantity, 10);
+    await generateGiftCodes(playerId, quantity);
+  } else if (metadata.includesGift === 'true' || billingCycle === 'annual') {
+    await generateGiftCodes(playerId, 1);
+  }
+}
+
+/**
+ * Generate gift codes for user
+ */
+async function generateGiftCodes(playerId, quantity) {
+  for (let i = 0; i < quantity; i++) {
+    const giftCode = `GIFT-${crypto.randomBytes(8).toString('hex').toUpperCase()}`;
+
+    await pool.query(
+      `INSERT INTO user_gift_subscriptions (
+        owner_user_id,
+        gift_code,
+        bundle_id,
+        is_redeemed,
+        created_at
+      ) VALUES ($1, $2, NULL, FALSE, NOW())`,
+      [playerId, giftCode]
+    );
+
+    logSubscriptionEvent('gift_code_generated', {
+      playerId,
+      giftCode
+    });
+  }
+}
+
+/**
+ * Handle subscription.created event
+ */
+async function handleSubscriptionCreated(playerId, eventData) {
+  const subscriptionId = eventData.subscription?.id || eventData.id;
+
+  const query = `
+    UPDATE players
+    SET
+      zaprite_subscription_id = $1,
+      subscription_started_at = COALESCE(subscription_started_at, NOW()),
+      updated_at = NOW()
+    WHERE player_id = $2
+  `;
+
+  await pool.query(query, [subscriptionId, playerId]);
+
+  logSubscriptionEvent('subscription_created', {
+    playerId,
+    subscriptionId
+  });
+}
+
+/**
+ * Handle subscription.renewed event
+ */
+async function handleSubscriptionRenewed(playerId, eventData) {
+  const billingCycle = eventData.billing_cycle || eventData.subscription?.billing_cycle || eventData.metadata?.interval;
+  const periodEnd = calculatePeriodEnd(billingCycle, eventData.metadata);
+
+  const query = `
+    UPDATE players
+    SET
+      subscription_current_period_start = NOW(),
+      subscription_current_period_end = $1,
+      subscription_cancel_at_period_end = FALSE,
+      subscription_status = 'active',
+      is_subscribed = TRUE,
+      updated_at = NOW()
+    WHERE player_id = $2
+  `;
+
+  await pool.query(query, [periodEnd, playerId]);
+
+  logSubscriptionEvent('subscription_renewed', {
+    playerId,
+    periodEnd
+  });
+}
+
+/**
+ * Handle subscription.canceled event
+ */
+async function handleSubscriptionCanceled(playerId, eventData) {
+  const query = `
+    UPDATE players
+    SET
+      subscription_cancel_at_period_end = TRUE,
+      updated_at = NOW()
+    WHERE player_id = $1
+  `;
+
+  await pool.query(query, [playerId]);
+
+  logSubscriptionEvent('subscription_canceled', {
+    playerId
+  });
+}
+
+/**
+ * Handle subscription.expired event
+ */
+async function handleSubscriptionExpired(playerId, eventData) {
+  const query = `
+    UPDATE players
+    SET
+      subscription_status = 'canceled',
+      subscription_tier = NULL,
+      is_subscribed = FALSE,
+      updated_at = NOW()
+    WHERE player_id = $1
+  `;
+
+  await pool.query(query, [playerId]);
+
+  logSubscriptionEvent('subscription_expired', {
+    playerId
+  });
+}
+
+/**
+ * Process webhook event and update subscription
+ */
 async function processWebhookEvent(eventId, eventData) {
   let playerId = extractPlayerIdFromEvent(eventData);
 
@@ -168,6 +370,7 @@ async function processWebhookEvent(eventId, eventData) {
       break;
 
     case 'subscription.canceled':
+    case 'subscription.cancelled':
       await handleSubscriptionCanceled(playerId, eventData);
       break;
 
@@ -177,7 +380,7 @@ async function processWebhookEvent(eventId, eventData) {
       break;
 
     default:
-      console.log(`Unhandled event type: ${eventType}`);
+      logWarn(`Unhandled webhook event type: ${eventType}`, { eventType, eventId });
   }
 
   // Mark event as processed
@@ -187,118 +390,9 @@ async function processWebhookEvent(eventId, eventData) {
   );
 }
 
-// Handle order.paid event - Activate subscription
-async function handleOrderPaid(playerId, eventData) {
-  const subscriptionId = eventData.subscription?.id || eventData.order?.subscription_id;
-  const customerId = eventData.customer?.id;
-  const paymentMethod = eventData.payment_method || 'unknown';
-  const productId = eventData.product?.id || eventData.items?.[0]?.product_id;
-  const billingCycle = eventData.billing_cycle || eventData.subscription?.billing_cycle || 'monthly';
-
-  const tier = mapZapriteTierToApp(productId);
-  const periodEnd = calculatePeriodEnd(billingCycle);
-
-  const query = `
-    UPDATE players
-    SET
-      zaprite_customer_id = $1,
-      zaprite_subscription_id = $2,
-      zaprite_payment_method = $3,
-      subscription_status = 'active',
-      subscription_tier = $4,
-      subscription_billing_cycle = $5,
-      subscription_started_at = COALESCE(subscription_started_at, NOW()),
-      subscription_current_period_start = NOW(),
-      subscription_current_period_end = $6,
-      subscription_cancel_at_period_end = FALSE,
-      updated_at = NOW()
-    WHERE player_id = $7
-  `;
-
-  await pool.query(query, [
-    customerId,
-    subscriptionId,
-    paymentMethod,
-    tier,
-    billingCycle,
-    periodEnd,
-    playerId
-  ]);
-
-  console.log(`Activated subscription for player ${playerId}: ${tier} (${billingCycle})`);
-}
-
-// Handle subscription.created event
-async function handleSubscriptionCreated(playerId, eventData) {
-  const subscriptionId = eventData.subscription?.id || eventData.id;
-
-  const query = `
-    UPDATE players
-    SET
-      zaprite_subscription_id = $1,
-      subscription_started_at = COALESCE(subscription_started_at, NOW()),
-      updated_at = NOW()
-    WHERE player_id = $2
-  `;
-
-  await pool.query(query, [subscriptionId, playerId]);
-
-  console.log(`Created subscription ${subscriptionId} for player ${playerId}`);
-}
-
-// Handle subscription.renewed event
-async function handleSubscriptionRenewed(playerId, eventData) {
-  const billingCycle = eventData.billing_cycle || eventData.subscription?.billing_cycle || 'monthly';
-  const periodEnd = calculatePeriodEnd(billingCycle);
-
-  const query = `
-    UPDATE players
-    SET
-      subscription_current_period_start = NOW(),
-      subscription_current_period_end = $1,
-      subscription_cancel_at_period_end = FALSE,
-      subscription_status = 'active',
-      updated_at = NOW()
-    WHERE player_id = $2
-  `;
-
-  await pool.query(query, [periodEnd, playerId]);
-
-  console.log(`Renewed subscription for player ${playerId} until ${periodEnd}`);
-}
-
-// Handle subscription.canceled event
-async function handleSubscriptionCanceled(playerId, eventData) {
-  const query = `
-    UPDATE players
-    SET
-      subscription_cancel_at_period_end = TRUE,
-      updated_at = NOW()
-    WHERE player_id = $1
-  `;
-
-  await pool.query(query, [playerId]);
-
-  console.log(`Marked subscription for cancellation for player ${playerId}`);
-}
-
-// Handle subscription.expired event
-async function handleSubscriptionExpired(playerId, eventData) {
-  const query = `
-    UPDATE players
-    SET
-      subscription_status = 'canceled',
-      subscription_tier = NULL,
-      updated_at = NOW()
-    WHERE player_id = $1
-  `;
-
-  await pool.query(query, [playerId]);
-
-  console.log(`Expired subscription for player ${playerId}`);
-}
-
-// Main webhook handler
+/**
+ * Main webhook handler
+ */
 export default async function handler(req, res) {
   // Only accept POST requests
   if (req.method !== 'POST') {
@@ -309,18 +403,33 @@ export default async function handler(req, res) {
     const signature = req.headers['x-zaprite-signature'] || req.headers['zaprite-signature'];
     const webhookSecret = process.env.ZAPRITE_WEBHOOK_SECRET;
 
+    // ENFORCE signature verification in production
+    if (isProduction() && !webhookSecret) {
+      logCritical('Webhook secret not configured in production', new Error('Missing ZAPRITE_WEBHOOK_SECRET'));
+      return res.status(500).json({ error: 'Webhook not properly configured' });
+    }
+
     // Verify webhook signature
-    if (webhookSecret && !verifyZapriteSignature(req.body, signature, webhookSecret)) {
-      console.error('Invalid webhook signature');
-      return res.status(401).json({ error: 'Invalid signature' });
+    if (webhookSecret) {
+      const isValid = verifyZapriteSignature(req.body, signature, webhookSecret);
+      if (!isValid) {
+        logCritical('Invalid webhook signature detected - possible security breach', new Error('Invalid signature'), {
+          hasSignature: !!signature,
+          hasSecret: !!webhookSecret
+        });
+        return res.status(401).json({ error: 'Invalid signature' });
+      }
+    } else if (isProduction()) {
+      // In production without secret, reject the webhook
+      logCritical('Production webhook received without signature verification', new Error('No webhook secret'));
+      return res.status(500).json({ error: 'Webhook security not configured' });
     }
 
     const eventData = req.body;
 
-    console.log('Received Zaprite webhook:', {
-      type: eventData.type,
-      id: eventData.id,
-      customer: eventData.customer?.id
+    logWebhookEvent(eventData.type || 'unknown', eventData.id || 'unknown', {
+      customer: eventData.customer?.id,
+      amount: eventData.amount || eventData.amount_paid
     });
 
     // Check for duplicate event (idempotency)
@@ -330,7 +439,10 @@ export default async function handler(req, res) {
     );
 
     if (duplicateCheck.rows.length > 0) {
-      console.log('Duplicate webhook event, ignoring');
+      logWarn('Duplicate webhook event received, ignoring', {
+        eventId: eventData.id,
+        eventType: eventData.type
+      });
       return res.status(200).json({ received: true, duplicate: true });
     }
 
@@ -339,7 +451,10 @@ export default async function handler(req, res) {
 
     // Process event asynchronously (don't block webhook response)
     processWebhookEvent(eventId, eventData).catch(error => {
-      console.error('Error processing webhook event:', error);
+      logError('Error processing webhook event', error, {
+        eventId,
+        eventType: eventData.type
+      });
       pool.query(
         'UPDATE zaprite_events SET processing_error = $1, retry_count = retry_count + 1 WHERE event_id = $2',
         [error.message, eventId]
@@ -353,7 +468,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('Webhook handler error:', error);
+    logError('Webhook handler error', error);
     res.status(500).json({
       error: 'Webhook processing failed',
       message: error.message

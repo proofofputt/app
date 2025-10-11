@@ -2,15 +2,12 @@ import { Pool } from 'pg';
 import { setCORSHeaders } from '../../../utils/cors.js';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
+import { createZapriteOrder, extractCheckoutUrl, extractOrderId, ZapriteApiError } from '../../../utils/zaprite-client.js';
+import { logApiRequest, logApiResponse, logPaymentEvent, error as logError, createRequestLogger } from '../../../utils/logger.js';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
-
-// Zaprite configuration
-const ZAPRITE_API_KEY = process.env.ZAPRITE_API_KEY;
-const ZAPRITE_ORG_ID = process.env.ZAPRITE_ORG_ID;
-const ZAPRITE_BASE_URL = process.env.ZAPRITE_BASE_URL || 'https://api.zaprite.com';
 
 // Bundle pricing - matches frontend
 const BUNDLE_PRICING = {
@@ -25,6 +22,9 @@ function generateGiftCode() {
 }
 
 export default async function handler(req, res) {
+  const requestId = crypto.randomUUID();
+  const logger = createRequestLogger(requestId);
+
   setCORSHeaders(req, res);
 
   if (req.method === 'OPTIONS') {
@@ -32,14 +32,21 @@ export default async function handler(req, res) {
   }
 
   if (req.method !== 'POST') {
+    logApiResponse('/api/subscriptions/bundles/purchase', 'POST', 405, { requestId });
     return res.status(405).json({ success: false, message: 'Method not allowed' });
   }
+
+  logApiRequest('/api/subscriptions/bundles/purchase', 'POST', { requestId });
 
   const { bundleId } = req.body;
 
   // Get user from auth token
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    logApiResponse('/api/subscriptions/bundles/purchase', 'POST', 401, {
+      requestId,
+      reason: 'missing_auth_header'
+    });
     return res.status(401).json({ success: false, message: 'Authentication required' });
   }
 
@@ -51,33 +58,53 @@ export default async function handler(req, res) {
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (jwtError) {
-      console.error('JWT verification failed:', jwtError);
+      logger.error('JWT verification failed', jwtError);
+      logApiResponse('/api/subscriptions/bundles/purchase', 'POST', 401, {
+        requestId,
+        reason: 'invalid_jwt'
+      });
       return res.status(401).json({ success: false, message: 'Invalid authentication token' });
     }
 
     // Get user details from database
     const userResult = await pool.query(
-      'SELECT player_id, email, name as display_name FROM players WHERE player_id = $1',
+      'SELECT player_id, email, display_name FROM players WHERE player_id = $1',
       [decoded.playerId]
     );
 
     if (userResult.rows.length === 0) {
+      logger.warn('User not found in database', { playerId: decoded.playerId });
+      logApiResponse('/api/subscriptions/bundles/purchase', 'POST', 401, {
+        requestId,
+        reason: 'user_not_found'
+      });
       return res.status(401).json({ success: false, message: 'User not found' });
     }
 
     const user = userResult.rows[0];
+    logger.info('User authenticated', { userId: user.player_id, email: user.email });
 
     // Get bundle details
     const bundle = BUNDLE_PRICING[bundleId];
     if (!bundle) {
+      logger.warn('Invalid bundle ID requested', { bundleId });
+      logApiResponse('/api/subscriptions/bundles/purchase', 'POST', 400, {
+        requestId,
+        userId: user.player_id,
+        reason: 'invalid_bundle_id'
+      });
       return res.status(400).json({ success: false, message: 'Invalid bundle ID' });
     }
 
+    logger.info('Processing bundle purchase', {
+      userId: user.player_id,
+      bundleId,
+      quantity: bundle.quantity,
+      price: bundle.price
+    });
+
     // Create Zaprite order for bundle purchase
-    // Use player_id for customerName to avoid issues with special characters in display names
-    // Full name is preserved in metadata for reference if needed
     const orderPayload = {
-      organizationId: ZAPRITE_ORG_ID,
       customerId: user.player_id.toString(),
       customerEmail: user.email,
       customerName: `Player ${user.player_id}`,
@@ -90,60 +117,90 @@ export default async function handler(req, res) {
         displayName: user.display_name || 'Anonymous',
         bundleId: bundleId.toString(),
         bundleQuantity: bundle.quantity.toString(),
-        type: 'bundle'
+        type: 'bundle',
+        requestId
       }
     };
 
-    console.log('Creating Zaprite order:', orderPayload);
-
-    const zapriteResponse = await fetch(`${ZAPRITE_BASE_URL}/v1/order`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${ZAPRITE_API_KEY}`
-      },
-      body: JSON.stringify(orderPayload)
+    logPaymentEvent('bundle_purchase_initiated', {
+      userId: user.player_id,
+      bundleId,
+      amount: bundle.price,
+      requestId
     });
 
-    const zapriteData = await zapriteResponse.json();
+    // Use Zaprite client with retry logic
+    let zapriteData;
+    try {
+      zapriteData = await createZapriteOrder(orderPayload);
+    } catch (zapriteError) {
+      if (zapriteError instanceof ZapriteApiError) {
+        logger.error('Zaprite API error', zapriteError, {
+          statusCode: zapriteError.statusCode,
+          response: zapriteError.response
+        });
 
-    console.log('Zaprite response status:', zapriteResponse.status);
-    console.log('Zaprite response data:', zapriteData);
+        logApiResponse('/api/subscriptions/bundles/purchase', 'POST', 500, {
+          requestId,
+          userId: user.player_id,
+          reason: 'zaprite_api_error',
+          zapriteStatus: zapriteError.statusCode
+        });
 
-    if (!zapriteResponse.ok) {
-      console.error('Zaprite API error:', zapriteData);
-      return res.status(500).json({
-        success: false,
-        message: `Failed to create payment order: ${zapriteData.message || 'Unknown error'}`
-      });
+        return res.status(500).json({
+          success: false,
+          message: `Failed to create payment order: ${zapriteError.message}`
+        });
+      }
+      throw zapriteError; // Re-throw if not a Zaprite API error
     }
 
-    // Check multiple possible field names for checkout URL
-    const checkoutUrl = zapriteData.checkoutUrl ||
-                       zapriteData.checkout_url ||
-                       zapriteData.url ||
-                       zapriteData.paymentUrl ||
-                       zapriteData.payment_url;
+    // Extract checkout URL
+    const checkoutUrl = extractCheckoutUrl(zapriteData);
+    const orderId = extractOrderId(zapriteData);
 
     if (!checkoutUrl) {
-      console.error('No checkout URL found in Zaprite response:', zapriteData);
+      logger.error('No checkout URL in Zaprite response', null, { zapriteData });
+      logApiResponse('/api/subscriptions/bundles/purchase', 'POST', 500, {
+        requestId,
+        userId: user.player_id,
+        reason: 'missing_checkout_url'
+      });
       return res.status(500).json({
         success: false,
         message: 'Payment order created but no checkout URL received'
       });
     }
 
-    console.log('Returning checkout URL:', checkoutUrl);
+    logPaymentEvent('bundle_purchase_order_created', {
+      userId: user.player_id,
+      bundleId,
+      orderId,
+      checkoutUrl,
+      requestId
+    });
+
+    logApiResponse('/api/subscriptions/bundles/purchase', 'POST', 200, {
+      requestId,
+      userId: user.player_id,
+      bundleId,
+      orderId
+    });
 
     // Return checkout URL for redirect
     return res.status(200).json({
       success: true,
       checkoutUrl: checkoutUrl,
-      orderId: zapriteData.id
+      orderId: orderId
     });
 
   } catch (error) {
-    console.error('Bundle purchase error:', error);
+    logger.error('Bundle purchase error', error);
+    logApiResponse('/api/subscriptions/bundles/purchase', 'POST', 500, {
+      requestId,
+      reason: 'internal_error',
+      error: error.message
+    });
     return res.status(500).json({
       success: false,
       message: error.message || 'Internal server error'
