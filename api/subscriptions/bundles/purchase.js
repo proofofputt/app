@@ -1,6 +1,7 @@
 import { Pool } from 'pg';
 import { setCORSHeaders } from '../../../utils/cors.js';
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -37,20 +38,31 @@ export default async function handler(req, res) {
   const { bundleId } = req.body;
 
   // Get user from auth token
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ success: false, message: 'Authentication required' });
   }
 
+  const token = authHeader.replace('Bearer ', '');
+
   try {
-    // Verify token and get user
+    // Verify JWT token
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (jwtError) {
+      console.error('JWT verification failed:', jwtError);
+      return res.status(401).json({ success: false, message: 'Invalid authentication token' });
+    }
+
+    // Get user details from database
     const userResult = await pool.query(
-      'SELECT player_id, email, display_name FROM players WHERE player_id = (SELECT player_id FROM sessions WHERE token = $1 LIMIT 1)',
-      [token]
+      'SELECT player_id, email, name as display_name FROM players WHERE player_id = $1',
+      [decoded.playerId]
     );
 
     if (userResult.rows.length === 0) {
-      return res.status(401).json({ success: false, message: 'Invalid authentication token' });
+      return res.status(401).json({ success: false, message: 'User not found' });
     }
 
     const user = userResult.rows[0];
