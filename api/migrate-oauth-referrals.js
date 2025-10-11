@@ -13,29 +13,39 @@ export default async function handler(req, res) {
   const client = await pool.connect();
 
   try {
-    console.log('🔄 Adding referral_code column to oauth_sessions...');
+    console.log('🔄 Adding mode and referral_code columns to oauth_sessions...');
 
-    // Add referral_code column
+    // Add both mode and referral_code columns
     await client.query(`
       ALTER TABLE oauth_sessions
+      ADD COLUMN IF NOT EXISTS mode VARCHAR(20),
       ADD COLUMN IF NOT EXISTS referral_code VARCHAR(20)
     `);
 
-    // Verify the column was added
+    // Verify both columns were added
     const verify = await client.query(`
-      SELECT column_name, data_type
+      SELECT column_name, data_type, character_maximum_length
       FROM information_schema.columns
       WHERE table_name = 'oauth_sessions'
-      AND column_name = 'referral_code'
+      AND column_name IN ('mode', 'referral_code')
+      ORDER BY column_name
     `);
 
+    const columnsAdded = verify.rows.map(r => r.column_name);
+    const allColumnsPresent = columnsAdded.includes('mode') && columnsAdded.includes('referral_code');
+
     console.log('✅ Migration completed successfully');
+    console.log('📊 Columns added:', columnsAdded.join(', '));
 
     return res.status(200).json({
       success: true,
       message: 'OAuth referral tracking migration completed successfully',
-      column_added: verify.rows.length > 0,
-      details: verify.rows[0]
+      columns_added: allColumnsPresent,
+      columns: verify.rows,
+      summary: {
+        mode: columnsAdded.includes('mode') ? '✓ Added' : '✗ Missing',
+        referral_code: columnsAdded.includes('referral_code') ? '✓ Added' : '✗ Missing'
+      }
     });
 
   } catch (error) {
