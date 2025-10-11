@@ -390,8 +390,8 @@
 }
 
 .message.admin-message {
-  border-left: 4px solid #10b981;
-  background: #f0fdf4;
+  border-left: 4px solid #ff8c00;
+  background: #fff8f0;
 }
 
 .message-header {
@@ -430,12 +430,12 @@
   background: white;
   padding: 1.5rem;
   border-radius: 8px;
-  border: 2px solid #10b981;
+  border: 2px solid #ff8c00;
 }
 
 .admin-reply-form h3 {
   margin: 0 0 1rem 0;
-  color: #059669;
+  color: #ff6b00;
   font-size: 1.125rem;
 }
 
@@ -497,12 +497,12 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #ff8c00 0%, #ff6b00 100%);
   color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: linear-gradient(135deg, #ff9500 0%, #ff7700 100%);
 }
 
 .btn-secondary {
