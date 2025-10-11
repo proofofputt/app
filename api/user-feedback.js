@@ -1,6 +1,11 @@
 import { Pool } from 'pg';
 import jwt from 'jsonwebtoken';
 import { setCORSHeaders } from '../utils/cors.js';
+import {
+  sendFeedbackConfirmationEmail,
+  sendFeedbackResponseEmail,
+  sendNewFeedbackAlertEmail
+} from '../utils/emailService.js';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -197,11 +202,44 @@ async function handleCreateFeedback(req, res, client, user) {
     });
   }
 
+  // Auto-priority assignment based on category
+  const AUTO_PRIORITY_RULES = {
+    'bug_report': 'high',
+    'performance': 'high',
+    'support': 'normal',
+    'feature_request': 'low',
+    'general_feedback': 'normal',
+    'page_issue': 'normal',
+    'ui_ux': 'normal',
+    'other': 'normal'
+  };
+
+  const priority = AUTO_PRIORITY_RULES[category] || 'normal';
+
+  // Category labels for emails
+  const categoryLabels = {
+    'general_feedback': 'General Feedback',
+    'feature_request': 'Feature Request',
+    'bug_report': 'Bug Report',
+    'page_issue': 'Page Issue',
+    'ui_ux': 'UI/UX Feedback',
+    'performance': 'Performance Issue',
+    'support': 'Support Request',
+    'other': 'Other'
+  };
+
   // Start transaction
   await client.query('BEGIN');
 
   try {
-    // Create thread
+    // Get player info for emails
+    const playerResult = await client.query(
+      'SELECT name, email FROM players WHERE player_id = $1',
+      [user.playerId]
+    );
+    const player = playerResult.rows[0];
+
+    // Create thread with auto-assigned priority
     const threadResult = await client.query(`
       INSERT INTO feedback_threads (
         player_id,
@@ -209,11 +247,12 @@ async function handleCreateFeedback(req, res, client, user) {
         category,
         page_location,
         feature_area,
-        status
+        status,
+        priority
       )
-      VALUES ($1, $2, $3, $4, $5, 'open')
-      RETURNING thread_id, subject, category, page_location, feature_area, status, created_at
-    `, [user.playerId, subject, category, page_location || null, feature_area || null]);
+      VALUES ($1, $2, $3, $4, $5, 'open', $6)
+      RETURNING thread_id, subject, category, page_location, feature_area, status, priority, created_at
+    `, [user.playerId, subject, category, page_location || null, feature_area || null, priority]);
 
     const thread = threadResult.rows[0];
 
@@ -230,6 +269,48 @@ async function handleCreateFeedback(req, res, client, user) {
     `, [thread.thread_id, user.playerId, initial_message]);
 
     await client.query('COMMIT');
+
+    // Send confirmation email to user
+    try {
+      await sendFeedbackConfirmationEmail(player.email, player.name, {
+        subject: thread.subject,
+        category_label: categoryLabels[thread.category],
+        thread_id: thread.thread_id
+      });
+    } catch (emailError) {
+      console.error('Failed to send feedback confirmation email:', emailError);
+      // Don't fail the request if email fails
+    }
+
+    // Send admin alert for high/critical priority
+    if (thread.priority === 'high' || thread.priority === 'critical') {
+      try {
+        const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()).filter(Boolean) || [];
+
+        if (adminEmails.length > 0) {
+          const emailPromises = adminEmails.map(adminEmail =>
+            sendNewFeedbackAlertEmail(adminEmail, {
+              subject: thread.subject,
+              category_label: categoryLabels[thread.category],
+              priority: thread.priority.toUpperCase(),
+              page_location: thread.page_location || 'Not specified',
+              feature_area: thread.feature_area || 'Not specified',
+              thread_id: thread.thread_id,
+              initial_message: initial_message
+            }, {
+              name: player.name,
+              email: player.email,
+              player_id: user.playerId
+            })
+          );
+
+          await Promise.all(emailPromises);
+        }
+      } catch (emailError) {
+        console.error('Failed to send admin alert email:', emailError);
+        // Don't fail the request if email fails
+      }
+    }
 
     return res.status(201).json({
       success: true,

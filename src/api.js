@@ -451,3 +451,43 @@ export const apiAddFeedbackMessage = (threadId, messageText) =>
     headers: getHeaders(),
     body: JSON.stringify({ thread_id: threadId, message_text: messageText })
   }).then(handleResponse);
+
+// --- Admin: Feedback Management ---
+export const apiAdminGetAllFeedback = (filters = {}, pagination = {}) => {
+  const params = new URLSearchParams();
+
+  if (filters.status) params.append('status', filters.status);
+  if (filters.priority) params.append('priority', filters.priority);
+  if (filters.category) params.append('category', filters.category);
+  if (pagination.limit) params.append('limit', pagination.limit);
+  if (pagination.offset) params.append('offset', pagination.offset);
+
+  const queryString = params.toString();
+  const url = queryString ? `${API_BASE_URL}/admin/feedback?${queryString}` : `${API_BASE_URL}/admin/feedback`;
+
+  return fetch(url, { headers: getHeaders() }).then(handleResponse);
+};
+
+export const apiAdminUpdateThread = (threadId, updates) =>
+  fetch(`${API_BASE_URL}/admin/feedback`, {
+    method: 'PATCH',
+    headers: getHeaders(),
+    body: JSON.stringify({ thread_id: threadId, ...updates })
+  }).then(handleResponse);
+
+export const apiAdminBulkUpdateThreads = (threadIds, updates) =>
+  fetch(`${API_BASE_URL}/admin/feedback`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ thread_ids: threadIds, ...updates })
+  }).then(handleResponse);
+
+export const apiAdminGetFeedbackStats = () =>
+  fetch(`${API_BASE_URL}/admin/feedback-stats`, { headers: getHeaders() }).then(handleResponse);
+
+export const apiAdminRespondToThread = (threadId, messageText, autoInProgress = true) =>
+  fetch(`${API_BASE_URL}/admin/feedback-respond`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ thread_id: threadId, message_text: messageText, auto_in_progress: autoInProgress })
+  }).then(handleResponse);

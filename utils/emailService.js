@@ -302,7 +302,7 @@ export const sendDuelInviteEmail = async (email, inviterName, duelDetails) => {
  */
 export const sendLeagueInviteEmail = async (email, inviterName, leagueDetails) => {
   const signupLink = `${APP_URL}/register?invite=league&email=${encodeURIComponent(email)}&league=${encodeURIComponent(leagueDetails.name)}`;
-  
+
   const msg = {
     to: email,
     from: {
@@ -323,12 +323,12 @@ export const sendLeagueInviteEmail = async (email, inviterName, leagueDetails) =
           <h1 style="margin: 0; font-size: 28px; font-weight: 600;">🏌️ League Invitation!</h1>
           <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Join the competition</p>
         </div>
-        
+
         <div style="background: #f7fafc; padding: 30px 20px; border-radius: 0 0 8px 8px;">
           <h2 style="color: #2d5016; margin-top: 0;">Hi there!</h2>
-          
+
           <p><strong>${inviterName}</strong> has invited you to join the <strong>"${leagueDetails.name}"</strong> league on ${APP_NAME}!</p>
-          
+
           <div style="background: white; border: 2px solid #2d5016; border-radius: 8px; padding: 20px; margin: 20px 0;">
             <h3 style="color: #2d5016; margin-top: 0;">🏆 League Details</h3>
             <p><strong>League:</strong> ${leagueDetails.name}</p>
@@ -336,24 +336,24 @@ export const sendLeagueInviteEmail = async (email, inviterName, leagueDetails) =
             <p><strong>Members:</strong> ${leagueDetails.memberCount || 'Multiple'} players</p>
             <p><strong>Status:</strong> ${leagueDetails.status || 'Active'}</p>
           </div>
-          
+
           <h3 style="color: #2d5016;">What is ${APP_NAME}?</h3>
           <p>${APP_NAME} is an AI-powered golf training platform that uses computer vision to track your putting performance. Join leagues for group competitions, challenge friends to duels, and improve your game with detailed analytics!</p>
-          
+
           <div style="text-align: center; margin: 30px 0;">
             <a href="${signupLink}" style="background: linear-gradient(135deg, #0a5d1a 0%, #2d5016 100%); color: white; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: 600; display: inline-block;">Join League & Sign Up</a>
           </div>
-          
+
           <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 15px; margin: 20px 0;">
             <strong style="color: #856404;">📱 Getting Started:</strong> After signing up, you'll need to download our desktop app to track your putting sessions and participate in league rounds.
           </div>
-          
+
           <p style="color: #718096; font-size: 14px; margin-top: 30px;">
             Not interested in joining? No problem! You can safely ignore this email.
           </p>
-          
+
           <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
-          
+
           <p style="color: #718096; font-size: 12px; text-align: center;">
             © ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.<br>
             This email was sent from ${FROM_EMAIL}
@@ -388,6 +388,379 @@ export const sendLeagueInviteEmail = async (email, inviterName, leagueDetails) =
     return { success: true };
   } catch (error) {
     console.error('Error sending league invite email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Send feedback confirmation email when user submits new feedback
+ */
+export const sendFeedbackConfirmationEmail = async (email, name, feedbackDetails) => {
+  const feedbackLink = `${APP_URL}/comments`;
+
+  const msg = {
+    to: email,
+    from: {
+      email: FROM_EMAIL,
+      name: APP_NAME
+    },
+    subject: `Thanks for your feedback! - ${APP_NAME}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Feedback Received</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #2d3748; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #0a5d1a 0%, #2d5016 100%); color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="margin: 0; font-size: 28px; font-weight: 600;">💬 Feedback Received!</h1>
+          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">We appreciate your input</p>
+        </div>
+
+        <div style="background: #f7fafc; padding: 30px 20px; border-radius: 0 0 8px 8px;">
+          <h2 style="color: #2d5016; margin-top: 0;">Hi ${name},</h2>
+
+          <p>Thank you for taking the time to share your feedback with us! We've received your submission and our team will review it shortly.</p>
+
+          <div style="background: white; border: 2px solid #2d5016; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h3 style="color: #2d5016; margin-top: 0;">📝 Your Feedback</h3>
+            <p><strong>Subject:</strong> ${feedbackDetails.subject}</p>
+            <p><strong>Category:</strong> ${feedbackDetails.category_label}</p>
+            <p><strong>Reference #:</strong> ${feedbackDetails.thread_id}</p>
+          </div>
+
+          <div style="background: #e6fffa; border: 1px solid #4fd1c7; border-radius: 4px; padding: 15px; margin: 20px 0;">
+            <strong style="color: #234e52;">⏱️ What's Next?</strong>
+            <p style="margin: 5px 0 0 0;">Our support team typically responds within 24-48 hours. You'll receive an email when we reply to your feedback.</p>
+          </div>
+
+          <p>You can view the conversation and add additional details anytime by visiting your Comments & Feedback page:</p>
+
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${feedbackLink}" style="background: linear-gradient(135deg, #0a5d1a 0%, #2d5016 100%); color: white; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: 600; display: inline-block;">View Conversation</a>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+
+          <p style="color: #718096; font-size: 12px; text-align: center;">
+            © ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.<br>
+            This email was sent from ${FROM_EMAIL}
+          </p>
+        </div>
+      </body>
+      </html>
+    `,
+    text: `
+      Hi ${name},
+
+      Thank you for taking the time to share your feedback with us! We've received your submission and our team will review it shortly.
+
+      Your Feedback:
+      - Subject: ${feedbackDetails.subject}
+      - Category: ${feedbackDetails.category_label}
+      - Reference #: ${feedbackDetails.thread_id}
+
+      What's Next?
+      Our support team typically responds within 24-48 hours. You'll receive an email when we reply to your feedback.
+
+      View the conversation: ${feedbackLink}
+
+      Best regards,
+      The ${APP_NAME} Team
+    `
+  };
+
+  try {
+    await sgMail.send(msg);
+    console.log(`Feedback confirmation email sent to ${email}`);
+    return { success: true };
+  } catch (error) {
+    console.error('Error sending feedback confirmation email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Send notification email when admin responds to feedback
+ */
+export const sendFeedbackResponseEmail = async (email, name, threadDetails, responsePreview) => {
+  const threadLink = `${APP_URL}/comments`;
+
+  const msg = {
+    to: email,
+    from: {
+      email: FROM_EMAIL,
+      name: APP_NAME
+    },
+    subject: `We replied to your feedback: ${threadDetails.subject}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>New Response to Your Feedback</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #2d3748; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #0a5d1a 0%, #2d5016 100%); color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="margin: 0; font-size: 28px; font-weight: 600;">💬 New Response!</h1>
+          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">We've replied to your feedback</p>
+        </div>
+
+        <div style="background: #f7fafc; padding: 30px 20px; border-radius: 0 0 8px 8px;">
+          <h2 style="color: #2d5016; margin-top: 0;">Hi ${name},</h2>
+
+          <p>Good news! Our team has responded to your feedback about "${threadDetails.subject}".</p>
+
+          <div style="background: white; border: 2px solid #2d5016; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h3 style="color: #2d5016; margin-top: 0;">💬 Response Preview</h3>
+            <p style="font-style: italic; color: #4a5568;">"${responsePreview}"</p>
+            <p style="font-size: 12px; color: #718096; margin: 10px 0 0 0;">View the full conversation for complete details.</p>
+          </div>
+
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${threadLink}" style="background: linear-gradient(135deg, #0a5d1a 0%, #2d5016 100%); color: white; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: 600; display: inline-block;">View Full Conversation</a>
+          </div>
+
+          <p>Feel free to reply with any additional questions or information!</p>
+
+          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+
+          <p style="color: #718096; font-size: 12px; text-align: center;">
+            © ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.<br>
+            This email was sent from ${FROM_EMAIL}
+          </p>
+        </div>
+      </body>
+      </html>
+    `,
+    text: `
+      Hi ${name},
+
+      Good news! Our team has responded to your feedback about "${threadDetails.subject}".
+
+      Response Preview:
+      "${responsePreview}"
+
+      View the full conversation: ${threadLink}
+
+      Feel free to reply with any additional questions or information!
+
+      Best regards,
+      The ${APP_NAME} Team
+    `
+  };
+
+  try {
+    await sgMail.send(msg);
+    console.log(`Feedback response email sent to ${email}`);
+    return { success: true };
+  } catch (error) {
+    console.error('Error sending feedback response email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Send notification when feedback status changes
+ */
+export const sendFeedbackStatusUpdateEmail = async (email, name, threadDetails, oldStatus, newStatus) => {
+  const threadLink = `${APP_URL}/comments`;
+
+  const statusMessages = {
+    in_progress: 'Our team is actively working on your feedback',
+    resolved: 'Your feedback has been resolved',
+    closed: 'This conversation has been closed'
+  };
+
+  const msg = {
+    to: email,
+    from: {
+      email: FROM_EMAIL,
+      name: APP_NAME
+    },
+    subject: `Feedback update: ${threadDetails.subject}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Feedback Status Update</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #2d3748; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #0a5d1a 0%, #2d5016 100%); color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="margin: 0; font-size: 28px; font-weight: 600;">🔄 Status Update</h1>
+          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Your feedback status changed</p>
+        </div>
+
+        <div style="background: #f7fafc; padding: 30px 20px; border-radius: 0 0 8px 8px;">
+          <h2 style="color: #2d5016; margin-top: 0;">Hi ${name},</h2>
+
+          <p>We have an update regarding your feedback: "${threadDetails.subject}".</p>
+
+          <div style="background: white; border: 2px solid #2d5016; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h3 style="color: #2d5016; margin-top: 0;">📊 Status Change</h3>
+            <p><strong>Previous Status:</strong> <span style="text-transform: capitalize;">${oldStatus.replace('_', ' ')}</span></p>
+            <p><strong>New Status:</strong> <span style="text-transform: capitalize; color: #0a5d1a; font-weight: 600;">${newStatus.replace('_', ' ')}</span></p>
+            <p style="margin-top: 15px;">${statusMessages[newStatus] || 'Status has been updated'}</p>
+          </div>
+
+          ${threadDetails.admin_notes ? `
+          <div style="background: #e3f2fd; border-left: 4px solid #1976d2; border-radius: 4px; padding: 15px; margin: 20px 0;">
+            <strong style="color: #1976d2;">📝 Resolution Notes:</strong>
+            <p style="margin: 5px 0 0 0; color: #2d3748;">${threadDetails.admin_notes}</p>
+          </div>
+          ` : ''}
+
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${threadLink}" style="background: linear-gradient(135deg, #0a5d1a 0%, #2d5016 100%); color: white; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: 600; display: inline-block;">View Conversation</a>
+          </div>
+
+          ${newStatus === 'closed' ? `
+          <p style="color: #718096; font-size: 14px;">
+            This conversation is now closed. If you have additional feedback, feel free to start a new conversation from your Comments & Feedback page.
+          </p>
+          ` : `
+          <p>If you have questions or additional information, feel free to reply in the conversation!</p>
+          `}
+
+          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+
+          <p style="color: #718096; font-size: 12px; text-align: center;">
+            © ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.<br>
+            This email was sent from ${FROM_EMAIL}
+          </p>
+        </div>
+      </body>
+      </html>
+    `,
+    text: `
+      Hi ${name},
+
+      We have an update regarding your feedback: "${threadDetails.subject}".
+
+      Status Change:
+      - Previous Status: ${oldStatus.replace('_', ' ')}
+      - New Status: ${newStatus.replace('_', ' ')}
+
+      ${statusMessages[newStatus] || 'Status has been updated'}
+
+      ${threadDetails.admin_notes ? `\nResolution Notes:\n${threadDetails.admin_notes}\n` : ''}
+
+      View conversation: ${threadLink}
+
+      ${newStatus === 'closed'
+        ? 'This conversation is now closed. If you have additional feedback, feel free to start a new conversation.'
+        : 'If you have questions or additional information, feel free to reply in the conversation!'}
+
+      Best regards,
+      The ${APP_NAME} Team
+    `
+  };
+
+  try {
+    await sgMail.send(msg);
+    console.log(`Feedback status update email sent to ${email}`);
+    return { success: true };
+  } catch (error) {
+    console.error('Error sending feedback status update email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Send alert to admin team when new high-priority feedback is submitted
+ */
+export const sendNewFeedbackAlertEmail = async (adminEmail, feedbackDetails, playerInfo) => {
+  const adminLink = `${APP_URL}/admin/feedback`;
+
+  const msg = {
+    to: adminEmail,
+    from: {
+      email: FROM_EMAIL,
+      name: APP_NAME
+    },
+    subject: `[${feedbackDetails.priority.toUpperCase()}] New Feedback: ${feedbackDetails.subject}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>New Feedback Alert</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #2d3748; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%); color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="margin: 0; font-size: 28px; font-weight: 600;">🚨 New Feedback Alert</h1>
+          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Priority: ${feedbackDetails.priority.toUpperCase()}</p>
+        </div>
+
+        <div style="background: #f7fafc; padding: 30px 20px; border-radius: 0 0 8px 8px;">
+          <h2 style="color: #2d5016; margin-top: 0;">New ${feedbackDetails.category_label}</h2>
+
+          <div style="background: white; border: 2px solid #b91c1c; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h3 style="color: #b91c1c; margin-top: 0;">📝 Feedback Details</h3>
+            <p><strong>Subject:</strong> ${feedbackDetails.subject}</p>
+            <p><strong>Category:</strong> ${feedbackDetails.category_label}</p>
+            <p><strong>Priority:</strong> <span style="text-transform: uppercase; color: #b91c1c; font-weight: 600;">${feedbackDetails.priority}</span></p>
+            ${feedbackDetails.page_location ? `<p><strong>Page:</strong> ${feedbackDetails.page_location}</p>` : ''}
+            ${feedbackDetails.feature_area ? `<p><strong>Feature:</strong> ${feedbackDetails.feature_area}</p>` : ''}
+            <p><strong>Thread ID:</strong> #${feedbackDetails.thread_id}</p>
+          </div>
+
+          <div style="background: #f0f8f0; border: 1px solid #4a6741; border-radius: 6px; padding: 15px; margin: 20px 0;">
+            <h4 style="color: #2d5016; margin-top: 0; margin-bottom: 10px;">👤 Submitted By</h4>
+            <p style="margin: 5px 0;"><strong>Name:</strong> ${playerInfo.name}</p>
+            <p style="margin: 5px 0;"><strong>Email:</strong> ${playerInfo.email}</p>
+            <p style="margin: 5px 0;"><strong>Player ID:</strong> ${playerInfo.player_id}</p>
+          </div>
+
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${adminLink}" style="background: linear-gradient(135deg, #0a5d1a 0%, #2d5016 100%); color: white; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: 600; display: inline-block;">View in Admin Dashboard</a>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+
+          <p style="color: #718096; font-size: 12px; text-align: center;">
+            © ${new Date().getFullYear()} ${APP_NAME} Admin System<br>
+            This is an automated alert for admin team members
+          </p>
+        </div>
+      </body>
+      </html>
+    `,
+    text: `
+      NEW FEEDBACK ALERT
+      Priority: ${feedbackDetails.priority.toUpperCase()}
+
+      Feedback Details:
+      - Subject: ${feedbackDetails.subject}
+      - Category: ${feedbackDetails.category_label}
+      - Priority: ${feedbackDetails.priority.toUpperCase()}
+      ${feedbackDetails.page_location ? `- Page: ${feedbackDetails.page_location}` : ''}
+      ${feedbackDetails.feature_area ? `- Feature: ${feedbackDetails.feature_area}` : ''}
+      - Thread ID: #${feedbackDetails.thread_id}
+
+      Submitted By:
+      - Name: ${playerInfo.name}
+      - Email: ${playerInfo.email}
+      - Player ID: ${playerInfo.player_id}
+
+      View in Admin Dashboard: ${adminLink}
+
+      This is an automated alert for admin team members.
+    `
+  };
+
+  try {
+    await sgMail.send(msg);
+    console.log(`New feedback alert email sent to admin ${adminEmail}`);
+    return { success: true };
+  } catch (error) {
+    console.error('Error sending new feedback alert email:', error);
     return { success: false, error: error.message };
   }
 };

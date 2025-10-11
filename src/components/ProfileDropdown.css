@@ -64,6 +64,15 @@
   font-weight: bold;
 }
 
+.dropdown-menu .dropdown-item.admin-link {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.dropdown-menu .dropdown-item.admin-link:hover {
+  background-color: #f0fdf4;
+}
+
 .dropdown-divider {
   height: 1px;
   margin: 0.5rem 0;

@@ -50,12 +50,6 @@ const ProfileDropdown = () => {
       </button>
       {isOpen && (
         <div className="dropdown-menu">
-          <a href="https://docs.proofofputt.com" target="_blank" rel="noopener noreferrer" className="dropdown-item" onClick={() => setIsOpen(false)}>
-            Documentation
-          </a>
-          <NavLink to="/settings" className="dropdown-item" onClick={() => setIsOpen(false)}>
-            Settings
-          </NavLink>
           <NavLink to={`/player/${playerData?.player_id}/stats`} className="dropdown-item" onClick={() => setIsOpen(false)}>
             My Stats
           </NavLink>
@@ -64,9 +58,9 @@ const ProfileDropdown = () => {
             Contacts
           </NavLink>
           {import.meta.env.DEV && (
-            <NavLink 
-              to="/coach" 
-              className="dropdown-item" 
+            <NavLink
+              to="/coach"
+              className="dropdown-item"
               onClick={(e) => {
                 handleProtectedLinkClick(e);
                 setIsOpen(false);
@@ -80,8 +74,22 @@ const ProfileDropdown = () => {
             Notifications {unreadCount > 0 && `(${unreadCount})`}
           </NavLink>
           <NavLink to="/comments" className="dropdown-item" onClick={() => setIsOpen(false)}>
-            Comments & Feedback
+            Comments
           </NavLink>
+          <a href="https://docs.proofofputt.com" target="_blank" rel="noopener noreferrer" className="dropdown-item" onClick={() => setIsOpen(false)}>
+            Documentation
+          </a>
+          <NavLink to="/settings" className="dropdown-item" onClick={() => setIsOpen(false)}>
+            Settings
+          </NavLink>
+          {playerData?.is_admin && (
+            <>
+              <div className="dropdown-divider"></div>
+              <NavLink to="/admin/feedback" className="dropdown-item admin-link" onClick={() => setIsOpen(false)}>
+                Admin Dashboard
+              </NavLink>
+            </>
+          )}
           <div className="dropdown-divider"></div>
           <button onClick={handleLogout} className="dropdown-item">Logout</button>
         </div>

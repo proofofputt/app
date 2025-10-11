@@ -63,7 +63,7 @@ const CommentsPage = () => {
   const [selectedThread, setSelectedThread] = useState(null);
   const [isLoadingThreads, setIsLoadingThreads] = useState(true);
   const [isLoadingThread, setIsLoadingThread] = useState(false);
-  const [showNewThreadForm, setShowNewThreadForm] = useState(false);
+  const [showNewThreadForm, setShowNewThreadForm] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
 
   // New thread form state
@@ -205,7 +205,7 @@ const CommentsPage = () => {
   return (
     <div className="comments-page">
       <div className="page-header">
-        <h1>Comments & Feedback</h1>
+        <h1>Comments</h1>
         <p className="welcome-message">
           Welcome to Proof of Putt! We recently launched and your feedback is invaluable to us.
           Share your thoughts, report issues, or suggest new features below.
@@ -233,7 +233,7 @@ const CommentsPage = () => {
               className="btn btn-primary"
               onClick={() => setShowNewThreadForm(!showNewThreadForm)}
             >
-              {showNewThreadForm ? 'Cancel' : 'New Feedback'}
+              {showNewThreadForm ? 'Hide Form' : 'New Comment Thread'}
             </button>
           </div>
 
