@@ -30,7 +30,7 @@ ALTER TABLE players ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMP W
 -- Insert default subscription bundles
 INSERT INTO subscription_bundles (name, quantity, discount_percentage) VALUES
 ('3-Pack', 3, 10.00),
-('5-Pack', 5, 20.00),
+('5-Pack', 5, 21.00),
 ('10-Pack', 10, 42.00),
 ('21-Pack', 21, 50.00)
 ON CONFLICT DO NOTHING;

@@ -30,3 +30,5 @@ sendgrid.env
 *.sln
 *.sw?
 .vercel
+.env*.local
+.env.vercel.*

@@ -55,7 +55,7 @@ async function testInvite() {
         expires_at,
         created_at
       )
-      VALUES ($1, $2, $3, 'pending', $4, 'direct', NOW() + INTERVAL '7 days', NOW())
+      VALUES ($1, $2, $3, 'pending', $4, 'username', NOW() + INTERVAL '7 days', NOW())
       RETURNING *
     `, [leagueId, inviterId, inviteeId, 'Test invitation']);
 
