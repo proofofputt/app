@@ -138,7 +138,9 @@ export default async function handler(req, res) {
         bundleQuantity: bundle.quantity.toString(),
         type: 'bundle',
         requestId
-      }
+      },
+      successUrl: `${process.env.FRONTEND_URL || 'https://app.proofofputt.com'}/settings?bundle_success=true&bundle_id=${bundleId}`,
+      cancelUrl: `${process.env.FRONTEND_URL || 'https://app.proofofputt.com'}/settings?canceled=true`
     };
 
     logPaymentEvent('bundle_purchase_initiated', {
