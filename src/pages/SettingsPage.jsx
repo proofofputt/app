@@ -632,28 +632,26 @@ const SettingsPage = () => {
           <h3>Referrals Dashboard</h3>
           {referralStats ? (
             <div className="referrals-stats">
-              <div className="stats-summary">
-                <div className="stat-card">
-                  <div className="stat-number">{referralStats.totalInvites || 0}</div>
-                  <div className="stat-label">Total Invites Sent</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-number">{referralStats.viewed || 0}</div>
-                  <div className="stat-label">Viewed Invites</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-number">{referralStats.rejected || 0}</div>
-                  <div className="stat-label">Rejected/Declined</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-number">{referralStats.accountsCreated || 0}</div>
-                  <div className="stat-label">Accounts Created</div>
-                </div>
-                <div className="stat-card stat-card-highlight">
-                  <div className="stat-number">{referralStats.upgraded || 0}</div>
-                  <div className="stat-label">Upgraded to Subscriber</div>
-                </div>
-              </div>
+              <table className="stats-summary-table">
+                <thead>
+                  <tr>
+                    <th>Total Invites Sent</th>
+                    <th>Viewed Invites</th>
+                    <th>Rejected/Declined</th>
+                    <th>Accounts Created</th>
+                    <th>Upgraded to Subscriber</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>{referralStats.totalInvites || 0}</td>
+                    <td>{referralStats.viewed || 0}</td>
+                    <td>{referralStats.rejected || 0}</td>
+                    <td>{referralStats.accountsCreated || 0}</td>
+                    <td>{referralStats.upgraded || 0}</td>
+                  </tr>
+                </tbody>
+              </table>
 
               {referralStats.invites && referralStats.invites.length > 0 ? (
                 <div className="referrals-list">
