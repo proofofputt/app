@@ -120,7 +120,7 @@ export default async function handler(req, res) {
 
     // Check if player is already a member
     const membershipResult = await client.query(`
-      SELECT membership_id FROM league_memberships 
+      SELECT league_id, player_id FROM league_memberships
       WHERE league_id = $1 AND player_id = $2
     `, [leagueId, inviteeId]);
 
@@ -156,7 +156,7 @@ export default async function handler(req, res) {
         expires_at,
         created_at
       )
-      VALUES ($1, $2, $3, 'pending', $4, 'direct', NOW() + INTERVAL '7 days', NOW())
+      VALUES ($1, $2, $3, 'pending', $4, 'username', NOW() + INTERVAL '7 days', NOW())
       RETURNING
         invitation_id,
         league_id,
@@ -193,10 +193,18 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('League invite error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      leagueId,
+      inviterId,
+      inviteeId
+    });
     return res.status(500).json({
       success: false,
       message: 'Failed to send league invitation',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: error.message,
+      details: error.detail || error.hint
     });
   } finally {
     if (client) client.release();
