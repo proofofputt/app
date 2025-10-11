@@ -524,7 +524,7 @@ const SettingsPage = () => {
                             <span className="bundle-discount">{bundle.discount}% OFF</span>
                           </div>
                           <div className="bundle-details">
-                            <p className="bundle-quantity">{bundle.name} - 1 Year Subscriptions</p>
+                            <p className="bundle-quantity">Year Subscriptions</p>
                             <p className="bundle-price">${bundle.price}</p>
                             <p className="bundle-unit-price">${(bundle.price / bundle.quantity).toFixed(2)}/each</p>
                           </div>
@@ -611,7 +611,7 @@ const SettingsPage = () => {
                             <span className="bundle-discount">{bundle.discount}% OFF</span>
                           </div>
                           <div className="bundle-details">
-                            <p className="bundle-quantity">{bundle.name} - 1 Year Subscriptions</p>
+                            <p className="bundle-quantity">Year Subscriptions</p>
                             <p className="bundle-price">${bundle.price}</p>
                             <p className="bundle-unit-price">${(bundle.price / bundle.quantity).toFixed(2)}/each</p>
                           </div>
