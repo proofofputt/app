@@ -1,27 +1,9 @@
 import { Pool } from 'pg';
-import jwt from 'jsonwebtoken';
 import { setCORSHeaders } from '../../../utils/cors.js';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
-
-function verifyToken(req) {
-  return new Promise((resolve) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return resolve(null);
-    }
-
-    const token = authHeader.split(' ')[1];
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-      if (err) {
-        return resolve(null);
-      }
-      resolve(decoded);
-    });
-  });
-}
 
 export default async function handler(req, res) {
   setCORSHeaders(req, res);
@@ -34,15 +16,26 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, message: 'Method not allowed' });
   }
 
-  // Verify authentication
-  const user = await verifyToken(req);
-  if (!user) {
+  // Get user from auth token (session token, not JWT)
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) {
     return res.status(401).json({ success: false, message: 'Authentication required' });
   }
 
-  const userId = user.playerId;
+  let userId;
 
   try {
+    // Verify token and get user from sessions table
+    const userResult = await pool.query(
+      'SELECT player_id FROM players WHERE player_id = (SELECT player_id FROM sessions WHERE token = $1 LIMIT 1)',
+      [token]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(401).json({ success: false, message: 'Invalid authentication token' });
+    }
+
+    userId = userResult.rows[0].player_id;
 
     // Get all gift codes owned by this user
     const giftCodesResult = await pool.query(

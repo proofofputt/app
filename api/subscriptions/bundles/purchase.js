@@ -1,7 +1,6 @@
 import { Pool } from 'pg';
 import { setCORSHeaders } from '../../../utils/cors.js';
 import crypto from 'crypto';
-import jwt from 'jsonwebtoken';
 import { createZapriteOrder, extractCheckoutUrl, extractOrderId, ZapriteApiError } from '../../../utils/zaprite-client.js';
 import { logApiRequest, logApiResponse, logPaymentEvent, error as logError, createRequestLogger } from '../../../utils/logger.js';
 
@@ -53,32 +52,19 @@ export default async function handler(req, res) {
   const token = authHeader.replace('Bearer ', '');
 
   try {
-    // Verify JWT token
-    let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (jwtError) {
-      logger.error('JWT verification failed', jwtError);
-      logApiResponse('/api/subscriptions/bundles/purchase', 'POST', 401, {
-        requestId,
-        reason: 'invalid_jwt'
-      });
-      return res.status(401).json({ success: false, message: 'Invalid authentication token' });
-    }
-
-    // Get user details from database
+    // Verify token and get user details from sessions table (not JWT)
     const userResult = await pool.query(
-      'SELECT player_id, email, display_name FROM players WHERE player_id = $1',
-      [decoded.playerId]
+      'SELECT player_id, email, display_name FROM players WHERE player_id = (SELECT player_id FROM sessions WHERE token = $1 LIMIT 1)',
+      [token]
     );
 
     if (userResult.rows.length === 0) {
-      logger.warn('User not found in database', { playerId: decoded.playerId });
+      logger.warn('User not found or invalid session token');
       logApiResponse('/api/subscriptions/bundles/purchase', 'POST', 401, {
         requestId,
-        reason: 'user_not_found'
+        reason: 'invalid_session'
       });
-      return res.status(401).json({ success: false, message: 'User not found' });
+      return res.status(401).json({ success: false, message: 'Invalid authentication token' });
     }
 
     const user = userResult.rows[0];
