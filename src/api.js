@@ -298,8 +298,16 @@ export const apiLeaveLeague = (leagueId) =>
   fetch(`${API_BASE_URL}/leagues/${leagueId}`, { method: 'DELETE', headers: getHeaders(), body: JSON.stringify({ action: 'leave' }) }).then(handleResponse);
 
 // Get league invitations for a player
-export const apiGetLeagueInvitations = (playerId) => 
+export const apiGetLeagueInvitations = (playerId) =>
   fetch(`${API_BASE_URL}/players/${playerId}/league-invitations`, { headers: getHeaders() }).then(handleResponse);
+
+// Get my league invitations (sent or received)
+export const apiGetMyLeagueInvitations = (type = 'received') =>
+  fetch(`${API_BASE_URL}/leagues/invitations/my-invitations?type=${type}`, { headers: getHeaders() }).then(handleResponse);
+
+// Cancel a league invitation
+export const apiCancelLeagueInvitation = (invitationId) =>
+  fetch(`${API_BASE_URL}/leagues/invitations/${invitationId}/cancel`, { method: 'POST', headers: getHeaders() }).then(handleResponse);
 
 // --- Fundraising ---
 export const apiListFundraisers = () => 
