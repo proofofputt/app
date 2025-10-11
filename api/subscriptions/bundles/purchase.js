@@ -52,19 +52,36 @@ export default async function handler(req, res) {
   const token = authHeader.replace('Bearer ', '');
 
   try {
-    // Verify token and get user details from sessions table (not JWT)
+    // Verify JWT token
+    const decoded = await new Promise((resolve, reject) => {
+      jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+        if (err) reject(err);
+        else resolve(decoded);
+      });
+    });
+
+    if (!decoded || !decoded.playerId) {
+      logger.warn('Invalid JWT token');
+      logApiResponse('/api/subscriptions/bundles/purchase', 'POST', 401, {
+        requestId,
+        reason: 'invalid_jwt'
+      });
+      return res.status(401).json({ success: false, message: 'Invalid authentication token' });
+    }
+
+    // Get user details from database
     const userResult = await pool.query(
-      'SELECT player_id, email, display_name FROM players WHERE player_id = (SELECT player_id FROM sessions WHERE token = $1 LIMIT 1)',
-      [token]
+      'SELECT player_id, email, display_name FROM players WHERE player_id = $1',
+      [decoded.playerId]
     );
 
     if (userResult.rows.length === 0) {
-      logger.warn('User not found or invalid session token');
+      logger.warn('User not found');
       logApiResponse('/api/subscriptions/bundles/purchase', 'POST', 401, {
         requestId,
-        reason: 'invalid_session'
+        reason: 'user_not_found'
       });
-      return res.status(401).json({ success: false, message: 'Invalid authentication token' });
+      return res.status(401).json({ success: false, message: 'User not found' });
     }
 
     const user = userResult.rows[0];
