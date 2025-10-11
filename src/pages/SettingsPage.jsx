@@ -501,6 +501,8 @@ const SettingsPage = () => {
                             />
                             <button type="submit" className="btn">Redeem</button>
                           </form>
+                        </div>
+                        <div className="referrals-button-wrapper">
                           <button onClick={toggleReferralsDashboard} className="btn btn-secondary">
                             {showReferralsDashboard ? 'Hide' : 'Referrals Dashboard'}
                           </button>

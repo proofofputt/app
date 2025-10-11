@@ -401,6 +401,7 @@
 .coupon-section {
   margin-top: 2rem;
   padding-top: 1.5rem;
+  padding-bottom: 0;
   border-top: 1px solid var(--border-color);
 }
 
@@ -409,6 +410,7 @@
   gap: 1rem;
   align-items: flex-end;
   flex-wrap: wrap;
+  margin-bottom: 1rem;
 }
 
 .coupon-section .coupon-form {
@@ -425,9 +427,15 @@
   color: var(--text-color);
 }
 
-.coupon-header .btn-secondary {
-  white-space: nowrap;
-  align-self: flex-end;
+.referrals-button-wrapper {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+.referrals-button-wrapper .btn {
+  margin: 0;
 }
 
 /* Status Badges */
