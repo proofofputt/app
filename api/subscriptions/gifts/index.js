@@ -1,27 +1,9 @@
 import { Pool } from 'pg';
-import jwt from 'jsonwebtoken';
 import { setCORSHeaders } from '../../../utils/cors.js';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
-
-function verifyToken(req) {
-  return new Promise((resolve) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return resolve(null);
-    }
-
-    const token = authHeader.split(' ')[1];
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-      if (err) {
-        return resolve(null);
-      }
-      resolve(decoded);
-    });
-  });
-}
 
 export default async function handler(req, res) {
   setCORSHeaders(req, res);
@@ -34,24 +16,26 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, message: 'Method not allowed' });
   }
 
-  // Verify authentication
-  const user = await verifyToken(req);
-  if (!user) {
+  // Get session token from auth header
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ success: false, message: 'Authentication required' });
   }
 
-  // Support different ID field names in JWT
-  const userId = user.playerId || user.userId || user.id;
-
-  if (!userId) {
-    return res.status(401).json({
-      success: false,
-      message: 'Invalid authentication token',
-      debug: process.env.NODE_ENV === 'development' ? 'No user ID found in token' : undefined
-    });
-  }
+  const token = authHeader.replace('Bearer ', '');
 
   try {
+    // Verify token and get user ID from sessions table
+    const sessionResult = await pool.query(
+      'SELECT player_id FROM sessions WHERE token = $1',
+      [token]
+    );
+
+    if (sessionResult.rows.length === 0) {
+      return res.status(401).json({ success: false, message: 'Invalid authentication token' });
+    }
+
+    const userId = sessionResult.rows[0].player_id;
 
     // Get all gift codes owned by this user
     const giftCodesResult = await pool.query(
