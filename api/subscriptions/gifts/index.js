@@ -40,7 +40,16 @@ export default async function handler(req, res) {
     return res.status(401).json({ success: false, message: 'Authentication required' });
   }
 
-  const userId = user.playerId;
+  // Support different ID field names in JWT
+  const userId = user.playerId || user.userId || user.id;
+
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid authentication token',
+      debug: process.env.NODE_ENV === 'development' ? 'No user ID found in token' : undefined
+    });
+  }
 
   try {
 

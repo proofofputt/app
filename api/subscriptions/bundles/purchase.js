@@ -50,30 +50,57 @@ export default async function handler(req, res) {
     return res.status(401).json({ success: false, message: 'Authentication required' });
   }
 
-  const token = authHeader.replace('Bearer ', '');
+  const token = authHeader.split(' ')[1];
 
+  let decoded;
   try {
     // Verify JWT token
-    const decoded = await new Promise((resolve, reject) => {
+    decoded = await new Promise((resolve, reject) => {
       jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-        if (err) reject(err);
-        else resolve(decoded);
+        if (err) {
+          logger.warn('JWT verification failed', { error: err.message, tokenPresent: !!token });
+          reject(err);
+        } else {
+          resolve(decoded);
+        }
       });
     });
+  } catch (jwtError) {
+    logger.error('JWT verification error', jwtError, {
+      requestId,
+      errorName: jwtError.name,
+      errorMessage: jwtError.message
+    });
+    logApiResponse('/api/subscriptions/bundles/purchase', 'POST', 401, {
+      requestId,
+      reason: 'jwt_verification_failed',
+      error: jwtError.message
+    });
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid authentication token',
+      error: process.env.NODE_ENV === 'development' ? jwtError.message : undefined
+    });
+  }
 
-    if (!decoded || !decoded.playerId) {
-      logger.warn('Invalid JWT token');
-      logApiResponse('/api/subscriptions/bundles/purchase', 'POST', 401, {
-        requestId,
-        reason: 'invalid_jwt'
-      });
-      return res.status(401).json({ success: false, message: 'Invalid authentication token' });
-    }
+  if (!decoded || (!decoded.playerId && !decoded.userId && !decoded.id)) {
+    logger.warn('JWT decoded but missing player ID', { decoded });
+    logApiResponse('/api/subscriptions/bundles/purchase', 'POST', 401, {
+      requestId,
+      reason: 'missing_player_id'
+    });
+    return res.status(401).json({ success: false, message: 'Invalid authentication token' });
+  }
+
+  // Support different ID field names
+  const playerId = decoded.playerId || decoded.userId || decoded.id;
+
+  try {
 
     // Get user details from database
     const userResult = await pool.query(
       'SELECT player_id, email, display_name FROM players WHERE player_id = $1',
-      [decoded.playerId]
+      [playerId]
     );
 
     if (userResult.rows.length === 0) {
