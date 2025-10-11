@@ -134,7 +134,7 @@ export default async function handler(req, res) {
     // Check for existing pending invitation
     const existingInviteResult = await client.query(`
       SELECT invitation_id FROM league_invitations
-      WHERE league_id = $1 AND invited_user_id = $2 AND status = 'pending'
+      WHERE league_id = $1 AND invited_player_id = $2 AND status = 'pending'
     `, [leagueId, inviteeId]);
 
     if (existingInviteResult.rows.length > 0) {
@@ -148,8 +148,8 @@ export default async function handler(req, res) {
     const invitationResult = await client.query(`
       INSERT INTO league_invitations (
         league_id,
-        inviting_user_id,
-        invited_user_id,
+        inviting_player_id,
+        invited_player_id,
         status,
         message,
         invitation_method,
@@ -160,8 +160,8 @@ export default async function handler(req, res) {
       RETURNING
         invitation_id,
         league_id,
-        inviting_user_id as inviting_player_id,
-        invited_user_id as invited_player_id,
+        inviting_player_id,
+        invited_player_id,
         status,
         created_at,
         expires_at
