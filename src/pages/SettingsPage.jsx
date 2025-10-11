@@ -747,6 +747,20 @@ const SettingsPage = () => {
               ) : (
                 <div className="empty-referrals">
                   <p>No referrals yet. Share your gift codes above to invite friends!</p>
+
+                  <div className="referral-link-section">
+                    <label>Your Referral Link</label>
+                    <div className="referral-link-row">
+                      <input
+                        type="text"
+                        value={generateReferralLink()}
+                        readOnly
+                        className="referral-link-input"
+                      />
+                      <button onClick={copyReferralLink} className="btn btn-primary btn-sm">Copy Link</button>
+                    </div>
+                    <p className="referral-hint">Share this link with friends to earn rewards when they sign up!</p>
+                  </div>
                 </div>
               )}
             </div>
