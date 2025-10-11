@@ -722,7 +722,7 @@
   gap: 1rem;
 }
 
-.stat-card {
+.referrals-stats .stat-card {
   background-color: #0B4D2C;
   border: 1px solid var(--border-color);
   border-radius: 8px;
@@ -731,24 +731,24 @@
   transition: all 0.3s ease;
 }
 
-.stat-card:hover {
+.referrals-stats .stat-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.stat-card-highlight {
+.referrals-stats .stat-card-highlight {
   border-color: var(--primary-color);
-  background: linear-gradient(135deg, var(--surface-color) 0%, rgba(var(--primary-color-rgb, 52, 211, 153), 0.05) 100%);
+  background: linear-gradient(135deg, #0B4D2C 0%, rgba(var(--primary-color-rgb, 52, 211, 153), 0.1) 100%);
 }
 
-.stat-number {
+.referrals-stats .stat-number {
   font-size: 2.5rem;
   font-weight: bold;
   color: var(--primary-color);
   margin-bottom: 0.5rem;
 }
 
-.stat-label {
+.referrals-stats .stat-label {
   font-size: 0.9rem;
   color: #ffffff;
   font-weight: 500;
