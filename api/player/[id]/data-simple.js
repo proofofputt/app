@@ -54,7 +54,7 @@ export default async function handler(req, res) {
     try {
       // Get player basic info
       const playerResult = await client.query(
-        'SELECT player_id, name, email, membership_tier, timezone, created_at FROM players WHERE player_id = $1',
+        'SELECT player_id, name, email, membership_tier, timezone, created_at, referral_code FROM players WHERE player_id = $1',
         [playerId]
       );
 
@@ -130,6 +130,7 @@ export default async function handler(req, res) {
         membership_tier: player.membership_tier,
         timezone: player.timezone,
         created_at: player.created_at,
+        referral_code: player.referral_code,
         
         // Simple stats object
         stats: {

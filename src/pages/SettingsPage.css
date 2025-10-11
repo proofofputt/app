@@ -405,26 +405,78 @@
   border-top: 1px solid var(--border-color);
 }
 
-.coupon-header {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-end;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
+.coupon-form-inline {
+  margin-bottom: 1.5rem;
 }
 
-.coupon-section .coupon-form {
+.coupon-form-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  flex: 1;
-  min-width: 250px;
 }
 
-.coupon-section label {
+.coupon-form-group label {
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-color);
+}
+
+.coupon-form-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.coupon-input {
+  flex: 1;
+  padding: 0.5rem;
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-color);
+  font-size: 0.9rem;
+}
+
+/* Referral Link Section */
+.referral-link-section {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: rgba(var(--primary-color-rgb, 52, 211, 153), 0.05);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.referral-link-section label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+}
+
+.referral-link-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.referral-link-input {
+  flex: 1;
+  padding: 0.5rem;
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-color);
+  font-size: 0.85rem;
+  font-family: monospace;
+}
+
+.referral-hint {
+  font-size: 0.8rem;
+  color: var(--text-color);
+  margin: 0;
+  opacity: 0.8;
 }
 
 .referrals-button-wrapper {

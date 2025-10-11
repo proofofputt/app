@@ -364,6 +364,28 @@ const SettingsPage = () => {
     }
   };
 
+  const generateReferralLink = () => {
+    if (!playerData?.referral_code) return '';
+    const baseUrl = window.location.origin;
+    const utmParams = new URLSearchParams({
+      ref: playerData.referral_code,
+      utm_source: 'referral',
+      utm_medium: 'direct_link',
+      utm_campaign: 'user_referral',
+      utm_content: `user_${playerData.player_id}`
+    });
+    return `${baseUrl}/register?${utmParams.toString()}`;
+  };
+
+  const copyReferralLink = () => {
+    const link = generateReferralLink();
+    navigator.clipboard.writeText(link).then(() => {
+      showNotification('Referral link copied to clipboard!');
+    }).catch(err => {
+      showNotification('Failed to copy link', true);
+    });
+  };
+
   if (!playerData) {
     return <div className="settings-page"><div className="settings-section">Loading...</div></div>;
   }
@@ -488,20 +510,37 @@ const SettingsPage = () => {
                       </div>
 
                       <div className="coupon-section">
-                        <div className="coupon-header">
-                          <form onSubmit={handleRedeemCoupon} className="coupon-form">
+                        <form onSubmit={handleRedeemCoupon} className="coupon-form-inline">
+                          <div className="coupon-form-group">
                             <label htmlFor="coupon-input">Have a Gift Code?</label>
+                            <div className="coupon-form-input-row">
+                              <input
+                                id="coupon-input"
+                                type="text"
+                                value={couponCode}
+                                onChange={(e) => setCouponCode(e.target.value)}
+                                placeholder="Enter Code"
+                                className="coupon-input"
+                              />
+                              <button type="submit" className="btn btn-sm">Redeem</button>
+                            </div>
+                          </div>
+                        </form>
+
+                        <div className="referral-link-section">
+                          <label>Your Referral Link</label>
+                          <div className="referral-link-row">
                             <input
-                              id="coupon-input"
                               type="text"
-                              value={couponCode}
-                              onChange={(e) => setCouponCode(e.target.value)}
-                              placeholder="Enter Code"
-                              className="coupon-input"
+                              value={generateReferralLink()}
+                              readOnly
+                              className="referral-link-input"
                             />
-                            <button type="submit" className="btn">Redeem</button>
-                          </form>
+                            <button onClick={copyReferralLink} className="btn btn-primary btn-sm">Copy Link</button>
+                          </div>
+                          <p className="referral-hint">Share this link with friends to earn rewards when they sign up!</p>
                         </div>
+
                         <div className="referrals-button-wrapper">
                           <button onClick={toggleReferralsDashboard} className="btn btn-secondary">
                             {showReferralsDashboard ? 'Hide' : 'Referrals Dashboard'}
@@ -583,18 +622,36 @@ const SettingsPage = () => {
                     </div>
 
                     <div className="coupon-section">
-                      <form onSubmit={handleRedeemCoupon} className="coupon-form">
-                        <label htmlFor="coupon-input">Have a Gift Code?</label>
-                        <input
-                          id="coupon-input"
-                          type="text"
-                          value={couponCode}
-                          onChange={(e) => setCouponCode(e.target.value)}
-                          placeholder="Enter Code"
-                          className="coupon-input"
-                        />
-                        <button type="submit" className="btn">Redeem</button>
+                      <form onSubmit={handleRedeemCoupon} className="coupon-form-inline">
+                        <div className="coupon-form-group">
+                          <label htmlFor="coupon-input-free">Have a Gift Code?</label>
+                          <div className="coupon-form-input-row">
+                            <input
+                              id="coupon-input-free"
+                              type="text"
+                              value={couponCode}
+                              onChange={(e) => setCouponCode(e.target.value)}
+                              placeholder="Enter Code"
+                              className="coupon-input"
+                            />
+                            <button type="submit" className="btn btn-sm">Redeem</button>
+                          </div>
+                        </div>
                       </form>
+
+                      <div className="referral-link-section">
+                        <label>Your Referral Link</label>
+                        <div className="referral-link-row">
+                          <input
+                            type="text"
+                            value={generateReferralLink()}
+                            readOnly
+                            className="referral-link-input"
+                          />
+                          <button onClick={copyReferralLink} className="btn btn-primary btn-sm">Copy Link</button>
+                        </div>
+                        <p className="referral-hint">Share this link with friends to earn rewards when they sign up!</p>
+                      </div>
                     </div>
                   </div>
 
