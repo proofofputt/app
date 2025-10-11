@@ -123,13 +123,14 @@ export default async function handler(req, res) {
     });
 
     // Create Zaprite order for bundle purchase
+    // Using same field patterns as working subscription endpoint
     const orderPayload = {
       customerId: user.player_id.toString(),
       customerEmail: user.email,
-      customerName: `Player ${user.player_id}`,
+      customerName: user.display_name || `Player ${user.player_id}`,
       amount: bundle.price,
       currency: 'USD',
-      description: `Proof of Putt ${bundle.quantity}-Pack Bundle - ${bundle.quantity} Year Subscriptions`,
+      description: `Proof of Putt Bundle (${bundle.quantity} subscriptions)`,
       metadata: {
         userId: user.player_id.toString(),
         userEmail: user.email,
