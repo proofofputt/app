@@ -1,4 +1,5 @@
 import { Pool } from 'pg';
+import jwt from 'jsonwebtoken';
 import { setCORSHeaders } from '../../../utils/cors.js';
 import crypto from 'crypto';
 import { createZapriteOrder, extractCheckoutUrl, extractOrderId, ZapriteApiError } from '../../../utils/zaprite-client.js';
