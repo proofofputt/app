@@ -143,6 +143,14 @@ export default async function handler(req, res) {
       cancelUrl: `${process.env.FRONTEND_URL || 'https://app.proofofputt.com'}/settings?canceled=true`
     };
 
+    // Log the exact payload being sent to Zaprite
+    logger.info('Zaprite order payload', {
+      payload: orderPayload,
+      payloadFields: Object.keys(orderPayload),
+      amountType: typeof orderPayload.amount,
+      hasOrgId: 'organizationId will be added by createZapriteOrder'
+    });
+
     logPaymentEvent('bundle_purchase_initiated', {
       userId: user.player_id,
       bundleId,
@@ -158,19 +166,22 @@ export default async function handler(req, res) {
       if (zapriteError instanceof ZapriteApiError) {
         logger.error('Zaprite API error', zapriteError, {
           statusCode: zapriteError.statusCode,
-          response: zapriteError.response
+          response: zapriteError.response,
+          responseDetails: JSON.stringify(zapriteError.response, null, 2)
         });
 
         logApiResponse('/api/subscriptions/bundles/purchase', 'POST', 500, {
           requestId,
           userId: user.player_id,
           reason: 'zaprite_api_error',
-          zapriteStatus: zapriteError.statusCode
+          zapriteStatus: zapriteError.statusCode,
+          zapriteResponse: zapriteError.response
         });
 
         return res.status(500).json({
           success: false,
-          message: `Failed to create payment order: ${zapriteError.message}`
+          message: `Failed to create payment order: ${zapriteError.message}`,
+          details: zapriteError.response
         });
       }
       throw zapriteError; // Re-throw if not a Zaprite API error
