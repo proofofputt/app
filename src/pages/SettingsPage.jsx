@@ -482,7 +482,7 @@ const SettingsPage = () => {
                           ))
                         ) : (
                           <div className="no-gift-codes">
-                            <p>You don't have any gift codes yet. Annual subscribers receive 1 free year gift code to share!</p>
+                            <p>You don't have any gift codes yet.</p>
                           </div>
                         )}
                       </div>
@@ -574,8 +574,7 @@ const SettingsPage = () => {
                         <div className="plan-savings">Save $4.20 vs monthly!</div>
                         <ul className="plan-features">
                           <li>✓ Everything in Monthly</li>
-                          <li>🎁 <strong>1 Free Year Gift Code</strong></li>
-                          <li>✓ Share with a friend</li>
+                          <li>✓ Best value for long-term use</li>
                         </ul>
                         <button onClick={() => handleSubscribe('annual')} className="btn btn-primary btn-featured">Subscribe Annually</button>
                       </div>
