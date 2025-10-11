@@ -139,7 +139,7 @@ export default async function handler(req, res) {
         type: 'bundle',
         requestId
       },
-      successUrl: `${process.env.FRONTEND_URL || 'https://app.proofofputt.com'}/settings?bundle_success=true&bundle_id=${bundleId}`,
+      successUrl: `${process.env.FRONTEND_URL || 'https://app.proofofputt.com'}/settings?bundle_success=true&bundle_id=${bundleId}&order_id={ORDER_ID}`,
       cancelUrl: `${process.env.FRONTEND_URL || 'https://app.proofofputt.com'}/settings?canceled=true`
     };
 
