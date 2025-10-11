@@ -65,7 +65,7 @@ const SettingsPage = () => {
 
   const fetchGiftCodes = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       const response = await fetch('/api/subscriptions/gifts', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -183,7 +183,7 @@ const SettingsPage = () => {
 
   const handleSubscribe = async (interval) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       const response = await fetch('/api/subscriptions/create-zaprite-order', {
         method: 'POST',
         headers: {
@@ -209,7 +209,7 @@ const SettingsPage = () => {
 
   const handlePurchase = async (bundleId) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       console.log('Initiating bundle purchase:', bundleId);
 
       const response = await fetch('/api/subscriptions/bundles/purchase', {
@@ -304,7 +304,7 @@ const SettingsPage = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       const response = await fetch('/api/subscriptions/gifts/send', {
         method: 'POST',
         headers: {
@@ -340,7 +340,7 @@ const SettingsPage = () => {
 
   const fetchReferralStats = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       const response = await fetch('/api/referrals/stats', {
         headers: {
           'Authorization': `Bearer ${token}`
