@@ -46,7 +46,6 @@ This document provides a complete implementation plan to resolve all known limit
      try {
        await sendLeagueInviteEmail(
          invitee.email,
-         invitee.name || 'Player',
          inviterName,
          {
            name: league.name,

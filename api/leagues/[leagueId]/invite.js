@@ -182,7 +182,6 @@ export default async function handler(req, res) {
       try {
         await sendLeagueInviteEmail(
           invitee.email,
-          invitee.name || 'Player',
           inviterName,
           {
             name: league.name,
