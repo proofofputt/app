@@ -73,7 +73,9 @@ const ContactsPage = () => {
           </div>
         )}
 
-        <FriendsSection 
+        <YourFriendsSection />
+
+        <FindFriendsSection
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
           handleSearch={handleSearch}
@@ -83,9 +85,40 @@ const ContactsPage = () => {
   );
 };
 
-const FriendsSection = ({ searchTerm, setSearchTerm, handleSearch }) => {
+const YourFriendsSection = () => {
   return (
     <div className="friends-section">
+      <div className="friends-lists">
+        <div className="friends-list-section">
+          <h3>Your Friends</h3>
+          <div className="friends-list">
+            <div className="empty-state">
+              <div className="empty-icon">👥</div>
+              <p>No friends added yet.</p>
+              <p>Use the search below to find and connect with other players!</p>
+            </div>
+          </div>
+
+          <ImportContactsButton />
+        </div>
+
+        <div className="friends-list-section">
+          <h3>Friend Requests</h3>
+          <div className="requests-list">
+            <div className="empty-state">
+              <div className="empty-icon">📮</div>
+              <p>No pending friend requests.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const FindFriendsSection = ({ searchTerm, setSearchTerm, handleSearch }) => {
+  return (
+    <div className="find-friends-section">
       <div className="search-container">
         <div className="search-header">
           <h2>Find Friends</h2>
@@ -94,7 +127,7 @@ const FriendsSection = ({ searchTerm, setSearchTerm, handleSearch }) => {
             <span>Search by email, phone, or username. Only usernames are shown publicly.</span>
           </div>
         </div>
-        
+
         <div className="search-box">
           <input
             type="text"
@@ -107,31 +140,6 @@ const FriendsSection = ({ searchTerm, setSearchTerm, handleSearch }) => {
           <button onClick={handleSearch} className="search-button">
             Search
           </button>
-        </div>
-      </div>
-
-      <div className="friends-lists">
-        <div className="friends-list-section">
-          <h3>Your Friends</h3>
-          <div className="friends-list">
-            <div className="empty-state">
-              <div className="empty-icon">👥</div>
-              <p>No friends added yet.</p>
-              <p>Use the search above to find and connect with other players!</p>
-            </div>
-          </div>
-          
-          <ImportContactsButton />
-        </div>
-
-        <div className="friends-list-section">
-          <h3>Friend Requests</h3>
-          <div className="requests-list">
-            <div className="empty-state">
-              <div className="empty-icon">📮</div>
-              <p>No pending friend requests.</p>
-            </div>
-          </div>
         </div>
       </div>
     </div>

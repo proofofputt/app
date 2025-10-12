@@ -337,7 +337,7 @@ main {
   background-color: var(--surface-color);
   border-radius: 12px;
   border: 1px solid var(--border-color);
-  min-height: 300px; /* Minimum height for usability */
+  min-height: 600px; /* Doubled height to display more rows */
   position: relative;
 }
 
@@ -704,7 +704,7 @@ button.btn-danger:hover, .btn-danger:hover {
 }
 
 .leaderboard-card {
-  background-color: var(--surface-color);
+  background-color: var(--background-color);
   border-radius: 12px;
   padding: 1rem 1.5rem;
   box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);

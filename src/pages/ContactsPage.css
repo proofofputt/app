@@ -67,6 +67,14 @@
   margin: 0 auto;
 }
 
+/* Find Friends Section */
+.find-friends-section {
+  max-width: 800px;
+  margin: 3rem auto 0;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border-color);
+}
+
 .search-container {
   margin-bottom: 2rem;
 }
