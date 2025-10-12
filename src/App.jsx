@@ -18,6 +18,7 @@ import NotificationsPage from './pages/NotificationsPage';
 import ContactsPage from './pages/ContactsPage';
 import CommentsPage from './pages/CommentsPage';
 import AdminFeedbackPage from './pages/AdminFeedbackPage';
+import AdminSubscriptionsPage from './pages/AdminSubscriptionsPage';
 import MyGifts from './components/MyGifts';
 import Header from './components/Header';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -147,6 +148,7 @@ const AppContent = () => {
           <Route path="/contacts" element={<ProtectedRoute><ContactsPage /></ProtectedRoute>} />
           <Route path="/gifts" element={<ProtectedRoute><MyGifts /></ProtectedRoute>} />
           <Route path="/admin/feedback" element={<ProtectedRoute><AdminFeedbackPage /></ProtectedRoute>} />
+          <Route path="/admin/subscriptions" element={<ProtectedRoute><AdminSubscriptionsPage /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>

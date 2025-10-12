@@ -164,6 +164,41 @@ async function storeWebhookEvent(eventData, signature) {
 }
 
 /**
+ * Check if order is a bundle purchase by looking up payment link
+ */
+async function checkForBundlePurchase(eventData) {
+  try {
+    // Try to extract payment link ID from various possible locations in event data
+    const paymentLinkId =
+      eventData.payment_link?.id ||
+      eventData.payment_link_id ||
+      eventData.checkout?.payment_link_id ||
+      eventData.metadata?.payment_link_id;
+
+    if (!paymentLinkId) {
+      return null;
+    }
+
+    // Look up bundle configuration from mapping table
+    const result = await pool.query(
+      `SELECT bundle_id, bundle_name, bundle_quantity, bundle_price
+       FROM zaprite_payment_link_bundles
+       WHERE payment_link_id = $1 AND is_active = TRUE`,
+      [paymentLinkId]
+    );
+
+    if (result.rows.length > 0) {
+      return result.rows[0];
+    }
+
+    return null;
+  } catch (error) {
+    logError('Error checking for bundle purchase', error);
+    return null;
+  }
+}
+
+/**
  * Handle order.paid event - Activate subscription
  */
 async function handleOrderPaid(playerId, eventData) {
@@ -173,76 +208,97 @@ async function handleOrderPaid(playerId, eventData) {
   const productId = eventData.product?.id || eventData.items?.[0]?.product_id;
   const billingCycle = eventData.billing_cycle || eventData.subscription?.billing_cycle || eventData.metadata?.interval;
 
+  // Check if this is a bundle purchase via payment link
+  const bundleInfo = await checkForBundlePurchase(eventData);
+
   const tier = mapZapriteTierToApp(productId);
   const periodEnd = calculatePeriodEnd(billingCycle, eventData.metadata);
 
-  const query = `
-    UPDATE players
-    SET
-      zaprite_customer_id = $1,
-      zaprite_subscription_id = $2,
-      zaprite_payment_method = $3,
-      subscription_status = 'active',
-      subscription_tier = $4,
-      subscription_billing_cycle = $5,
-      subscription_started_at = COALESCE(subscription_started_at, NOW()),
-      subscription_current_period_start = NOW(),
-      subscription_current_period_end = $6,
-      subscription_cancel_at_period_end = FALSE,
-      is_subscribed = TRUE,
-      updated_at = NOW()
-    WHERE player_id = $7
-  `;
+  // Only update subscription status if NOT a bundle purchase
+  // Bundles don't activate subscriptions, they just generate gift codes
+  if (!bundleInfo) {
+    const query = `
+      UPDATE players
+      SET
+        zaprite_customer_id = $1,
+        zaprite_subscription_id = $2,
+        zaprite_payment_method = $3,
+        subscription_status = 'active',
+        subscription_tier = $4,
+        subscription_billing_cycle = $5,
+        subscription_started_at = COALESCE(subscription_started_at, NOW()),
+        subscription_current_period_start = NOW(),
+        subscription_current_period_end = $6,
+        subscription_cancel_at_period_end = FALSE,
+        is_subscribed = TRUE,
+        updated_at = NOW()
+      WHERE player_id = $7
+    `;
 
-  await pool.query(query, [
-    customerId,
-    subscriptionId,
-    paymentMethod,
-    tier,
-    billingCycle || 'monthly',
-    periodEnd,
-    playerId
-  ]);
+    await pool.query(query, [
+      customerId,
+      subscriptionId,
+      paymentMethod,
+      tier,
+      billingCycle || 'monthly',
+      periodEnd,
+      playerId
+    ]);
 
-  logSubscriptionEvent('subscription_activated', {
-    playerId,
-    tier,
-    billingCycle,
-    periodEnd,
-    subscriptionId
-  });
+    logSubscriptionEvent('subscription_activated', {
+      playerId,
+      tier,
+      billingCycle,
+      periodEnd,
+      subscriptionId
+    });
+  }
 
-  // If this was an annual subscription or bundle, generate gift codes
-  const metadata = eventData.metadata || {};
-  if (metadata.type === 'bundle' && metadata.bundleQuantity) {
-    const quantity = parseInt(metadata.bundleQuantity, 10);
-    await generateGiftCodes(playerId, quantity);
-  } else if (metadata.includesGift === 'true' || billingCycle === 'annual') {
-    await generateGiftCodes(playerId, 1);
+  // Generate gift codes based on purchase type
+  if (bundleInfo) {
+    // Bundle purchase - generate gift codes based on bundle quantity
+    logSubscriptionEvent('bundle_purchased', {
+      playerId,
+      bundleId: bundleInfo.bundle_id,
+      bundleName: bundleInfo.bundle_name,
+      quantity: bundleInfo.bundle_quantity,
+      price: bundleInfo.bundle_price
+    });
+    await generateGiftCodes(playerId, bundleInfo.bundle_quantity, bundleInfo.bundle_id);
+  } else {
+    // Check if regular subscription includes gift codes
+    const metadata = eventData.metadata || {};
+    if (metadata.type === 'bundle' && metadata.bundleQuantity) {
+      const quantity = parseInt(metadata.bundleQuantity, 10);
+      await generateGiftCodes(playerId, quantity);
+    } else if (metadata.includesGift === 'true' || billingCycle === 'annual') {
+      await generateGiftCodes(playerId, 1);
+    }
   }
 }
 
 /**
  * Generate gift codes for user
  */
-async function generateGiftCodes(playerId, quantity) {
+async function generateGiftCodes(playerId, quantity, bundleId = null) {
   for (let i = 0; i < quantity; i++) {
     const giftCode = `GIFT-${crypto.randomBytes(8).toString('hex').toUpperCase()}`;
 
     await pool.query(
       `INSERT INTO user_gift_subscriptions (
-        owner_user_id,
+        owner_player_id,
         gift_code,
         bundle_id,
         is_redeemed,
         created_at
-      ) VALUES ($1, $2, NULL, FALSE, NOW())`,
-      [playerId, giftCode]
+      ) VALUES ($1, $2, $3, FALSE, NOW())`,
+      [playerId, giftCode, bundleId]
     );
 
     logSubscriptionEvent('gift_code_generated', {
       playerId,
-      giftCode
+      giftCode,
+      bundleId
     });
   }
 }
