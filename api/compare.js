@@ -70,16 +70,16 @@ export default async function handler(req, res) {
 
     // Get head-to-head duel results
     const duelsResult = await client.query(`
-      SELECT 
-        creator_id,
-        invited_player_id,
-        creator_score,
-        invited_player_score,
+      SELECT
+        duel_creator_id,
+        duel_invited_player_id,
+        duel_creator_score,
+        duel_invited_player_score,
         status,
         winner_id
-      FROM duels 
-      WHERE (creator_id = $1 AND invited_player_id = $2)
-         OR (creator_id = $2 AND invited_player_id = $1)
+      FROM duels
+      WHERE (duel_creator_id = $1 AND duel_invited_player_id = $2)
+         OR (duel_creator_id = $2 AND duel_invited_player_id = $1)
       AND status = 'completed'
     `, [parseInt(player1_id), parseInt(player2_id)]);
 
@@ -112,20 +112,20 @@ export default async function handler(req, res) {
 
     // Get recent duels for history table
     const duelHistoryResult = await client.query(`
-      SELECT 
+      SELECT
         duel_id,
-        creator_id,
-        invited_player_id,
-        creator_score,
-        invited_player_score,
+        duel_creator_id,
+        duel_invited_player_id,
+        duel_creator_score,
+        duel_invited_player_score,
         status,
         winner_id,
         created_at,
         completed_at,
         settings
-      FROM duels 
-      WHERE (creator_id = $1 AND invited_player_id = $2)
-         OR (creator_id = $2 AND invited_player_id = $1)
+      FROM duels
+      WHERE (duel_creator_id = $1 AND duel_invited_player_id = $2)
+         OR (duel_creator_id = $2 AND duel_invited_player_id = $1)
       ORDER BY created_at DESC
       LIMIT 10
     `, [parseInt(player1_id), parseInt(player2_id)]);
@@ -141,10 +141,10 @@ export default async function handler(req, res) {
       },
       duel_history: duelHistoryResult.rows.map(duel => ({
         duel_id: duel.duel_id,
-        creator_id: duel.creator_id,
-        invited_player_id: duel.invited_player_id,
-        creator_score: duel.creator_score,
-        invited_player_score: duel.invited_player_score,
+        creator_id: duel.duel_creator_id,
+        invited_player_id: duel.duel_invited_player_id,
+        creator_score: duel.duel_creator_score,
+        invited_player_score: duel.duel_invited_player_score,
         status: duel.status,
         winner_id: duel.winner_id,
         created_at: duel.created_at,
