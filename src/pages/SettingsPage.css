@@ -193,6 +193,15 @@
   border: 1px solid var(--border-color);
 }
 
+/* Full Width Upgrade Column for Free Users */
+.upgrade-column-full-width {
+  background-color: var(--background-color);
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  grid-column: 1 / -1;
+}
+
 .subscription-status > p {
   margin-bottom: 0.5rem;
 }

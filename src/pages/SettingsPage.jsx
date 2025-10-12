@@ -609,8 +609,8 @@ const SettingsPage = () => {
             default:
               return (
                 <div className="subscription-layout">
-                  {/* Left Column: Upgrade Options */}
-                  <div className="upgrade-column">
+                  {/* Full Width: Upgrade Options Only */}
+                  <div className="upgrade-column-full-width">
                     <p className="tier-badge"><strong>Status:</strong> <span className="status-badge status-free">Free Tier</span></p>
 
                     <h4>Upgrade Your Account</h4>
@@ -677,35 +677,10 @@ const SettingsPage = () => {
                             readOnly
                             className="referral-link-input"
                           />
-                          <button onClick={copyReferralLink} className="btn btn-primary btn-sm">Copy Link</button>
+                          <button onClick={copyReferralLink} className="btn btn-sm">Copy Link</button>
                         </div>
                         <p className="referral-hint">Share this link with friends to earn rewards when they sign up!</p>
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Right Column: Bundle Options */}
-                  <div className="bundles-column">
-                    <h4>Bulk Purchase Options</h4>
-                    <p className="bundles-subtitle">Perfect for golf clubs, instructors, or groups</p>
-
-                    <div className="bundles-grid">
-                      {bundles.map((bundle) => (
-                        <div key={bundle.id} className="bundle-card">
-                          <div className="bundle-header">
-                            <h5>{bundle.name}</h5>
-                            <span className="bundle-discount">{bundle.discount}% OFF</span>
-                          </div>
-                          <div className="bundle-details">
-                            <p className="bundle-quantity">Year Subscriptions</p>
-                            <p className="bundle-price">${bundle.price.toFixed(2)}</p>
-                            <p className="bundle-unit-price">${(bundle.price / bundle.quantity).toFixed(2)}/each</p>
-                          </div>
-                          <button onClick={() => handlePurchase(bundle.id)} className="btn btn-primary">
-                            Purchase Bundle
-                          </button>
-                        </div>
-                      ))}
                     </div>
                   </div>
                 </div>
