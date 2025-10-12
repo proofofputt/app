@@ -570,7 +570,7 @@ const SettingsPage = () => {
                               readOnly
                               className="referral-link-input"
                             />
-                            <button onClick={copyReferralLink} className="btn btn-primary btn-sm">Copy Link</button>
+                            <button onClick={copyReferralLink} className="btn btn-sm">Copy Link</button>
                           </div>
                           <p className="referral-hint">Share this link with friends to earn rewards when they sign up!</p>
                         </div>

@@ -451,7 +451,7 @@
 .referral-link-section {
   margin-bottom: 1.5rem;
   padding: 1rem;
-  background-color: rgba(var(--primary-color-rgb, 52, 211, 153), 0.05);
+  background-color: var(--surface-color);
   border-radius: 8px;
   border: 1px solid var(--border-color);
 }
