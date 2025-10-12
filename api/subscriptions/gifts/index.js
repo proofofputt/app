@@ -61,9 +61,20 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Error fetching gift codes:', error);
+
+    // If table doesn't exist yet, return empty array
+    if (error.code === '42P01') {
+      console.log('[Gifts] Table does not exist yet, returning empty array');
+      return res.status(200).json({
+        success: true,
+        giftCodes: []
+      });
+    }
+
     return res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 }
