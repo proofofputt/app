@@ -67,7 +67,7 @@ export default async function handler(req, res) {
         l.name,
         l.created_by,
         l.status,
-        l.settings,
+        l.rules,
         lm.member_role
       FROM leagues l
       LEFT JOIN league_memberships lm ON l.league_id = lm.league_id AND lm.player_id = $2
@@ -75,19 +75,34 @@ export default async function handler(req, res) {
     `, [leagueId, inviterId]);
 
     if (leagueResult.rows.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'League not found' 
+      return res.status(404).json({
+        success: false,
+        message: 'League not found'
       });
     }
 
     const league = leagueResult.rows[0];
 
+    // Parse rules if needed
+    let leagueRules = {};
+    if (league.rules) {
+      if (typeof league.rules === 'string') {
+        try {
+          leagueRules = JSON.parse(league.rules);
+        } catch (parseError) {
+          console.log(`[invite] Warning: Could not parse league rules for league ${leagueId}: ${parseError.message}`);
+          leagueRules = {};
+        }
+      } else {
+        leagueRules = league.rules;
+      }
+    }
+
     // Check if user has permission to invite (creator, admin, or if league allows member invites)
     const canInvite = (
       league.created_by === parseInt(inviterId) ||
       league.member_role === 'admin' ||
-      (league.member_role === 'member' && league.settings?.allow_player_invites)
+      (league.member_role === 'member' && leagueRules.allow_player_invites)
     );
 
     if (!canInvite) {
