@@ -228,30 +228,25 @@ const SettingsPage = () => {
 
   const handlePurchase = async (bundleId) => {
     try {
-      const token = localStorage.getItem('authToken');
-      console.log('Initiating bundle purchase:', bundleId);
+      // Use pre-configured Zaprite payment links for each bundle
+      const paymentLinks = {
+        1: 'https://pay.zaprite.com/pl_5GiV3AIMVc',  // 3-Pack - $56.70
+        2: 'https://pay.zaprite.com/pl_sLPDlcXmej',  // 5-Pack - $84
+        3: 'https://pay.zaprite.com/pl_qwz5BPb1Th',  // 10-Pack - $121
+        4: 'https://pay.zaprite.com/pl_c5uK0HOPlu'   // 21-Pack - $221
+      };
 
-      const response = await fetch('/api/subscriptions/bundles/purchase', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ bundleId }),
-      });
+      const paymentLink = paymentLinks[bundleId];
 
-      console.log('Response status:', response.status);
-      const data = await response.json();
-      console.log('Response data:', data);
-
-      if (data.success && data.checkoutUrl) {
-        console.log('Redirecting to:', data.checkoutUrl);
-        // Redirect to Zaprite checkout
-        window.location.href = data.checkoutUrl;
-      } else {
-        console.error('No checkout URL received:', data);
-        showNotification(`Error: ${data.message || 'Failed to create checkout'}`, true);
+      if (!paymentLink) {
+        showNotification('Invalid bundle selection', true);
+        return;
       }
+
+      console.log('Redirecting to Zaprite payment link for bundle:', bundleId);
+      // Redirect directly to Zaprite hosted payment page
+      window.location.href = paymentLink;
+
     } catch (error) {
       console.error('Purchase error:', error);
       showNotification(`An error occurred during purchase: ${error.message}`, true);
