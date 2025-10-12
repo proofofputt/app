@@ -396,14 +396,7 @@ const SettingsPage = () => {
     }
 
     const baseUrl = window.location.origin;
-    const utmParams = new URLSearchParams({
-      ref: playerData.referral_code,
-      utm_source: 'referral',
-      utm_medium: 'direct_link',
-      utm_campaign: 'user_referral',
-      utm_content: `user_${playerData.player_id}`
-    });
-    const link = `${baseUrl}/register?${utmParams.toString()}`;
+    const link = `${baseUrl}/register?ref=${playerData.referral_code}`;
     console.log('[Referral] Generated link:', link);
     return link;
   };

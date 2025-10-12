@@ -62,10 +62,16 @@
 }
 
 .subscription-actions {
-  margin-top: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  margin-top: 0;
+  display: inline-block;
+  margin-left: 1rem;
+  vertical-align: middle;
+}
+
+.subscription-actions .btn {
+  width: auto;
+  padding: 0.5rem 1rem;
+  margin: 0;
 }
 
 .coupon-form {
@@ -185,6 +191,10 @@
   padding: 1.5rem;
   border-radius: 8px;
   border: 1px solid var(--border-color);
+}
+
+.subscription-status > p {
+  margin-bottom: 0.5rem;
 }
 
 .subscription-status-column h4,
@@ -513,18 +523,28 @@
   margin-top: 2rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--border-color);
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 1.5rem;
+  align-items: start;
 }
 
 .gift-invites-section h4 {
   margin-top: 0;
   margin-bottom: 0.5rem;
   color: var(--primary-color);
+  grid-column: 1;
+  grid-row: 1;
 }
 
 .gift-invites-intro {
   color: var(--text-color);
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  margin-bottom: 0;
+  margin-top: 0;
+  grid-column: 1;
+  grid-row: 2;
+  line-height: 1.4;
 }
 
 .gift-invite-row {
@@ -533,6 +553,12 @@
   border-radius: 8px;
   padding: 1rem;
   margin-bottom: 1rem;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+
+.gift-invite-row:not(:first-of-type) {
+  grid-row: auto;
 }
 
 .gift-code-label {
@@ -593,6 +619,8 @@
   border-radius: 8px;
   padding: 1.5rem;
   text-align: center;
+  grid-column: 2;
+  grid-row: 1 / span 2;
 }
 
 .no-gift-codes p {
@@ -766,6 +794,28 @@
 
   .btn-large {
     width: 100%;
+  }
+
+  .subscription-actions {
+    display: block;
+    margin-left: 0;
+    margin-top: 1rem;
+  }
+
+  .gift-invites-section {
+    grid-template-columns: 1fr;
+  }
+
+  .gift-invites-section h4,
+  .gift-invites-intro,
+  .gift-invite-row,
+  .no-gift-codes {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .gift-invites-intro {
+    margin-bottom: 1rem;
   }
 }
 
