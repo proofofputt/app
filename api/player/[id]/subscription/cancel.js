@@ -93,7 +93,6 @@ export default async function handler(req, res) {
        SET
          membership_tier = 'free',
          subscription_status = 'canceled',
-         subscription_tier = NULL,
          subscription_billing_cycle = NULL,
          subscription_cancel_at_period_end = TRUE,
          is_subscribed = FALSE,
