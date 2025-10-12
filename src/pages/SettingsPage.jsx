@@ -63,6 +63,25 @@ const SettingsPage = () => {
     }
   }, [playerData]);
 
+  // Force refresh player data on settings page load to get latest referral_code
+  useEffect(() => {
+    const forceRefresh = async () => {
+      console.log('[Settings] Checking if player data needs refresh...');
+      if (playerData && !playerData.referral_code) {
+        console.log('[Settings] No referral_code found, forcing data refresh...');
+        try {
+          await refreshData();
+          console.log('[Settings] Player data refreshed');
+        } catch (error) {
+          console.error('[Settings] Failed to refresh player data:', error);
+        }
+      } else if (playerData?.referral_code) {
+        console.log('[Settings] Referral code present:', playerData.referral_code);
+      }
+    };
+    forceRefresh();
+  }, []); // Run once on mount
+
   const fetchGiftCodes = async () => {
     try {
       const token = localStorage.getItem('authToken');
@@ -365,7 +384,17 @@ const SettingsPage = () => {
   };
 
   const generateReferralLink = () => {
-    if (!playerData?.referral_code) return '';
+    console.log('[Referral] Generating link with playerData:', {
+      hasReferralCode: !!playerData?.referral_code,
+      referralCode: playerData?.referral_code,
+      playerId: playerData?.player_id
+    });
+
+    if (!playerData?.referral_code) {
+      console.warn('[Referral] No referral code found in playerData');
+      return '';
+    }
+
     const baseUrl = window.location.origin;
     const utmParams = new URLSearchParams({
       ref: playerData.referral_code,
@@ -374,15 +403,27 @@ const SettingsPage = () => {
       utm_campaign: 'user_referral',
       utm_content: `user_${playerData.player_id}`
     });
-    return `${baseUrl}/register?${utmParams.toString()}`;
+    const link = `${baseUrl}/register?${utmParams.toString()}`;
+    console.log('[Referral] Generated link:', link);
+    return link;
   };
 
   const copyReferralLink = () => {
     const link = generateReferralLink();
+
+    if (!link) {
+      console.error('[Referral] Cannot copy - no link generated');
+      showNotification('Unable to generate referral link. Please refresh the page.', true);
+      return;
+    }
+
+    console.log('[Referral] Attempting to copy link to clipboard');
     navigator.clipboard.writeText(link).then(() => {
+      console.log('[Referral] Link copied successfully');
       showNotification('Referral link copied to clipboard!');
     }).catch(err => {
-      showNotification('Failed to copy link', true);
+      console.error('[Referral] Clipboard copy failed:', err);
+      showNotification('Failed to copy link. Please try again.', true);
     });
   };
 
