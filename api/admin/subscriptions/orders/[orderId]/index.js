@@ -100,14 +100,14 @@ export default async function handler(req, res) {
         gift_code,
         bundle_id,
         is_redeemed,
-        redeemed_by_player_id,
+        redeemed_by_user_id,
         redeemed_at,
         created_at,
         custom_label,
         granted_by_admin_id,
         grant_reason
       FROM user_gift_subscriptions
-      WHERE owner_player_id = $1
+      WHERE owner_user_id = $1
         AND created_at >= $2
         AND created_at <= $2 + INTERVAL '10 minutes'
       ORDER BY created_at ASC
@@ -120,8 +120,8 @@ export default async function handler(req, res) {
 
     // Get redeemed player info for redeemed gift codes
     const redeemedPlayerIds = giftCodesResult.rows
-      .filter(gc => gc.redeemed_by_player_id)
-      .map(gc => gc.redeemed_by_player_id);
+      .filter(gc => gc.redeemed_by_user_id)
+      .map(gc => gc.redeemed_by_user_id);
 
     let redeemedPlayers = {};
     if (redeemedPlayerIds.length > 0) {
@@ -142,10 +142,10 @@ export default async function handler(req, res) {
       code: gc.gift_code,
       bundleId: gc.bundle_id,
       isRedeemed: gc.is_redeemed,
-      redeemedBy: gc.redeemed_by_player_id ? {
-        playerId: gc.redeemed_by_player_id,
-        name: redeemedPlayers[gc.redeemed_by_player_id]?.name,
-        email: redeemedPlayers[gc.redeemed_by_player_id]?.email
+      redeemedBy: gc.redeemed_by_user_id ? {
+        playerId: gc.redeemed_by_user_id,
+        name: redeemedPlayers[gc.redeemed_by_user_id]?.name,
+        email: redeemedPlayers[gc.redeemed_by_user_id]?.email
       } : null,
       redeemedAt: gc.redeemed_at,
       createdAt: gc.created_at,

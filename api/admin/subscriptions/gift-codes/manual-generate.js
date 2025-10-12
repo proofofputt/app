@@ -117,7 +117,7 @@ export default async function handler(req, res) {
 
       await client.query(
         `INSERT INTO user_gift_subscriptions (
-          owner_player_id,
+          owner_user_id,
           gift_code,
           bundle_id,
           is_redeemed,

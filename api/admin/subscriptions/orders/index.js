@@ -123,7 +123,7 @@ export default async function handler(req, res) {
         (
           SELECT COUNT(*)
           FROM user_gift_subscriptions ugs
-          WHERE ugs.owner_player_id = ze.player_id
+          WHERE ugs.owner_user_id = ze.player_id
             AND ugs.created_at >= ze.created_at
             AND ugs.created_at <= ze.created_at + INTERVAL '5 minutes'
         ) as gift_codes_generated

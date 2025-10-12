@@ -114,11 +114,11 @@ export default async function handler(req, res) {
         gift_code,
         bundle_id,
         is_redeemed,
-        redeemed_by_player_id,
+        redeemed_by_user_id,
         redeemed_at,
         created_at
       FROM user_gift_subscriptions
-      WHERE owner_player_id = $1
+      WHERE owner_user_id = $1
       ORDER BY created_at DESC
     `;
 
@@ -130,14 +130,14 @@ export default async function handler(req, res) {
         ugs.id,
         ugs.gift_code,
         ugs.bundle_id,
-        ugs.owner_player_id,
+        ugs.owner_user_id,
         p.name as gifter_name,
         p.email as gifter_email,
         ugs.redeemed_at,
         ugs.created_at
       FROM user_gift_subscriptions ugs
-      LEFT JOIN players p ON ugs.owner_player_id = p.player_id
-      WHERE ugs.redeemed_by_player_id = $1
+      LEFT JOIN players p ON ugs.owner_user_id = p.player_id
+      WHERE ugs.redeemed_by_user_id = $1
       ORDER BY ugs.redeemed_at DESC
     `;
 
@@ -208,7 +208,7 @@ export default async function handler(req, res) {
           code: gc.gift_code,
           bundleId: gc.bundle_id,
           isRedeemed: gc.is_redeemed,
-          redeemedBy: gc.redeemed_by_player_id,
+          redeemedBy: gc.redeemed_by_user_id,
           redeemedAt: gc.redeemed_at,
           createdAt: gc.created_at
         })),
@@ -217,7 +217,7 @@ export default async function handler(req, res) {
           code: gc.gift_code,
           bundleId: gc.bundle_id,
           from: {
-            playerId: gc.owner_player_id,
+            playerId: gc.owner_user_id,
             name: gc.gifter_name,
             email: gc.gifter_email
           },

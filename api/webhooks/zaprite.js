@@ -286,7 +286,7 @@ async function generateGiftCodes(playerId, quantity, bundleId = null) {
 
     await pool.query(
       `INSERT INTO user_gift_subscriptions (
-        owner_player_id,
+        owner_user_id,
         gift_code,
         bundle_id,
         is_redeemed,
