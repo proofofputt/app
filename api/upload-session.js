@@ -288,7 +288,13 @@ export default async function handler(req, res) {
           const roundInfo = roundResult.rows[0];
           
           // Check if this is an IRL league
-          const leagueRules = roundInfo.rules ? JSON.parse(roundInfo.rules) : {};
+          let leagueRules = {};
+          try {
+            leagueRules = roundInfo.rules ? JSON.parse(roundInfo.rules) : {};
+          } catch (parseError) {
+            console.log(`[upload-session] Warning: Could not parse league rules for round ${league_round_id}: ${parseError.message}. Using empty rules.`);
+            leagueRules = {};
+          }
           isIRLLeague = leagueRules.is_irl || false;
           
           if (isIRLLeague) {
