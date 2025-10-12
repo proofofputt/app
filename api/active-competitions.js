@@ -101,7 +101,7 @@ async function handleGetActiveCompetitions(req, res) {
       ORDER BY d.expires_at ASC NULLS LAST
     `;
 
-    // Get active league rounds where player needs to submit a session
+    // Get active league rounds - includes both rounds needing submission AND recently submitted rounds
     const leaguesQuery = `
       SELECT
         lr.round_id,
@@ -116,18 +116,29 @@ async function handleGetActiveCompetitions(req, res) {
         lm.player_id as member_player_id,
         lm.is_active as membership_active,
         -- Check if player has already submitted for this round
-        lrs.session_id as submitted_session_id
+        lrs.session_id as submitted_session_id,
+        lrs.round_score as submitted_score,
+        lrs.submitted_at,
+        -- Get next round info if current round is submitted
+        next_lr.round_id as next_round_id,
+        next_lr.round_number as next_round_number,
+        next_lr.start_time as next_round_start
       FROM league_rounds lr
       JOIN leagues l ON lr.league_id = l.league_id
       JOIN league_memberships lm ON l.league_id = lm.league_id
       LEFT JOIN league_round_sessions lrs ON lr.round_id = lrs.round_id AND lrs.player_id = $1
+      LEFT JOIN league_rounds next_lr ON next_lr.league_id = l.league_id
+        AND next_lr.round_number = lr.round_number + 1
       WHERE
         lm.player_id = $1
         AND lm.is_active = true                         -- Player is active member
         AND l.status IN ('active', 'in_progress')       -- League is active
         AND lr.start_time <= NOW()                      -- Round has started
-        AND lr.end_time > NOW()                         -- Round hasn't ended
-        AND lrs.session_id IS NULL                      -- Player hasn't submitted yet
+        AND lr.end_time > NOW()                         -- Round hasn't ended yet
+        AND (
+          lrs.session_id IS NULL                        -- Player hasn't submitted yet
+          OR (lrs.session_id IS NOT NULL AND lr.end_time > NOW()) -- OR submitted but round still active
+        )
       ORDER BY lr.end_time ASC
     `;
 
@@ -142,8 +153,22 @@ async function handleGetActiveCompetitions(req, res) {
 
     // Format duels for desktop UI
     const activeDuels = duelsResult.rows.map(duel => {
-      const settings = typeof duel.settings === 'string' ? JSON.parse(duel.settings) : duel.settings;
-      const rules = typeof duel.rules === 'string' ? JSON.parse(duel.rules) : duel.rules;
+      let settings = {};
+      let rules = {};
+
+      try {
+        settings = typeof duel.settings === 'string' ? JSON.parse(duel.settings) : (duel.settings || {});
+      } catch (e) {
+        console.error(`[active-competitions] Failed to parse duel settings for duel ${duel.duel_id}:`, e);
+        settings = {};
+      }
+
+      try {
+        rules = typeof duel.rules === 'string' ? JSON.parse(duel.rules) : (duel.rules || {});
+      } catch (e) {
+        console.error(`[active-competitions] Failed to parse duel rules for duel ${duel.duel_id}:`, e);
+        rules = {};
+      }
       const competitionMode = duel.competition_mode || 'time_limit';
 
       let timeLimit = null;
@@ -223,9 +248,16 @@ async function handleGetActiveCompetitions(req, res) {
       };
     });
 
-    // Format league rounds for desktop UI  
+    // Format league rounds for desktop UI
     const activeLeagueRounds = leaguesResult.rows.map(league => {
-      const rules = typeof league.rules === 'string' ? JSON.parse(league.rules) : league.rules;
+      let rules = {};
+
+      try {
+        rules = typeof league.rules === 'string' ? JSON.parse(league.rules) : (league.rules || {});
+      } catch (e) {
+        console.error(`[active-competitions] Failed to parse league rules for round ${league.round_id}:`, e);
+        rules = {};
+      }
       const competitionMode = rules?.competition_mode || 'time_limit';
 
       let timeLimit = null;
@@ -238,7 +270,19 @@ async function handleGetActiveCompetitions(req, res) {
         // For time limit mode
         timeLimit = rules?.time_limit_minutes ? rules.time_limit_minutes * 60 : null; // Convert minutes to seconds
       }
-      
+
+      // Determine submission status
+      const hasSubmitted = !!league.submitted_session_id;
+      const submittedScore = league.submitted_score;
+      const submittedAt = league.submitted_at;
+
+      // Next round information
+      const nextRound = league.next_round_id ? {
+        id: league.next_round_id,
+        roundNumber: league.next_round_number,
+        startTime: league.next_round_start
+      } : null;
+
       return {
         type: 'league',
         id: league.round_id,
@@ -250,6 +294,10 @@ async function handleGetActiveCompetitions(req, res) {
         endTime: league.end_time,
         startTime: league.start_time,
         creatorId: league.league_creator_id,
+        hasSubmitted: hasSubmitted,
+        submittedScore: submittedScore,
+        submittedAt: submittedAt,
+        nextRound: nextRound,
         sessionData: {
           leagueRoundId: league.round_id,
           league: league.league_name,
