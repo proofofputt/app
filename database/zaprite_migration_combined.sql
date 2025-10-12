@@ -7,6 +7,7 @@ ALTER TABLE players
 ADD COLUMN IF NOT EXISTS zaprite_customer_id VARCHAR(255),
 ADD COLUMN IF NOT EXISTS zaprite_subscription_id VARCHAR(255),
 ADD COLUMN IF NOT EXISTS zaprite_payment_method VARCHAR(50), -- 'bitcoin', 'lightning', 'card'
+ADD COLUMN IF NOT EXISTS subscription_tier VARCHAR(50), -- 'basic', 'premium', 'full_subscriber'
 ADD COLUMN IF NOT EXISTS subscription_started_at TIMESTAMP WITH TIME ZONE,
 ADD COLUMN IF NOT EXISTS subscription_current_period_start TIMESTAMP WITH TIME ZONE,
 ADD COLUMN IF NOT EXISTS subscription_current_period_end TIMESTAMP WITH TIME ZONE,
@@ -18,27 +19,33 @@ CREATE INDEX IF NOT EXISTS idx_players_zaprite_customer ON players(zaprite_custo
 CREATE INDEX IF NOT EXISTS idx_players_zaprite_subscription ON players(zaprite_subscription_id) WHERE zaprite_subscription_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_players_subscription_period ON players(subscription_current_period_end) WHERE subscription_status = 'active';
 
--- Zaprite payment events table (used by webhook handler)
-CREATE TABLE IF NOT EXISTS zaprite_payment_events (
-    id BIGSERIAL PRIMARY KEY,
-    player_id INTEGER REFERENCES players(player_id) ON DELETE SET NULL,
+-- Zaprite webhook events table (used by webhook handler)
+CREATE TABLE IF NOT EXISTS zaprite_events (
+    event_id BIGSERIAL PRIMARY KEY,
+    zaprite_event_id VARCHAR(255) UNIQUE NOT NULL,
     event_type VARCHAR(100) NOT NULL,
-    event_id VARCHAR(255),
-    customer_id VARCHAR(255),
-    amount DECIMAL(10, 2),
-    currency VARCHAR(10),
-    raw_event JSONB,
-    status VARCHAR(50),
-    error_message TEXT,
+    player_id INTEGER REFERENCES players(player_id) ON DELETE SET NULL,
+    zaprite_customer_id VARCHAR(255),
+    zaprite_subscription_id VARCHAR(255),
+    zaprite_order_id VARCHAR(255),
+    event_data JSONB NOT NULL,
+    payment_amount DECIMAL(10, 2),
+    payment_currency VARCHAR(10),
+    payment_method VARCHAR(50),
+    processed BOOLEAN DEFAULT FALSE,
     processed_at TIMESTAMP WITH TIME ZONE,
+    processing_error TEXT,
+    retry_count INTEGER DEFAULT 0,
+    received_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create indexes for zaprite_payment_events
-CREATE INDEX IF NOT EXISTS idx_zaprite_payment_events_player ON zaprite_payment_events(player_id) WHERE player_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_zaprite_payment_events_type ON zaprite_payment_events(event_type);
-CREATE INDEX IF NOT EXISTS idx_zaprite_payment_events_status ON zaprite_payment_events(status);
-CREATE INDEX IF NOT EXISTS idx_zaprite_payment_events_created ON zaprite_payment_events(created_at DESC);
+-- Create indexes for zaprite_events
+CREATE INDEX IF NOT EXISTS idx_zaprite_events_player ON zaprite_events(player_id) WHERE player_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_zaprite_events_type ON zaprite_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_zaprite_events_zaprite_id ON zaprite_events(zaprite_event_id);
+CREATE INDEX IF NOT EXISTS idx_zaprite_events_processed ON zaprite_events(processed) WHERE processed = FALSE;
+CREATE INDEX IF NOT EXISTS idx_zaprite_events_created ON zaprite_events(created_at DESC);
 
 -- Subscription bundles table
 CREATE TABLE IF NOT EXISTS subscription_bundles (
@@ -79,10 +86,11 @@ INSERT INTO subscription_bundles (name, quantity, discount_percentage) VALUES
 ON CONFLICT DO NOTHING;
 
 -- Comments for documentation
-COMMENT ON TABLE zaprite_payment_events IS 'Zaprite webhook events processed by webhook handler';
+COMMENT ON TABLE zaprite_events IS 'Zaprite webhook events processed by webhook handler';
 COMMENT ON TABLE subscription_bundles IS 'Pre-configured subscription bundle pricing';
 COMMENT ON TABLE user_gift_subscriptions IS 'Gift subscription codes for sharing annual subscriptions';
 COMMENT ON COLUMN players.zaprite_customer_id IS 'Zaprite customer ID for this player';
 COMMENT ON COLUMN players.zaprite_subscription_id IS 'Active Zaprite subscription ID';
 COMMENT ON COLUMN players.zaprite_payment_method IS 'Payment method: bitcoin, lightning, or card';
+COMMENT ON COLUMN players.subscription_tier IS 'Subscription tier: basic, premium, or full_subscriber';
 COMMENT ON COLUMN players.subscription_billing_cycle IS 'Billing frequency: monthly or annual';
