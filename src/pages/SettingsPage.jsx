@@ -593,10 +593,10 @@ const SettingsPage = () => {
                           </div>
                           <div className="bundle-details">
                             <p className="bundle-quantity">Year Subscriptions</p>
-                            <p className="bundle-price">${bundle.price}</p>
+                            <p className="bundle-price">${bundle.price.toFixed(2)}</p>
                             <p className="bundle-unit-price">${(bundle.price / bundle.quantity).toFixed(2)}/each</p>
                           </div>
-                          <button onClick={() => handlePurchase(bundle.id)} className="btn btn-primary btn-bundle-orange">
+                          <button onClick={() => handlePurchase(bundle.id)} className="btn btn-primary">
                             Purchase Bundle
                           </button>
                         </div>
@@ -698,10 +698,10 @@ const SettingsPage = () => {
                           </div>
                           <div className="bundle-details">
                             <p className="bundle-quantity">Year Subscriptions</p>
-                            <p className="bundle-price">${bundle.price}</p>
+                            <p className="bundle-price">${bundle.price.toFixed(2)}</p>
                             <p className="bundle-unit-price">${(bundle.price / bundle.quantity).toFixed(2)}/each</p>
                           </div>
-                          <button onClick={() => handlePurchase(bundle.id)} className="btn btn-primary btn-bundle-orange">
+                          <button onClick={() => handlePurchase(bundle.id)} className="btn btn-primary">
                             Purchase Bundle
                           </button>
                         </div>
