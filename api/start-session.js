@@ -108,7 +108,7 @@ export default async function handler(req, res) {
         
         // Get league round details for time limit and validation
         const roundResult = await client.query(`
-          SELECT lr.*, l.settings->>'time_limit_minutes' as league_time_limit
+          SELECT lr.*, l.rules->>'time_limit_minutes' as league_time_limit
           FROM league_rounds lr
           JOIN leagues l ON lr.league_id = l.league_id
           WHERE lr.round_id = $1

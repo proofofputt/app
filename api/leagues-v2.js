@@ -32,21 +32,21 @@ async function calculateLeagueStandings(client, leagueId, rules) {
   
   // Get league members and their recent sessions
   const query = `
-    SELECT 
+    SELECT
       lm.player_id,
-      u.display_name as player_name,
+      p.name as player_name,
       COUNT(s.session_id) as session_count,
       AVG((s.data->>'make_percentage')::decimal) as avg_percentage,
       SUM((s.data->>'total_makes')::integer) as total_makes,
       MAX((s.data->>'best_streak')::integer) as best_streak,
       MIN((s.data->>'fastest_21_makes')::decimal) as fastest_21
     FROM league_memberships lm
-    LEFT JOIN users u ON lm.player_id = u.id
+    LEFT JOIN players p ON lm.player_id = p.player_id
     LEFT JOIN sessions s ON lm.player_id = s.player_id 
       AND s.created_at >= (SELECT start_date FROM leagues WHERE league_id = $1)
       AND s.created_at <= COALESCE((SELECT end_date FROM leagues WHERE league_id = $1), NOW())
     WHERE lm.league_id = $1 AND lm.is_active = true
-    GROUP BY lm.player_id, u.display_name
+    GROUP BY lm.player_id, p.name
     HAVING COUNT(s.session_id) >= $2
     ORDER BY 
       CASE 
@@ -102,10 +102,10 @@ export default async function handler(req, res) {
       if (league_id) {
         // Get specific league details
         const leagueResult = await client.query(`
-          SELECT l.*, u.display_name as creator_name,
+          SELECT l.*, p.name as creator_name,
                  (SELECT COUNT(*) FROM league_memberships lm WHERE lm.league_id = l.league_id AND lm.is_active = true) as member_count
           FROM leagues l
-          LEFT JOIN users u ON l.created_by = u.id
+          LEFT JOIN players p ON l.created_by = p.player_id
           WHERE l.league_id = $1
         `, [league_id]);
         
@@ -117,9 +117,9 @@ export default async function handler(req, res) {
         
         // Get members
         const membersResult = await client.query(`
-          SELECT lm.player_id, u.display_name as player_name, lm.joined_at
+          SELECT lm.player_id, p.name as player_name, lm.joined_at
           FROM league_memberships lm
-          LEFT JOIN users u ON lm.player_id = u.id
+          LEFT JOIN players p ON lm.player_id = p.player_id
           WHERE lm.league_id = $1 AND lm.is_active = true
           ORDER BY lm.joined_at
         `, [league_id]);
@@ -158,10 +158,10 @@ export default async function handler(req, res) {
         // List leagues
         const user = await verifyToken(req);
         let query = `
-          SELECT l.*, u.display_name as creator_name,
+          SELECT l.*, p.name as creator_name,
                  (SELECT COUNT(*) FROM league_memberships lm WHERE lm.league_id = l.league_id AND lm.is_active = true) as member_count
           FROM leagues l
-          LEFT JOIN users u ON l.created_by = u.id
+          LEFT JOIN players p ON l.created_by = p.player_id
           WHERE l.status = $1
         `;
         let queryParams = [status];

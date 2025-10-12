@@ -82,10 +82,10 @@ async function calculateEnhancedLeagueStandings(client, leagueId, options = {}) 
       GROUP BY lm.player_id
       ${minSessions > 0 ? sessionFilter.split('HAVING')[1] : ''}
     )
-    SELECT 
+    SELECT
       lm.player_id,
-      u.display_name as player_name,
-      u.username,
+      p.name as player_name,
+      p.email as player_email,
       lm.member_role,
       lm.joined_at,
       lm.total_score as official_total_score,
@@ -104,18 +104,18 @@ async function calculateEnhancedLeagueStandings(client, leagueId, options = {}) 
       ss.first_session_date,
       ss.last_session_date,
       -- Performance ratings (0-100 scale)
-      CASE 
+      CASE
         WHEN ss.avg_percentage IS NULL THEN 0
         ELSE ROUND(LEAST(ss.avg_percentage, 100)::numeric, 1)
       END as performance_rating,
       -- Activity rating based on session frequency
-      CASE 
+      CASE
         WHEN ss.total_sessions IS NULL OR ss.total_sessions = 0 THEN 0
         WHEN EXTRACT(EPOCH FROM (NOW() - ss.first_session_date))/86400 <= 1 THEN 100
         ELSE ROUND(LEAST(100, (ss.total_sessions::decimal / GREATEST(1, EXTRACT(EPOCH FROM (NOW() - ss.first_session_date))/86400)) * 10)::numeric, 1)
       END as activity_rating
     FROM league_memberships lm
-    JOIN users u ON lm.player_id = u.id
+    JOIN players p ON lm.player_id = p.player_id
     LEFT JOIN session_stats ss ON lm.player_id = ss.player_id
     WHERE lm.league_id = $1 
       AND (lm.is_active = true ${includeInactive ? 'OR lm.is_active = false' : ''})
@@ -144,7 +144,7 @@ async function calculateEnhancedLeagueStandings(client, leagueId, options = {}) 
     rank: index + 1,
     player_id: row.player_id,
     player_name: row.player_name || `Player ${row.player_id}`,
-    username: row.username,
+    player_email: row.player_email,
     member_role: row.member_role,
     joined_at: row.joined_at,
     session_count: parseInt(row.session_count),
@@ -364,9 +364,9 @@ export default async function handler(req, res) {
 
         // Get league info
         const leagueResult = await client.query(`
-          SELECT l.*, u.display_name as creator_name
+          SELECT l.*, p.name as creator_name
           FROM leagues l
-          LEFT JOIN users u ON l.created_by = u.id
+          LEFT JOIN players p ON l.created_by = p.player_id
           WHERE l.league_id = $1
         `, [league_id]);
 
@@ -521,11 +521,12 @@ export default async function handler(req, res) {
 
         // Check if recipient exists
         let existingUser = null;
-        if (invitation_method === 'username') {
-          const userResult = await client.query('SELECT * FROM users WHERE username = $1', [recipient_identifier]);
+        if (invitation_method === 'username' || invitation_method === 'name') {
+          // Search by name since players table doesn't have username field
+          const userResult = await client.query('SELECT * FROM players WHERE name = $1', [recipient_identifier]);
           existingUser = userResult.rows[0] || null;
         } else if (invitation_method === 'email') {
-          const userResult = await client.query('SELECT * FROM users WHERE email = $1', [recipient_identifier.toLowerCase()]);
+          const userResult = await client.query('SELECT * FROM players WHERE email = $1', [recipient_identifier.toLowerCase()]);
           existingUser = userResult.rows[0] || null;
         }
 
@@ -533,7 +534,7 @@ export default async function handler(req, res) {
         if (existingUser) {
           const existingMember = await client.query(
             'SELECT * FROM league_memberships WHERE league_id = $1 AND player_id = $2',
-            [league_id, existingUser.id]
+            [league_id, existingUser.player_id]
           );
 
           if (existingMember.rows.length > 0 && existingMember.rows[0].is_active) {
@@ -542,7 +543,7 @@ export default async function handler(req, res) {
 
           const pendingInvite = await client.query(
             'SELECT * FROM league_invitations WHERE league_id = $1 AND invited_player_id = $2 AND status = $3',
-            [league_id, existingUser.id, 'pending']
+            [league_id, existingUser.player_id, 'pending']
           );
 
           if (pendingInvite.rows.length > 0) {
@@ -555,15 +556,15 @@ export default async function handler(req, res) {
         const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
         const invitationResult = await client.query(`
-          INSERT INTO league_invitations 
-          (league_id, inviting_player_id, invited_player_id, invitation_method, external_contact, 
+          INSERT INTO league_invitations
+          (league_id, inviting_player_id, invited_player_id, invitation_method, external_contact,
            invitation_token, message, expires_at, status, created_at, updated_at)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
           RETURNING invitation_id
         `, [
           league_id,
           parseInt(user.playerId),
-          existingUser ? existingUser.id : null,
+          existingUser ? existingUser.player_id : null,
           invitation_method,
           existingUser ? null : recipient_identifier,
           invitationToken,
