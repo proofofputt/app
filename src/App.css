@@ -322,20 +322,18 @@ main {
 .session-list-container {
   grid-column: 1 / -1; /* Span full width */
   margin-top: 1rem;
-  padding: 1rem 1.5rem 3rem 1.5rem; /* Increased bottom padding to 3rem to fully contain pagination */
+  padding: 1rem 1.5rem 2rem 1.5rem; /* Bottom padding to contain pagination */
   display: flex; /* Make it a flex container */
   flex-direction: column; /* Stack children vertically */
   position: relative; /* For absolute positioning of the button */
-  flex-grow: 1; /* Allow to grow and fill remaining space */
   min-height: 0; /* Important for flex children to shrink */
 }
 
 .session-table-wrapper {
-  flex-grow: 1; /* Grow to fill remaining space */
   overflow-y: auto;
   margin-top: 1rem; /* Moved from .session-table to here */
   transition: max-height 0.4s ease-in-out;
-  min-height: 600px; /* Doubled height to display more rows */
+  height: 600px; /* Fixed height instead of min-height to display more rows */
   position: relative;
 }
 
