@@ -269,16 +269,16 @@ function Dashboard() {
               </tbody>
             </table>
           </div>
-        </div>
 
-        {/* Pagination Controls - outside session-list-container on main background */}
-        {paginatedSessions && paginatedSessions.pagination && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={paginatedSessions.pagination.totalPages}
-            onPageChange={handlePageChange}
-          />
-        )}
+          {/* Pagination Controls - inside session-list-container */}
+          {paginatedSessions && paginatedSessions.pagination && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={paginatedSessions.pagination.totalPages}
+              onPageChange={handlePageChange}
+            />
+          )}
+        </div>
 
       </main>
 
