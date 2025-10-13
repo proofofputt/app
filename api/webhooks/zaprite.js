@@ -221,14 +221,48 @@ async function checkForBundlePurchase(eventData) {
 }
 
 /**
+ * Check if order is a subscription purchase by looking up payment link
+ */
+async function checkForSubscriptionPurchase(eventData) {
+  try {
+    // Try to extract payment link ID from various possible locations in event data
+    const paymentLinkId =
+      eventData.payment_link?.id ||
+      eventData.payment_link_id ||
+      eventData.checkout?.payment_link_id ||
+      eventData.metadata?.payment_link_id;
+
+    if (!paymentLinkId) {
+      return null;
+    }
+
+    // Look up subscription configuration from mapping table
+    const result = await pool.query(
+      `SELECT subscription_type, amount, billing_cycle, includes_gift
+       FROM zaprite_subscription_links
+       WHERE payment_link_id = $1 AND is_active = TRUE`,
+      [paymentLinkId]
+    );
+
+    if (result.rows.length > 0) {
+      return result.rows[0];
+    }
+
+    return null;
+  } catch (error) {
+    logError('Error checking for subscription purchase', error);
+    return null;
+  }
+}
+
+/**
  * Handle order.paid event - Activate subscription
  */
 async function handleOrderPaid(playerId, eventData) {
-  const subscriptionId = eventData.subscription?.id || eventData.order?.subscription_id;
-  const customerId = eventData.customer?.id;
+  const subscriptionId = eventData.subscription?.id || eventData.order?.subscription_id || eventData.id;
+  const customerId = eventData.customer?.id || playerId.toString();
   const paymentMethod = eventData.payment_method || 'unknown';
   const productId = eventData.product?.id || eventData.items?.[0]?.product_id;
-  const billingCycle = eventData.billing_cycle || eventData.subscription?.billing_cycle || eventData.metadata?.interval;
 
   // Extract payment profile ID for auto-pay (saved payment method)
   const paymentProfileId = eventData.paymentProfile?.id ||
@@ -239,7 +273,28 @@ async function handleOrderPaid(playerId, eventData) {
   // Check if this is a bundle purchase via payment link
   const bundleInfo = await checkForBundlePurchase(eventData);
 
-  const tier = mapZapriteTierToApp(productId);
+  // Check if this is a subscription purchase via payment link
+  const subscriptionInfo = await checkForSubscriptionPurchase(eventData);
+
+  // Determine billing cycle and tier
+  let billingCycle = eventData.billing_cycle || eventData.subscription?.billing_cycle || eventData.metadata?.interval;
+  let tier = mapZapriteTierToApp(productId);
+  let includesGift = false;
+
+  // Override with payment link subscription info if available
+  if (subscriptionInfo) {
+    billingCycle = subscriptionInfo.billing_cycle;
+    includesGift = subscriptionInfo.includes_gift;
+    tier = 'full_subscriber';  // All subscription links are full subscriber
+
+    logSubscriptionEvent('subscription_purchased_via_link', {
+      playerId,
+      paymentLinkType: subscriptionInfo.subscription_type,
+      billingCycle,
+      amount: subscriptionInfo.amount
+    });
+  }
+
   const periodEnd = calculatePeriodEnd(billingCycle, eventData.metadata);
 
   // Only update subscription status if NOT a bundle purchase
@@ -260,6 +315,7 @@ async function handleOrderPaid(playerId, eventData) {
         subscription_current_period_end = $7,
         subscription_cancel_at_period_end = FALSE,
         is_subscribed = TRUE,
+        membership_tier = 'premium',
         updated_at = NOW()
       WHERE player_id = $8
     `;
@@ -296,12 +352,12 @@ async function handleOrderPaid(playerId, eventData) {
     });
     await generateGiftCodes(playerId, bundleInfo.bundle_quantity, bundleInfo.bundle_id);
   } else {
-    // Check if regular subscription includes gift codes
+    // Check if subscription includes gift codes
     const metadata = eventData.metadata || {};
     if (metadata.type === 'bundle' && metadata.bundleQuantity) {
       const quantity = parseInt(metadata.bundleQuantity, 10);
       await generateGiftCodes(playerId, quantity);
-    } else if (metadata.includesGift === 'true' || billingCycle === 'annual') {
+    } else if (includesGift || metadata.includesGift === 'true' || billingCycle === 'annual') {
       await generateGiftCodes(playerId, 1);
     }
   }
