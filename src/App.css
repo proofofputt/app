@@ -333,17 +333,29 @@ main {
   overflow-y: auto;
   margin-top: 1rem; /* Moved from .session-table to here */
   transition: height 0.3s ease-in-out;
-  height: 600px; /* Base height for default view - fits within session history section */
+  max-height: 400px; /* Reduced from 600px to fit ~7 rows without overlap when stats visible */
   position: relative;
+  /* Remove background from wrapper - it will be on the table instead */
 }
 
 /* Expand table when stats are hidden */
 .session-list-container.stats-hidden .session-table-wrapper {
-  height: calc(100vh - 280px); /* Expand to fill available viewport space when stats hidden */
+  max-height: calc(100vh - 250px); /* Expand to fill available viewport space when stats hidden */
 }
 
-/* Add subtle diagonal striped background pattern for empty table space - "mowed fairway" effect */
-.session-table-wrapper::after {
+/* The height of the wrapper when a session is expanded is now controlled
+   dynamically via JavaScript to "lock" the view. */
+.session-table {
+  width: 100%;
+  border-collapse: collapse;
+  position: relative;
+  z-index: 1;
+  /* margin-top: 1rem; Replaced by margin-top on .session-table-wrapper */
+}
+
+/* Add subtle diagonal striped background pattern to table - "mowed fairway" effect */
+/* Applied to table so it scales with content */
+.session-table::before {
   content: '';
   position: absolute;
   top: 0;
@@ -359,17 +371,7 @@ main {
     rgba(255, 255, 255, 0.01) 20px
   );
   pointer-events: none;
-  z-index: 0;
-}
-
-/* The height of the wrapper when a session is expanded is now controlled
-   dynamically via JavaScript to "lock" the view. */
-.session-table {
-  width: 100%;
-  border-collapse: collapse;
-  position: relative;
-  z-index: 1;
-  /* margin-top: 1rem; Replaced by margin-top on .session-table-wrapper */
+  z-index: -1;
 }
 
 .session-table th, .session-table td {
