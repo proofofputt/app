@@ -145,15 +145,26 @@ export default async function handler(req, res) {
       if (interval === 'monthly') {
         // For monthly subscriptions, use custom checkout for auto-pay
         // This creates the first order and allows customer to save their payment method
+        // Note: Custom checkouts have pre-configured URLs, so we don't pass successUrl/cancelUrl
+        const { successUrl, cancelUrl, ...basePayloadWithoutUrls } = basePayload;
+
         const monthlyPayload = {
-          ...basePayload,
+          ...basePayloadWithoutUrls,
           customCheckoutId: ZAPRITE_CUSTOM_CHECKOUT_ID  // Custom checkout configured for Square auto-pay
         };
 
         logger.info('Creating order with custom checkout for monthly subscription', {
           userId: user.player_id,
           amount: pricing.amount,
-          customCheckoutId: ZAPRITE_CUSTOM_CHECKOUT_ID
+          customCheckoutId: ZAPRITE_CUSTOM_CHECKOUT_ID,
+          payloadKeys: Object.keys(monthlyPayload)
+        });
+
+        // Log the exact payload being sent (without sensitive data)
+        console.log('[Zaprite Monthly Order] Payload structure:', {
+          ...monthlyPayload,
+          metadata: '... (see below)',
+          metadataKeys: Object.keys(monthlyPayload.metadata || {})
         });
 
         zapriteData = await createZapriteOrder(monthlyPayload);
