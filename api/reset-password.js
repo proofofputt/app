@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
+import { setCORSHeaders } from '../utils/cors.js';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -7,6 +8,13 @@ const pool = new Pool({
 });
 
 export default async function handler(req, res) {
+  // Set CORS headers
+  setCORSHeaders(req, res);
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -28,8 +36,8 @@ export default async function handler(req, res) {
 
     // Find user with valid reset token
     const users = await client.query(
-      `SELECT player_id, email, username
-       FROM players 
+      `SELECT player_id, email, name
+       FROM players
        WHERE reset_token = $1 AND reset_token_expiry > NOW()`,
       [token]
     );
@@ -48,7 +56,7 @@ export default async function handler(req, res) {
     // Update password and clear reset token
     await client.query(
       `UPDATE players
-       SET password_hash = $1, reset_token = NULL, reset_token_expiry = NULL, updated_at = NOW()
+       SET password_hash = $1, reset_token = NULL, reset_token_expiry = NULL
        WHERE player_id = $2`,
       [hashedPassword, user.player_id]
     );
