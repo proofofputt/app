@@ -109,7 +109,7 @@ async function createZapriteCheckout(player, tier, billingCycle) {
     items: [
       {
         name: `Proof of Putt - ${tier.replace('_', ' ').toUpperCase()}`,
-        description: `${billingCycle === 'annual' ? 'Annual' : 'Monthly'} subscription`,
+        description: `${billingCycle === 'annual' ? 'Yearly' : 'Monthly'} subscription`,
         amount: pricing.amount,
         currency: pricing.currency,
         quantity: 1

@@ -31,7 +31,7 @@ const PRICING = {
   annual: {
     amount: 21.00,
     interval: 'annual',
-    description: 'Proof of Putt Annual Subscription (includes 1 free year gift)'
+    description: 'Proof of Putt Yearly Subscription (includes 1 free year gift)'
   }
 };
 

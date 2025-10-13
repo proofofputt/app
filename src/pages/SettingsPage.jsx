@@ -646,10 +646,10 @@ const SettingsPage = () => {
                         <button onClick={() => handleSubscribe('monthly')} className="btn btn-primary">Subscribe Monthly</button>
                       </div>
 
-                      {/* Annual Plan */}
+                      {/* Yearly Plan */}
                       <div className="plan-card featured">
                         <div className="plan-badge">Best Value</div>
-                        <h5>Annual</h5>
+                        <h5>Yearly</h5>
                         <div className="plan-price">
                           <span className="amount">$21</span>
                           <span className="period">/year</span>
@@ -659,7 +659,7 @@ const SettingsPage = () => {
                           <li>✓ Everything in Monthly</li>
                           <li>✓ Early adopters get lifetime subscription</li>
                         </ul>
-                        <button onClick={() => handleSubscribe('annual')} className="btn btn-primary btn-featured">Subscribe Annually</button>
+                        <button onClick={() => handleSubscribe('annual')} className="btn btn-primary btn-featured">Subscribe Yearly</button>
                       </div>
                     </div>
 
