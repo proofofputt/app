@@ -333,7 +333,7 @@ main {
   overflow-y: auto;
   margin-top: 1rem; /* Moved from .session-table to here */
   transition: max-height 0.4s ease-in-out;
-  height: 600px; /* Fixed height instead of min-height to display more rows */
+  height: 1200px; /* Increased height to show twice as many rows and full session details */
   position: relative;
 }
 
