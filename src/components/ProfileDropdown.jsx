@@ -54,9 +54,11 @@ const ProfileDropdown = () => {
             My Stats
           </NavLink>
           <div className="dropdown-divider"></div>
+          {/* Temporarily disabled - keeping for future consideration
           <NavLink to="/networking-preferences" className="dropdown-item" onClick={() => setIsOpen(false)}>
             Networking Preferences
           </NavLink>
+          */}
           <NavLink to="/contacts" className="dropdown-item" onClick={() => setIsOpen(false)}>
             Contacts
           </NavLink>

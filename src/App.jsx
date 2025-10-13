@@ -16,7 +16,7 @@ import CoachPage from './components/CoachPage';
 import PlayerVsPlayerPage from './pages/PlayerVsPlayerPage';
 import NotificationsPage from './pages/NotificationsPage';
 import ContactsPage from './pages/ContactsPage';
-import NetworkingPreferencesPage from './pages/NetworkingPreferencesPage';
+// import NetworkingPreferencesPage from './pages/NetworkingPreferencesPage'; // Temporarily disabled
 import CommentsPage from './pages/CommentsPage';
 import AdminFeedbackPage from './pages/AdminFeedbackPage';
 import AdminSubscriptionsPage from './pages/AdminSubscriptionsPage';
@@ -146,7 +146,8 @@ const AppContent = () => {
           <Route path="/players/:player1Id/vs/:player2Id" element={<ProtectedRoute><PlayerVsPlayerPage /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
           <Route path="/comments" element={<ProtectedRoute><CommentsPage /></ProtectedRoute>} />
-          <Route path="/networking-preferences" element={<ProtectedRoute><NetworkingPreferencesPage /></ProtectedRoute>} />
+          {/* Temporarily disabled - keeping for future consideration */}
+          {/* <Route path="/networking-preferences" element={<ProtectedRoute><NetworkingPreferencesPage /></ProtectedRoute>} /> */}
           <Route path="/contacts" element={<ProtectedRoute><ContactsPage /></ProtectedRoute>} />
           <Route path="/gifts" element={<ProtectedRoute><MyGifts /></ProtectedRoute>} />
           <Route path="/admin/feedback" element={<ProtectedRoute><AdminFeedbackPage /></ProtectedRoute>} />
