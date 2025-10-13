@@ -631,6 +631,7 @@ const SettingsPage = () => {
                           <span className="amount">$2.10</span>
                           <span className="period">/month</span>
                         </div>
+                        <div className="plan-savings">Just tap it in! ⛳</div>
                         <ul className="plan-features">
                           <li>✓ Full Session History</li>
                           <li>✓ Create leagues and duels</li>
