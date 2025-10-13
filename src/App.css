@@ -322,7 +322,7 @@ main {
 .session-list-container {
   grid-column: 1 / -1; /* Span full width */
   margin-top: 1rem;
-  padding: 1rem 1.5rem 2rem 1.5rem; /* Bottom padding to contain pagination */
+  padding: 1rem 1.5rem; /* Reduced bottom padding since pagination is now outside */
   display: flex; /* Make it a flex container */
   flex-direction: column; /* Stack children vertically */
   position: relative; /* For absolute positioning of the button */
@@ -332,9 +332,14 @@ main {
 .session-table-wrapper {
   overflow-y: auto;
   margin-top: 1rem; /* Moved from .session-table to here */
-  transition: max-height 0.4s ease-in-out;
-  height: 1200px; /* Increased height to show twice as many rows and full session details */
+  transition: height 0.3s ease-in-out;
+  height: 1200px; /* Base height to show many rows */
   position: relative;
+}
+
+/* Expand table when stats are hidden */
+.session-list-container.stats-hidden .session-table-wrapper {
+  height: calc(100vh - 280px); /* Expand to fill available viewport space */
 }
 
 /* Add subtle diagonal striped background pattern for empty table space - "mowed fairway" effect */

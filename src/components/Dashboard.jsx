@@ -234,11 +234,11 @@ function Dashboard() {
           </>
         )}
         
-        <div className={`session-list-container ${expandedSessionId ? 'is-expanded' : ''}`}>
+        <div className={`session-list-container ${expandedSessionId ? 'is-expanded' : ''} ${shouldHideStats ? 'stats-hidden' : ''}`}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3>Session History</h3>
             <div style={{ display: 'flex', gap: '1rem' }}>
-              <button 
+              <button
                 onClick={handleRefreshClick}
                 className="btn btn-tertiary"
                 title="Refresh data"
@@ -278,16 +278,16 @@ function Dashboard() {
               </tbody>
             </table>
           </div>
-          
-          {/* Pagination Controls */}
-          {paginatedSessions && paginatedSessions.pagination && (
-            <Pagination 
-              currentPage={currentPage}
-              totalPages={paginatedSessions.pagination.totalPages}
-              onPageChange={handlePageChange}
-            />
-          )}
         </div>
+
+        {/* Pagination Controls - outside session-list-container on main background */}
+        {paginatedSessions && paginatedSessions.pagination && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={paginatedSessions.pagination.totalPages}
+            onPageChange={handlePageChange}
+          />
+        )}
 
       </main>
 
