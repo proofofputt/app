@@ -202,13 +202,20 @@ const SettingsPage = () => {
 
   const handleSubscribe = async (interval) => {
     try {
-      // Use direct Zaprite payment link for annual subscription
+      // TEMPORARY: Use direct Zaprite payment links for both monthly and annual
+      // TODO: Re-enable API integration once custom checkout is configured
       if (interval === 'annual') {
         window.location.href = 'https://pay.zaprite.com/pl_NC6B3oH3dJ';
         return;
       }
 
-      // Use API for monthly subscription
+      if (interval === 'monthly') {
+        // Temporary direct link for monthly subscription
+        window.location.href = 'https://pay.zaprite.com/pl_YOUR_MONTHLY_LINK_HERE';
+        return;
+      }
+
+      // Fallback API approach (currently not working)
       const token = localStorage.getItem('authToken');
       const response = await fetch('/api/subscriptions/create-zaprite-order', {
         method: 'POST',
@@ -220,12 +227,14 @@ const SettingsPage = () => {
       });
 
       const data = await response.json();
+      console.log('[Subscribe] API response:', data);
 
       if (data.success && data.checkoutUrl) {
         // Redirect to Zaprite checkout
         window.location.href = data.checkoutUrl;
       } else {
-        showNotification(`Error: ${data.error || 'Failed to create checkout'}`, true);
+        console.error('[Subscribe] API error details:', data);
+        showNotification(`Error: ${data.error || data.details || 'Failed to create checkout'}. Please try again or contact support.`, true);
       }
     } catch (error) {
       console.error('Subscription error:', error);
