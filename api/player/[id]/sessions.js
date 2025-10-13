@@ -84,6 +84,8 @@ export default async function handler(req, res) {
               -- Duel context
               COALESCE(d1.duel_id, d2.duel_id) as duel_id,
               COALESCE(d1.status, d2.status) as duel_status,
+              COALESCE(d1.competition_mode, d2.competition_mode) as duel_competition_mode,
+              COALESCE(d1.rules, d2.rules) as duel_rules,
               CASE
                 WHEN d1.duel_creator_id = s.player_id THEN d1.duel_invited_player_id
                 WHEN d1.duel_invited_player_id = s.player_id THEN d1.duel_creator_id
@@ -102,6 +104,7 @@ export default async function handler(req, res) {
               lrs.league_id,
               lrs.round_id as league_round_id,
               l.name as league_name,
+              l.rules as league_rules,
               lr.round_number
             FROM sessions s
             LEFT JOIN duels d1 ON s.session_id = d1.duel_creator_session_id
@@ -208,20 +211,34 @@ export default async function handler(req, res) {
             // Determine competition context
             let competitionContext = null;
             if (row.duel_id) {
+              const duelRules = row.duel_rules || {};
+              const competitionMode = row.duel_competition_mode || 'time_limit';
+
               competitionContext = {
                 type: 'duel',
                 duel_id: row.duel_id,
                 opponent_id: row.duel_opponent_id,
                 opponent_name: row.duel_opponent_name,
-                status: row.duel_status
+                status: row.duel_status,
+                competition_mode: competitionMode,
+                time_limit_minutes: competitionMode === 'time_limit' ?
+                  (duelRules.session_duration_limit_minutes || duelRules.time_limit_minutes || (duelRules.time_limit_hours ? duelRules.time_limit_hours * 60 : null)) :
+                  null,
+                max_attempts: competitionMode === 'shoot_out' ? (duelRules.max_attempts || 21) : null
               };
             } else if (row.league_id) {
+              const leagueRules = row.league_rules || {};
+              const competitionMode = leagueRules.competition_mode || 'time_limit';
+
               competitionContext = {
                 type: 'league',
                 league_id: row.league_id,
                 league_round_id: row.league_round_id,
                 league_name: row.league_name,
-                round_number: row.round_number
+                round_number: row.round_number,
+                competition_mode: competitionMode,
+                time_limit_minutes: competitionMode === 'time_limit' ? (leagueRules.time_limit_minutes || null) : null,
+                max_attempts: competitionMode === 'shoot_out' ? (leagueRules.max_attempts || 21) : null
               };
             }
 

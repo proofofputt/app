@@ -178,11 +178,11 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
         session.competition ? (
           session.competition.type === 'duel' ? (
             <span className="competition-badge duel-badge" title={`Duel vs ${session.competition.opponent_name}`}>
-              Duel
+              Duel - {session.competition.competition_mode === 'shoot_out' ? 'Shoot Out' : 'Timed'}
             </span>
           ) : (
             <span className="competition-badge league-badge" title={`${session.competition.league_name} Round ${session.competition.round_number}`}>
-              League
+              League - {session.competition.competition_mode === 'shoot_out' ? 'Shoot Out' : 'Timed'}
             </span>
           )
         ) : (
@@ -191,7 +191,13 @@ const SessionRow = ({ session, playerTimezone, isLocked, isExpanded, onToggleExp
           </span>
         )
       }</td>
-      <td style={{ textAlign: 'center' }}>{formatDuration(session.session_duration ?? session.duration)}</td>
+      <td style={{ textAlign: 'center' }}>{
+        session.competition && session.competition.competition_mode === 'shoot_out'
+          ? `${session.competition.max_attempts || 21} putts`
+          : session.competition && session.competition.time_limit_minutes
+            ? `${session.competition.time_limit_minutes} mins`
+            : formatDuration(session.session_duration ?? session.duration)
+      }</td>
       <td style={{ textAlign: 'center' }}>{session.makes ?? session.total_makes ?? 0}</td>
       <td style={{ textAlign: 'center' }}>{session.misses ?? session.total_misses ?? 0}</td>
       <td style={{ textAlign: 'center' }}>{session.best_streak || 0}</td>

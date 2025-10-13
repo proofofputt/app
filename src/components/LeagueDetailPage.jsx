@@ -457,7 +457,7 @@ const LeagueDetailPage = () => {
               </tr>
               <tr>
                 <td>Starts</td>
-                <td>{formatDateTime(league.start_time)}</td>
+                <td>{formatDateTime(league.rounds && league.rounds.length > 0 ? league.rounds[0].start_time : league.start_time)}</td>
               </tr>
             </tbody>
           </table>

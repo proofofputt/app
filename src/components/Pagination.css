@@ -3,10 +3,10 @@
   justify-content: center;
   align-items: center;
   gap: 1.5rem;
-  margin-top: 1.5rem;
-  padding: 1rem;
-  background-color: var(--surface-color);
-  border-radius: 12px;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  padding: 1rem 0;
+  background-color: transparent;
 }
 
 .pagination-controls span {
