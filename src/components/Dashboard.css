@@ -260,8 +260,8 @@ p.stat-value {
 
 .dashboard-main .session-table th,
 .dashboard-main .session-table td {
-  border-right: 1px solid var(--surface-color) !important;
-  border-bottom: 1px solid var(--surface-color) !important;
+  border-right: 1px solid var(--border-color) !important;
+  border-bottom: 1px solid var(--border-color) !important;
 }
 
 .dashboard-main .session-table th:last-child,
