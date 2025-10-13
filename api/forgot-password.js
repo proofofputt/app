@@ -33,12 +33,10 @@ export default async function handler(req, res) {
   const rateLimit = checkRateLimit(rateLimitKey, 3, 3600000); // 3 attempts per hour
 
   if (!rateLimit.allowed) {
-    res.set({
-      'X-RateLimit-Limit': '3',
-      'X-RateLimit-Remaining': '0',
-      'X-RateLimit-Reset': new Date(rateLimit.resetTime).toISOString(),
-      'Retry-After': rateLimit.retryAfter
-    });
+    res.setHeader('X-RateLimit-Limit', '3');
+    res.setHeader('X-RateLimit-Remaining', '0');
+    res.setHeader('X-RateLimit-Reset', new Date(rateLimit.resetTime).toISOString());
+    res.setHeader('Retry-After', rateLimit.retryAfter);
     return res.status(429).json({
       error: 'Too many password reset attempts. Please try again later.',
       retryAfter: rateLimit.retryAfter
@@ -46,11 +44,9 @@ export default async function handler(req, res) {
   }
 
   // Set rate limit headers for successful requests
-  res.set({
-    'X-RateLimit-Limit': '3',
-    'X-RateLimit-Remaining': rateLimit.remaining.toString(),
-    'X-RateLimit-Reset': new Date(rateLimit.resetTime).toISOString()
-  });
+  res.setHeader('X-RateLimit-Limit', '3');
+  res.setHeader('X-RateLimit-Remaining', rateLimit.remaining.toString());
+  res.setHeader('X-RateLimit-Reset', new Date(rateLimit.resetTime).toISOString());
 
   const client = await pool.connect();
   
