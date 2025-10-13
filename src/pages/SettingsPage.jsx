@@ -202,6 +202,13 @@ const SettingsPage = () => {
 
   const handleSubscribe = async (interval) => {
     try {
+      // Use direct Zaprite payment link for annual subscription
+      if (interval === 'annual') {
+        window.location.href = 'https://pay.zaprite.com/pl_NC6B3oH3dJ';
+        return;
+      }
+
+      // Use API for monthly subscription
       const token = localStorage.getItem('authToken');
       const response = await fetch('/api/subscriptions/create-zaprite-order', {
         method: 'POST',
@@ -625,10 +632,8 @@ const SettingsPage = () => {
                           <span className="period">/month</span>
                         </div>
                         <ul className="plan-features">
-                          <li>✓ Session recording</li>
-                          <li>✓ Competitive leagues</li>
-                          <li>✓ 1v1 duels</li>
-                          <li>✓ OTS certification</li>
+                          <li>✓ Full Session History</li>
+                          <li>✓ Create leagues and duels</li>
                         </ul>
                         <button onClick={() => handleSubscribe('monthly')} className="btn btn-primary">Subscribe Monthly</button>
                       </div>
@@ -644,7 +649,7 @@ const SettingsPage = () => {
                         <div className="plan-savings">Save $4.20 vs monthly!</div>
                         <ul className="plan-features">
                           <li>✓ Everything in Monthly</li>
-                          <li>✓ Best value for long-term use</li>
+                          <li>✓ Early adopters get lifetime subscription</li>
                         </ul>
                         <button onClick={() => handleSubscribe('annual')} className="btn btn-primary btn-featured">Subscribe Annually</button>
                       </div>

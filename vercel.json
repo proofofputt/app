@@ -25,6 +25,10 @@
     {
       "path": "/api/cron/expire-subscriptions",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/process-monthly-subscriptions",
+      "schedule": "0 9 * * *"
     }
   ]
 }

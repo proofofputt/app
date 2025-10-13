@@ -60,20 +60,42 @@ function verifyZapriteSignature(payload, signature, secret) {
 
 /**
  * Extract player ID from Zaprite event metadata
+ * Ensures consistent use of player_id across all event types
  */
 function extractPlayerIdFromEvent(eventData) {
-  // Check for player_id in metadata (should be set during checkout creation)
+  // Priority 1: Check metadata.playerId (new consistent format)
+  if (eventData.metadata && eventData.metadata.playerId) {
+    return parseInt(eventData.metadata.playerId, 10);
+  }
+
+  // Priority 2: Check metadata.userId (legacy format)
   if (eventData.metadata && eventData.metadata.userId) {
     return parseInt(eventData.metadata.userId, 10);
   }
 
+  // Priority 3: Check metadata.player_id (alternate format)
   if (eventData.metadata && eventData.metadata.player_id) {
     return parseInt(eventData.metadata.player_id, 10);
   }
 
-  // Check for player_id in customer metadata
-  if (eventData.customer && eventData.customer.metadata && eventData.customer.metadata.player_id) {
-    return parseInt(eventData.customer.metadata.player_id, 10);
+  // Priority 4: Check customer.id if it's a player_id reference
+  // Zaprite uses customerId as player_id in our system
+  if (eventData.customerId && !isNaN(eventData.customerId)) {
+    return parseInt(eventData.customerId, 10);
+  }
+
+  if (eventData.customer && eventData.customer.id && !isNaN(eventData.customer.id)) {
+    return parseInt(eventData.customer.id, 10);
+  }
+
+  // Priority 5: Check customer metadata
+  if (eventData.customer && eventData.customer.metadata) {
+    if (eventData.customer.metadata.playerId) {
+      return parseInt(eventData.customer.metadata.playerId, 10);
+    }
+    if (eventData.customer.metadata.player_id) {
+      return parseInt(eventData.customer.metadata.player_id, 10);
+    }
   }
 
   // If no player_id found, will need to match by email
@@ -208,6 +230,12 @@ async function handleOrderPaid(playerId, eventData) {
   const productId = eventData.product?.id || eventData.items?.[0]?.product_id;
   const billingCycle = eventData.billing_cycle || eventData.subscription?.billing_cycle || eventData.metadata?.interval;
 
+  // Extract payment profile ID for auto-pay (saved payment method)
+  const paymentProfileId = eventData.paymentProfile?.id ||
+                           eventData.payment_profile_id ||
+                           eventData.paymentProfileId ||
+                           null;
+
   // Check if this is a bundle purchase via payment link
   const bundleInfo = await checkForBundlePurchase(eventData);
 
@@ -223,22 +251,24 @@ async function handleOrderPaid(playerId, eventData) {
         zaprite_customer_id = $1,
         zaprite_subscription_id = $2,
         zaprite_payment_method = $3,
+        zaprite_payment_profile_id = $4,
         subscription_status = 'active',
-        subscription_tier = $4,
-        subscription_billing_cycle = $5,
+        subscription_tier = $5,
+        subscription_billing_cycle = $6,
         subscription_started_at = COALESCE(subscription_started_at, NOW()),
         subscription_current_period_start = NOW(),
-        subscription_current_period_end = $6,
+        subscription_current_period_end = $7,
         subscription_cancel_at_period_end = FALSE,
         is_subscribed = TRUE,
         updated_at = NOW()
-      WHERE player_id = $7
+      WHERE player_id = $8
     `;
 
     await pool.query(query, [
       customerId,
       subscriptionId,
       paymentMethod,
+      paymentProfileId,  // Store payment profile for auto-pay
       tier,
       billingCycle || 'monthly',
       periodEnd,
@@ -394,6 +424,101 @@ async function handleSubscriptionExpired(playerId, eventData) {
 }
 
 /**
+ * Handle invoice.paid event (for recurring invoices)
+ * This is triggered when a recurring monthly invoice is successfully paid
+ * Also used when auto-pay succeeds with /v1/order/charge
+ */
+async function handleInvoicePaid(playerId, eventData) {
+  const subscriptionId = eventData.subscription?.id || eventData.invoice?.subscription_id;
+  const customerId = eventData.customer?.id || eventData.customerId;
+  const paymentMethod = eventData.payment_method || 'square'; // Default to Square for monthly recurring
+  const billingCycle = eventData.billing_cycle || eventData.metadata?.interval || 'monthly';
+
+  // Extract payment profile ID for auto-pay (saved payment method)
+  const paymentProfileId = eventData.paymentProfile?.id ||
+                           eventData.payment_profile_id ||
+                           eventData.paymentProfileId ||
+                           null;
+
+  // Extend subscription period for recurring payment
+  const periodEnd = calculatePeriodEnd(billingCycle, eventData.metadata);
+
+  const query = `
+    UPDATE players
+    SET
+      zaprite_customer_id = $1,
+      zaprite_subscription_id = $2,
+      zaprite_payment_method = $3,
+      zaprite_payment_profile_id = COALESCE($4, zaprite_payment_profile_id),
+      subscription_status = 'active',
+      subscription_tier = 'full_subscriber',
+      subscription_billing_cycle = $5,
+      subscription_started_at = COALESCE(subscription_started_at, NOW()),
+      subscription_current_period_start = NOW(),
+      subscription_current_period_end = $6,
+      subscription_cancel_at_period_end = FALSE,
+      is_subscribed = TRUE,
+      updated_at = NOW()
+    WHERE player_id = $7
+  `;
+
+  await pool.query(query, [
+    customerId,
+    subscriptionId,
+    paymentMethod,
+    paymentProfileId,  // Update payment profile if provided, keep existing if null
+    billingCycle,
+    periodEnd,
+    playerId
+  ]);
+
+  logSubscriptionEvent('recurring_invoice_paid', {
+    playerId,
+    billingCycle,
+    periodEnd,
+    subscriptionId,
+    paymentMethod
+  });
+}
+
+/**
+ * Handle invoice.payment_failed event (for recurring invoices)
+ * This is triggered when a recurring payment fails
+ */
+async function handleInvoicePaymentFailed(playerId, eventData) {
+  const query = `
+    UPDATE players
+    SET
+      subscription_status = 'past_due',
+      updated_at = NOW()
+    WHERE player_id = $1
+  `;
+
+  await pool.query(query, [playerId]);
+
+  logSubscriptionEvent('recurring_payment_failed', {
+    playerId,
+    reason: eventData.failure_reason || 'unknown'
+  });
+
+  // TODO: Send email notification to user about failed payment
+}
+
+/**
+ * Handle invoice.created event (for recurring invoices)
+ * This is triggered when a new recurring invoice is generated
+ */
+async function handleInvoiceCreated(playerId, eventData) {
+  logSubscriptionEvent('recurring_invoice_created', {
+    playerId,
+    invoiceId: eventData.id,
+    amount: eventData.amount
+  });
+
+  // TODO: Send email notification to user about upcoming charge
+}
+
+/**
  * Process webhook event and update subscription
  */
 async function processWebhookEvent(eventId, eventData) {
@@ -411,11 +536,30 @@ async function processWebhookEvent(eventId, eventData) {
   const eventType = eventData.type;
 
   switch (eventType) {
+    // One-time order/payment events
     case 'order.paid':
     case 'payment.succeeded':
       await handleOrderPaid(playerId, eventData);
       break;
 
+    // Recurring invoice events (for monthly subscriptions)
+    case 'invoice.paid':
+    case 'recurring_invoice.paid':
+      await handleInvoicePaid(playerId, eventData);
+      break;
+
+    case 'invoice.payment_failed':
+    case 'recurring_invoice.payment_failed':
+    case 'payment.failed':
+      await handleInvoicePaymentFailed(playerId, eventData);
+      break;
+
+    case 'invoice.created':
+    case 'recurring_invoice.created':
+      await handleInvoiceCreated(playerId, eventData);
+      break;
+
+    // Subscription lifecycle events
     case 'subscription.created':
       await handleSubscriptionCreated(playerId, eventData);
       break;

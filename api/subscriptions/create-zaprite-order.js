@@ -1,7 +1,13 @@
 import pg from 'pg';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { createZapriteOrder, extractCheckoutUrl, extractOrderId, ZapriteApiError } from '../../utils/zaprite-client.js';
+import {
+  createZapriteOrder,
+  createZapriteOrderCharge,
+  extractCheckoutUrl,
+  extractOrderId,
+  ZapriteApiError
+} from '../../utils/zaprite-client.js';
 import { logApiRequest, logApiResponse, logPaymentEvent, createRequestLogger } from '../../utils/logger.js';
 
 const { Pool } = pg;
@@ -11,6 +17,9 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
+
+// Zaprite Custom Checkout ID for monthly subscriptions with auto-pay
+const ZAPRITE_CUSTOM_CHECKOUT_ID = 'cmgoepfh00001kv04t7a0mvdk';
 
 // Pricing Configuration
 const PRICING = {
@@ -101,16 +110,17 @@ export default async function handler(req, res) {
       amount: pricing.amount
     });
 
-    // Create Zaprite Order
-    const orderPayload = {
-      customerId: user.player_id.toString(),
+    // Create Zaprite Order or Recurring Invoice
+    const basePayload = {
+      customerId: user.player_id.toString(),  // Always use player_id for customer reference
       customerEmail: user.email,
-      customerName: `Player ${user.player_id}`,
+      customerName: user.display_name || `Player ${user.player_id}`,
       amount: pricing.amount,
       currency: 'USD',
       description: pricing.description,
       metadata: {
         userId: user.player_id.toString(),
+        playerId: user.player_id.toString(),  // Explicit player_id reference
         userEmail: user.email,
         displayName: user.display_name || 'Anonymous',
         interval: interval,
@@ -132,7 +142,30 @@ export default async function handler(req, res) {
     // Use Zaprite client with retry logic
     let zapriteData;
     try {
-      zapriteData = await createZapriteOrder(orderPayload);
+      if (interval === 'monthly') {
+        // For monthly subscriptions, use custom checkout for auto-pay
+        // This creates the first order and allows customer to save their payment method
+        const monthlyPayload = {
+          ...basePayload,
+          customCheckoutId: ZAPRITE_CUSTOM_CHECKOUT_ID  // Custom checkout configured for Square auto-pay
+        };
+
+        logger.info('Creating order with custom checkout for monthly subscription', {
+          userId: user.player_id,
+          amount: pricing.amount,
+          customCheckoutId: ZAPRITE_CUSTOM_CHECKOUT_ID
+        });
+
+        zapriteData = await createZapriteOrder(monthlyPayload);
+      } else {
+        // For annual subscriptions, use one-time order (lifetime early adopter)
+        logger.info('Creating one-time order for annual subscription', {
+          userId: user.player_id,
+          amount: pricing.amount
+        });
+
+        zapriteData = await createZapriteOrder(basePayload);
+      }
     } catch (zapriteError) {
       if (zapriteError instanceof ZapriteApiError) {
         logger.error('Zaprite API error', zapriteError, {
@@ -158,6 +191,8 @@ export default async function handler(req, res) {
 
     // Store order in database for tracking
     const orderId = extractOrderId(zapriteData);
+    const eventType = 'order.created';  // Both monthly and annual use regular orders
+
     await pool.query(
       `INSERT INTO zaprite_payment_events (
         player_id,
@@ -168,13 +203,17 @@ export default async function handler(req, res) {
       ) VALUES ($1, $2, $3, $4, $5)`,
       [
         user.player_id,
-        'order.created',
-        orderId || `order_${Date.now()}`,
+        eventType,
+        orderId || `${interval}_${Date.now()}`,
         JSON.stringify({
           interval,
           amount: pricing.amount,
+          isRecurring: interval === 'monthly',
+          usesCustomCheckout: interval === 'monthly',  // Monthly uses custom checkout for auto-pay
+          customCheckoutId: interval === 'monthly' ? ZAPRITE_CUSTOM_CHECKOUT_ID : null,
           orderData: zapriteData,
-          requestId
+          requestId,
+          playerId: user.player_id  // Ensure player_id is stored in raw_event
         }),
         'pending'
       ]
@@ -218,7 +257,9 @@ export default async function handler(req, res) {
       interval: interval,
       amount: pricing.amount,
       currency: 'USD',
-      includesGift: interval === 'annual'
+      isRecurring: interval === 'monthly',
+      includesGift: interval === 'annual',
+      playerId: user.player_id  // Return player_id for frontend reference
     });
 
   } catch (error) {

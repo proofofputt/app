@@ -186,7 +186,8 @@ async function zapriteApiCall(endpoint, options = {}, retries = DEFAULT_RETRIES)
 }
 
 /**
- * Create a Zaprite order
+ * Create a Zaprite order (one-time payment or subscription setup)
+ * For monthly subscriptions with auto-pay, include customCheckoutId
  */
 export async function createZapriteOrder(orderPayload, options = {}) {
   const payload = {
@@ -197,6 +198,77 @@ export async function createZapriteOrder(orderPayload, options = {}) {
   return zapriteApiCall('/v1/order', {
     method: 'POST',
     body: JSON.stringify(payload),
+    ...options
+  });
+}
+
+/**
+ * Charge a saved payment profile (for recurring payments)
+ * Used for monthly subscription auto-pay with saved Square payment method
+ *
+ * @param {Object} chargePayload - The charge details
+ * @param {string} chargePayload.orderId - The order ID to charge
+ * @param {string} chargePayload.paymentProfileId - The saved payment profile ID
+ * @param {Object} options - Additional request options
+ * @returns {Promise} The charge response
+ */
+export async function createZapriteOrderCharge(chargePayload, options = {}) {
+  const { orderId, paymentProfileId, ...additionalData } = chargePayload;
+
+  if (!orderId || !paymentProfileId) {
+    throw new Error('orderId and paymentProfileId are required for order charge');
+  }
+
+  const payload = {
+    paymentProfileId,
+    ...additionalData
+  };
+
+  return zapriteApiCall(`/v1/order/${orderId}/charge`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    ...options
+  });
+}
+
+/**
+ * Create a Zaprite recurring invoice (for subscriptions)
+ * Used for monthly recurring payments
+ */
+export async function createZapriteRecurringInvoice(invoicePayload, options = {}) {
+  const payload = {
+    organizationId: ZAPRITE_ORG_ID,
+    ...invoicePayload
+  };
+
+  // Note: The exact endpoint may vary - common patterns are:
+  // - /v1/invoice/recurring
+  // - /v1/recurring-invoice
+  // - /v1/subscription
+  // This will need to be verified with Zaprite's API documentation
+  return zapriteApiCall('/v1/invoice/recurring', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    ...options
+  });
+}
+
+/**
+ * Cancel a Zaprite recurring invoice
+ */
+export async function cancelZapriteRecurringInvoice(invoiceId, options = {}) {
+  return zapriteApiCall(`/v1/invoice/recurring/${invoiceId}/cancel`, {
+    method: 'POST',
+    ...options
+  });
+}
+
+/**
+ * Get Zaprite recurring invoice by ID
+ */
+export async function getZapriteRecurringInvoice(invoiceId, options = {}) {
+  return zapriteApiCall(`/v1/invoice/recurring/${invoiceId}`, {
+    method: 'GET',
     ...options
   });
 }
@@ -323,6 +395,10 @@ export function validateZapriteConfig() {
 
 export default {
   createZapriteOrder,
+  createZapriteOrderCharge,
+  createZapriteRecurringInvoice,
+  cancelZapriteRecurringInvoice,
+  getZapriteRecurringInvoice,
   getZapriteOrder,
   cancelZapriteOrder,
   getZapriteCustomer,
