@@ -333,13 +333,13 @@ main {
   overflow-y: auto;
   margin-top: 1rem; /* Moved from .session-table to here */
   transition: height 0.3s ease-in-out;
-  height: 1200px; /* Base height to show many rows */
+  height: 600px; /* Base height for default view - fits within session history section */
   position: relative;
 }
 
 /* Expand table when stats are hidden */
 .session-list-container.stats-hidden .session-table-wrapper {
-  height: calc(100vh - 280px); /* Expand to fill available viewport space */
+  height: calc(100vh - 280px); /* Expand to fill available viewport space when stats hidden */
 }
 
 /* Add subtle diagonal striped background pattern for empty table space - "mowed fairway" effect */
