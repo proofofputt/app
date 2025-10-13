@@ -333,7 +333,7 @@ main {
   overflow-y: auto;
   margin-top: 1rem; /* Moved from .session-table to here */
   transition: height 0.3s ease-in-out;
-  max-height: 400px; /* Reduced from 600px to fit ~7 rows without overlap when stats visible */
+  max-height: 350px; /* Reduced to fit ~6-7 rows with space for pagination buttons below */
   position: relative;
   /* Remove background from wrapper - it will be on the table instead */
 }
