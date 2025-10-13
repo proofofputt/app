@@ -86,16 +86,21 @@ export default async function handler(req, res) {
 
     // Send password reset email using SendGrid
     const username = user.name || email.split('@')[0];
-    const emailResult = await sendPasswordResetEmail(email, username, resetToken);
-    
-    if (!emailResult.success) {
-      console.error('Failed to send password reset email:', emailResult.error);
+    const resetLink = `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.proofofputt.com'}/reset-password?token=${resetToken}`;
+
+    try {
+      const emailResult = await sendPasswordResetEmail(email, username, resetToken);
+
+      if (!emailResult.success) {
+        console.error('Failed to send password reset email:', emailResult.error);
+      }
+    } catch (emailError) {
+      console.error('Email service error:', emailError);
       // Continue anyway - don't block the reset process if email fails
     }
-    
+
     // For development, also log the reset link
     if (process.env.NODE_ENV === 'development') {
-      const resetLink = `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.proofofputt.com'}/reset-password?token=${resetToken}`;
       console.log('Password reset link for', email, ':', resetLink);
     }
 
