@@ -35,6 +35,8 @@ export default async function handler(req, res) {
           membership_tier VARCHAR(50) DEFAULT 'basic',
           subscription_status VARCHAR(50) DEFAULT 'inactive',
           timezone VARCHAR(100) DEFAULT 'America/New_York',
+          reset_token VARCHAR(255),
+          reset_token_expiry TIMESTAMP WITH TIME ZONE,
           created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
           updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
@@ -135,6 +137,7 @@ export default async function handler(req, res) {
           updated_at = NOW();
 
       -- Performance indexes
+      CREATE INDEX IF NOT EXISTS idx_players_reset_token ON players(reset_token) WHERE reset_token IS NOT NULL;
       CREATE INDEX IF NOT EXISTS idx_sessions_player_id ON sessions(player_id);
       CREATE INDEX IF NOT EXISTS idx_sessions_created_at ON sessions(created_at);
       CREATE INDEX IF NOT EXISTS idx_player_stats_makes ON player_stats(total_makes DESC);

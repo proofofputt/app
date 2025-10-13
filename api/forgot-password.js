@@ -58,15 +58,15 @@ export default async function handler(req, res) {
 
     // Check if user exists
     const users = await client.query(
-      'SELECT player_id, name FROM players WHERE LOWER(email) = LOWER($1)',
+      'SELECT player_id, name, email FROM players WHERE LOWER(email) = LOWER($1)',
       [email]
     );
 
     if (users.rows.length === 0) {
       // Don't reveal if email exists or not for security
-      return res.status(200).json({ 
+      return res.status(200).json({
         success: true,
-        message: 'If an account exists with this email, you will receive password reset instructions.' 
+        message: 'If an account exists with this email, you will receive password reset instructions.'
       });
     }
 
@@ -78,14 +78,14 @@ export default async function handler(req, res) {
 
     // Store reset token in database
     await client.query(
-      `UPDATE players 
+      `UPDATE players
        SET reset_token = $1, reset_token_expiry = $2, updated_at = NOW()
        WHERE player_id = $3`,
       [resetToken, resetTokenExpiry, user.player_id]
     );
 
     // Send password reset email using SendGrid
-    const username = user.username || user.name || email.split('@')[0];
+    const username = user.name || email.split('@')[0];
     const emailResult = await sendPasswordResetEmail(email, username, resetToken);
     
     if (!emailResult.success) {
