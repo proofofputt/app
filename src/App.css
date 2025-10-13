@@ -322,7 +322,7 @@ main {
 .session-list-container {
   grid-column: 1 / -1; /* Span full width */
   margin-top: 1rem;
-  padding: 1rem 1.5rem 1.5rem 1.5rem; /* Increased bottom padding for pagination */
+  padding: 1rem 1.5rem 3rem 1.5rem; /* Increased bottom padding to 3rem to fully contain pagination */
   display: flex; /* Make it a flex container */
   flex-direction: column; /* Stack children vertically */
   position: relative; /* For absolute positioning of the button */
