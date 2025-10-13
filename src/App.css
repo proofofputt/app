@@ -158,6 +158,7 @@ main {
   /* align-items: center; /* Removed to allow full-width content. The padding on child elements will control the width. */ */
   justify-content: flex-start; /* Align content to the top */
   overflow-x: auto; /* Allow horizontal scroll if content is too wide */
+  padding-bottom: 2rem; /* Add space at the bottom of the page */
 }
 
 /* --- Auth Forms --- */
@@ -334,32 +335,10 @@ main {
   overflow-y: auto;
   margin-top: 1rem; /* Moved from .session-table to here */
   transition: max-height 0.4s ease-in-out;
-  background-color: var(--surface-color);
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
   min-height: 600px; /* Doubled height to display more rows */
   position: relative;
 }
 
-/* Add subtle grey background pattern for empty table space */
-.session-table-wrapper::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.02);
-  background-image: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 10px,
-    rgba(255, 255, 255, 0.01) 10px,
-    rgba(255, 255, 255, 0.01) 20px
-  );
-  pointer-events: none;
-  z-index: 0;
-}
 
 /* The height of the wrapper when a session is expanded is now controlled
    dynamically via JavaScript to "lock" the view. */
@@ -368,7 +347,6 @@ main {
   border-collapse: collapse;
   position: relative;
   z-index: 1;
-  background-color: var(--masters-green-light); /* Use hover color as default row background */
   /* margin-top: 1rem; Replaced by margin-top on .session-table-wrapper */
 }
 
