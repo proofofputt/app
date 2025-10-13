@@ -22,7 +22,9 @@ function Dashboard() {
   const [paginatedSessions, setPaginatedSessions] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [sessionsLoading, setSessionsLoading] = useState(false);
+  const [isScrolling, setIsScrolling] = useState(false);
   const tableWrapperRef = useRef(null);
+  const scrollTimeoutRef = useRef(null);
   const sessionsPerPage = 21;
 
   // This effect manages the height of the session table container
@@ -51,6 +53,35 @@ function Dashboard() {
       wrapper.style.maxHeight = null;
     }
   }, [expandedSessionId]);
+
+  // Handle scroll events to hide stats when scrolling
+  useEffect(() => {
+    const wrapper = tableWrapperRef.current;
+    if (!wrapper) return;
+
+    const handleScroll = () => {
+      setIsScrolling(true);
+
+      // Clear existing timeout
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+
+      // Set new timeout to hide scrolling indicator after 1.5 seconds of no scrolling
+      scrollTimeoutRef.current = setTimeout(() => {
+        setIsScrolling(false);
+      }, 1500);
+    };
+
+    wrapper.addEventListener('scroll', handleScroll);
+
+    return () => {
+      wrapper.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleToggleExpand = (sessionId) => {
     setExpandedSessionId(prevId => (prevId === sessionId ? null : sessionId));
@@ -178,23 +209,30 @@ function Dashboard() {
   }
 
   const { stats } = playerData;
-  
+
   const totalPutts = (stats.total_makes || 0) + (stats.total_misses || 0);
   const makePercentage = totalPutts > 0 ? ((stats.total_makes / totalPutts) * 100).toFixed(1) + '%' : 'N/A';
+
+  // Hide stats when session is expanded or scrolling
+  const shouldHideStats = expandedSessionId !== null || isScrolling;
 
   return (
     <>
       <main className="dashboard-main">
 
-        <div className="stats-summary-bar">
-          <h2>All-Time Stats</h2>
-        </div>
-        <div className="dashboard-grid">
-          <StatCard title="Makes" value={stats.total_makes} />
-          <StatCard title="Misses" value={stats.total_misses} />
-          <StatCard title="Accuracy" value={makePercentage} />
-          <StatCard title="Fastest 21" value={stats.fastest_21_makes ? `${stats.fastest_21_makes.toFixed(2)}s` : 'N/A'} />
-        </div>
+        {!shouldHideStats && (
+          <>
+            <div className="stats-summary-bar">
+              <h2>All-Time Stats</h2>
+            </div>
+            <div className="dashboard-grid">
+              <StatCard title="Makes" value={stats.total_makes} />
+              <StatCard title="Misses" value={stats.total_misses} />
+              <StatCard title="Accuracy" value={makePercentage} />
+              <StatCard title="Fastest 21" value={stats.fastest_21_makes ? `${stats.fastest_21_makes.toFixed(2)}s` : 'N/A'} />
+            </div>
+          </>
+        )}
         
         <div className={`session-list-container ${expandedSessionId ? 'is-expanded' : ''}`}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
