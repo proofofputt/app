@@ -521,7 +521,7 @@ main {
 /* Removed the extra margin on first column */
 
 .details-section h4 {
-  margin-top: 0;
+  margin-top: 1rem; /* Match h5 margin-top for consistent spacing */
   margin-bottom: 0.5rem;
   color: var(--primary-color); /* Changed to yellow like table headers */
   font-size: 1.3rem; /* Increased font size for category names */
