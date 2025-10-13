@@ -195,6 +195,12 @@ export async function createZapriteOrder(orderPayload, options = {}) {
     ...orderPayload
   };
 
+  // Log the exact payload being sent to Zaprite
+  console.log('[Zaprite Client] Creating order with payload:', {
+    ...payload,
+    metadata: JSON.stringify(payload.metadata, null, 2)
+  });
+
   return zapriteApiCall('/v1/order', {
     method: 'POST',
     body: JSON.stringify(payload),
