@@ -170,20 +170,34 @@ export default async function handler(req, res) {
       if (zapriteError instanceof ZapriteApiError) {
         logger.error('Zaprite API error', zapriteError, {
           statusCode: zapriteError.statusCode,
-          response: zapriteError.response
+          response: zapriteError.response,
+          message: zapriteError.message,
+          interval,
+          customCheckoutId: interval === 'monthly' ? ZAPRITE_CUSTOM_CHECKOUT_ID : null
+        });
+
+        // Log full error details for debugging
+        console.error('[Zaprite Error Details]', {
+          statusCode: zapriteError.statusCode,
+          message: zapriteError.message,
+          response: JSON.stringify(zapriteError.response, null, 2),
+          interval,
+          userId: user.player_id
         });
 
         logApiResponse('/api/subscriptions/create-zaprite-order', 'POST', 500, {
           requestId,
           userId: user.player_id,
           reason: 'zaprite_api_error',
-          zapriteStatus: zapriteError.statusCode
+          zapriteStatus: zapriteError.statusCode,
+          zapriteMessage: zapriteError.message
         });
 
         return res.status(500).json({
           error: 'Failed to create order',
           details: zapriteError.message,
-          status: zapriteError.statusCode
+          status: zapriteError.statusCode,
+          zapriteResponse: zapriteError.response
         });
       }
       throw zapriteError; // Re-throw if not a Zaprite API error
