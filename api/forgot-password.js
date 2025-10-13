@@ -79,7 +79,7 @@ export default async function handler(req, res) {
     // Store reset token in database
     await client.query(
       `UPDATE players
-       SET reset_token = $1, reset_token_expiry = $2, updated_at = NOW()
+       SET reset_token = $1, reset_token_expiry = $2
        WHERE player_id = $3`,
       [resetToken, resetTokenExpiry, user.player_id]
     );
