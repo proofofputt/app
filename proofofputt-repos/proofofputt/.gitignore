@@ -1,0 +1,30 @@
+# OAuth Credentials - NEVER COMMIT
+client_secret*.json
+*client_secret*.json
+google-credentials*.json
+oauth-credentials*.json
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.development
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+
+# IDE
+.vscode/
+.idea/
+.claude/
+
+# Logs
+*.log
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+.vercel
