@@ -24,7 +24,6 @@ function Dashboard() {
   const [sessionsLoading, setSessionsLoading] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
   const tableWrapperRef = useRef(null);
-  const scrollTimeoutRef = useRef(null);
   const sessionsPerPage = 21;
 
   // This effect manages the height of the session table container
@@ -60,26 +59,18 @@ function Dashboard() {
     if (!wrapper) return;
 
     const handleScroll = () => {
-      setIsScrolling(true);
-
-      // Clear existing timeout
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-
-      // Set new timeout to hide scrolling indicator after 1.5 seconds of no scrolling
-      scrollTimeoutRef.current = setTimeout(() => {
+      // Show stats only when scrolled back to the top (within 10px threshold)
+      if (wrapper.scrollTop <= 10) {
         setIsScrolling(false);
-      }, 1500);
+      } else {
+        setIsScrolling(true);
+      }
     };
 
     wrapper.addEventListener('scroll', handleScroll);
 
     return () => {
       wrapper.removeEventListener('scroll', handleScroll);
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
     };
   }, []);
 
