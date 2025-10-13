@@ -213,7 +213,7 @@ function Dashboard() {
           <div className="session-table-wrapper" ref={tableWrapperRef}>
             <table className="session-table">
               <thead>
-                <tr><th style={{ width: '1%', textAlign: 'left', whiteSpace: 'nowrap' }}>Details</th><th style={{ textAlign: 'center' }}>Session #</th><th style={{ textAlign: 'center' }}>Type</th><th style={{ textAlign: 'center' }}>Duration</th><th style={{ textAlign: 'center' }}>Makes</th><th style={{ textAlign: 'center' }}>Misses</th><th style={{ textAlign: 'center' }}>Top Streak</th><th style={{ textAlign: 'center' }}>Fastest 21</th><th style={{ textAlign: 'center' }}>PPM</th><th style={{ textAlign: 'center' }}>MPM</th><th style={{ textAlign: 'center' }}>Max 60s</th></tr>
+                <tr><th style={{ width: '1%', textAlign: 'left', whiteSpace: 'nowrap' }}>Details</th><th style={{ textAlign: 'center' }}>Session #</th><th style={{ textAlign: 'center', minWidth: '150px' }}>Type</th><th style={{ textAlign: 'center' }}>Duration</th><th style={{ textAlign: 'center' }}>Makes</th><th style={{ textAlign: 'center' }}>Misses</th><th style={{ textAlign: 'center' }}>Streak</th><th style={{ textAlign: 'center' }}>Fastest 21</th><th style={{ textAlign: 'center' }}>PPM</th><th style={{ textAlign: 'center' }}>MPM</th><th style={{ textAlign: 'center' }}>Max 60s</th></tr>
               </thead>
               <tbody>
                 {sessionsLoading ? (
