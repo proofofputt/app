@@ -1,0 +1,298 @@
+.dashboard-header {
+  background: linear-gradient(135deg, #1B4332 0%, #40916C 100%);
+  color: white;
+  padding: 5px 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+  width: 100%;
+  margin: 0;
+  padding: 0 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-content h1 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.welcome-text {
+  font-weight: 500;
+  margin-right: 10px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #1B4332 0%, #40916C 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(27, 67, 50, 0.3);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.btn-outline {
+  background: transparent;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.btn-outline:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dashboard-main {
+  width: 100%;
+  padding: 10px 2.625% 10px 2.625%; /* Reduced top/bottom padding from 40px to 10px */
+  box-sizing: border-box;
+  height: calc(100vh - 132px); /* Account for increased header height (68px + 64px padding = 132px) */
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);  /* Force exactly 4 columns */
+  gap: 16px;  /* Reduced gap */
+}
+
+.dashboard-card {
+  background: #188400; /* Changed from white to green for consistency */
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.dashboard-card h2 {
+  color: #1B4332;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+}
+
+.dashboard-card p {
+  color: #6B7280;
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
+.card-stats {
+  display: flex;
+  gap: 24px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #FFD700; /* Changed from transparent to yellow/gold */
+  margin-bottom: 4px;
+  background: transparent !important; /* Force remove any white background */
+  padding: 0.5rem;
+  border-radius: 6px;
+}
+
+/* More specific selector to override any conflicting styles */
+.stats-card .stat-value,
+.dashboard-card .stat-value,
+p.stat-value {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #6B7280;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-content {
+  margin-top: 16px;
+}
+
+.leaderboard-preview {
+  text-align: center;
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 8px;
+  color: #6B7280;
+}
+
+.no-activity {
+  text-align: center;
+  color: #9CA3AF;
+  font-style: italic;
+  margin: 20px 0;
+}
+
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+  
+  .header-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);  /* 2 columns on mobile */
+    gap: 12px;  /* Smaller gap on mobile */
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);  /* 2x2 grid for mobile */
+    gap: 0.5rem;  /* Compact gap */
+  }
+
+  .stats-card {
+    padding: 0.5rem 0.6rem;  /* Compact padding */
+  }
+
+  .stats-card h3 {
+    font-size: 0.85rem;  /* Smaller font on very small screens */
+  }
+
+  .stat-value {
+    font-size: 1rem;  /* Smaller value font on very small screens */
+    padding: 0.2rem;
+  }
+}
+
+/* Compact spacing for dashboard elements to show more session rows */
+.stats-summary-bar {
+  margin-bottom: 0.25rem !important; /* Match spacing above and below All-Time Stats */
+  padding: 0.25rem 0 !important; /* Reduced top/bottom padding from 0.8 to 0.25 */
+}
+
+.stats-summary-bar h2 {
+  margin: 0.05rem 0 !important; /* Minimal All-Time Stats margin */
+  padding: 0.025rem 0 !important; /* Minimal All-Time Stats padding */
+}
+
+.dashboard-grid {
+  margin-bottom: 0.25rem !important; /* Match spacing above cards */
+}
+
+.session-list-container {
+  margin-top: 0.25rem !important; /* Reduce space above session history */
+}
+
+.session-list-container > div:first-child {
+  margin-bottom: 0.05rem !important; /* Minimal space below buttons */
+  padding: 0.05rem 0 !important; /* Minimal padding around Refresh/Career Stats buttons */
+  justify-content: space-between !important; /* Keep buttons right-aligned */
+}
+
+/* Make session history buttons thinner */
+.session-list-container .btn {
+  padding: 0.375rem 1rem !important; /* Reduce button height by making vertical padding smaller */
+}
+
+.session-list-container h3 {
+  margin: 0.025rem 0 !important; /* Further reduce Session History title padding by 90% */
+  padding: 0 !important;
+  text-align: left !important; /* Keep Session History title left-aligned */
+}
+
+.session-table-wrapper {
+  margin-bottom: 0.25rem !important; /* Reduce padding below the table */
+}
+
+/* Add column and row stroke lines to session history table */
+.dashboard-main .session-table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+.dashboard-main .session-table th,
+.dashboard-main .session-table td {
+  border-right: 1px solid var(--border-color) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.dashboard-main .session-table th:last-child,
+.dashboard-main .session-table td:last-child {
+  border-right: none !important;
+}
+
+.dashboard-main .session-table tbody tr:last-child td {
+  border-bottom: none !important;
+}
+
+/* Column width distribution to match headers */
+.dashboard-main .session-table th:nth-child(1),
+.dashboard-main .session-table td:nth-child(1) { width: 1%; white-space: nowrap; }  /* Details button - minimal width */
+.dashboard-main .session-table th:nth-child(2),
+.dashboard-main .session-table td:nth-child(2) { width: 120px; }  /* Session # */
+.dashboard-main .session-table th:nth-child(3),
+.dashboard-main .session-table td:nth-child(3) { width: 80px; }   /* Type */
+.dashboard-main .session-table th:nth-child(4),
+.dashboard-main .session-table td:nth-child(4) { width: 80px; }   /* Duration */
+.dashboard-main .session-table th:nth-child(5),
+.dashboard-main .session-table td:nth-child(5) { width: 60px; }   /* Makes */
+.dashboard-main .session-table th:nth-child(6),
+.dashboard-main .session-table td:nth-child(6) { width: 60px; }   /* Misses */
+.dashboard-main .session-table th:nth-child(7),
+.dashboard-main .session-table td:nth-child(7) { width: 80px; }   /* Best Streak */
+.dashboard-main .session-table th:nth-child(8),
+.dashboard-main .session-table td:nth-child(8) { width: 80px; }   /* Fastest 21 */
+.dashboard-main .session-table th:nth-child(9),
+.dashboard-main .session-table td:nth-child(9) { width: 60px; }   /* PPM */
+.dashboard-main .session-table th:nth-child(10),
+.dashboard-main .session-table td:nth-child(10) { width: 60px; }  /* MPM */
+.dashboard-main .session-table th:nth-child(11),
+.dashboard-main .session-table td:nth-child(11) { width: 80px; }  /* Most in 60s */

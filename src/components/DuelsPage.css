@@ -1,0 +1,465 @@
+/* DuelsPage.css */
+
+/* Override container margins specifically for duels page */
+.duels-page .container {
+  margin: 0 11%; /* Add 11% margins on both sides */
+  width: 78%; /* Restrict content width (100% - 42%) */
+}
+
+/* Button groups for action buttons */
+.duel-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.duel-actions .btn {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.duels-page {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Loading and Error States */
+.duels-page .loading-state, 
+.duels-page .error-state {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.duels-page .loading-spinner {
+  margin: 1rem auto;
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Empty state styling to match table background */
+.duels-page .empty-state {
+  text-align: center;
+  padding: 2rem;
+  background-color: var(--background-color, #1a1a1a); /* Same background as tables */
+  border: 1px solid var(--border-color, #333);
+  border-radius: 12px;
+  color: white !important; /* White text for better readability - override other CSS */
+  width: 100%; /* Ensure empty state uses full container width */
+  box-sizing: border-box; /* Include padding in width calculation */
+}
+
+.duels-page .empty-state p {
+  margin: 0;
+  font-weight: 500;
+  color: white !important; /* Ensure paragraph text is also white */
+}
+
+/* Status badges */
+.status-badge {
+  color: white;
+  padding: 0.25rem 0.5rem; /* Reduced horizontal padding */
+  border-radius: 12px;
+  font-size: 0.75rem; /* Slightly smaller font to fit in constrained columns */
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.02em; /* Reduced letter spacing */
+  display: inline-block;
+  max-width: 100%; /* Ensure it doesn't overflow its container */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+}
+
+/* Opponent links */
+.opponent-link {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.opponent-link:hover {
+  text-decoration: underline;
+}
+
+/* Winner text */
+.winner-text {
+  font-weight: 600;
+  color: var(--success-color, #10b981);
+}
+
+/* Expiration box */
+.expiration-box {
+  background-color: var(--warning-bg, #fef3c7);
+  color: var(--warning-text, #d97706);
+  padding: 0.25rem 0.35rem; /* Reduced horizontal padding */
+  border-radius: 6px;
+  font-size: 0.75rem; /* Smaller font to fit in constrained columns */
+  font-weight: 500;
+  text-align: center;
+  border: 1px solid var(--warning-border, #fcd34d);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Create Duel Button - Yellow/Orange Gradient */
+.duels-page .page-header .btn-primary {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #f97316 100%);
+  border: none;
+  color: #1a1a1a;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  text-shadow: none;
+  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
+}
+
+.duels-page .page-header .btn-primary:hover {
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 50%, #ea580c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(251, 191, 36, 0.4);
+}
+
+.duels-page .page-header .btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
+}
+
+.duel-category-section {
+  margin-bottom: 2.5rem;
+  width: 100%; /* Ensure section uses full container width */
+  box-sizing: border-box; /* Include padding/borders in width */
+}
+
+.duel-category-title {
+  color: var(--primary-color);
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 1.1rem;
+}
+
+.duels-table-container {
+  /* Define a max-height to make the container scrollable */
+  max-height: 60vh; /* Adjust as needed */
+  overflow-y: auto;
+  overflow-x: auto; /* Enable horizontal scrolling when table is wider than container */
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  width: 100%; /* Ensure table container uses full container width */
+  box-sizing: border-box; /* Include borders in width calculation */
+  position: relative; /* For sticky header positioning */
+  /* Smooth scrolling on supported browsers */
+  scroll-behavior: smooth;
+  /* Better scrollbar appearance */
+  scrollbar-width: thin;
+}
+
+/* Webkit scrollbar styling for horizontal scrolling */
+.duels-table-container::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.duels-table-container::-webkit-scrollbar-track {
+  background: var(--background-color, #1a1a1a);
+  border-radius: 4px;
+}
+
+.duels-table-container::-webkit-scrollbar-thumb {
+  background: var(--border-color, #333);
+  border-radius: 4px;
+}
+
+.duels-table-container::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color, #fbbf24);
+}
+
+.duels-table {
+  width: 100%; /* Ensure table uses full container width */
+  min-width: 750px; /* Increased minimum width to accommodate all content */
+  table-layout: auto; /* Auto layout for better content-based sizing */
+  border-collapse: collapse; /* Clean borders */
+}
+
+.duels-table th,
+.duels-table td {
+  padding: 0.75rem 0.5rem; /* Comfortable padding */
+  vertical-align: middle;
+  white-space: nowrap; /* Prevent text wrapping by default */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Score cells - compact but readable */
+.duels-table .score-cell {
+  text-align: center;
+  white-space: nowrap; /* Keep scores on one line */
+  width: 80px; /* Fixed narrow width for scores */
+}
+
+/* Actions column configuration */
+.duels-table .actions-cell {
+  white-space: nowrap; /* Keep buttons together */
+  text-align: center;
+  width: 140px; /* Fixed width for "Copy Parameters" button */
+}
+
+/* Optimized column widths for content-based layout */
+.duels-table th[data-col="opponent"],
+.duels-table td[data-cell="opponent"] {
+  min-width: 120px; /* Minimum width for player names */
+  width: auto;
+  padding-right: 0.5rem;
+  white-space: nowrap; /* Keep names on one line */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.duels-table th[data-col="your-score"],
+.duels-table td[data-cell="your-score"],
+.duels-table th[data-col="opponent-score"],
+.duels-table td[data-cell="opponent-score"] {
+  min-width: 85px; /* Minimum width for score columns */
+  width: auto;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.duels-table th[data-col="result"],
+.duels-table td[data-cell="result"] {
+  min-width: 80px; /* Minimum width for Win/Loss/Draw */
+  width: auto;
+  text-align: center;
+}
+
+.duels-table th[data-col="completed"],
+.duels-table td[data-cell="completed"] {
+  min-width: 90px; /* Minimum width for date display */
+  width: auto;
+  white-space: nowrap;
+}
+
+.duels-table th[data-col="actions"],
+.duels-table td[data-cell="actions"] {
+  min-width: 140px; /* Minimum width for action buttons */
+  width: auto;
+  text-align: center;
+}
+
+/* General column minimums for better content handling */
+
+/* Status column - ensure minimum space */
+.duels-table th:nth-child(2), /* Status header */
+.duels-table td:nth-child(2) { /* Status cell */
+  min-width: 90px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Date/Time columns - readable minimums */
+.duels-table th:nth-child(3), /* Created header in pending tables */
+.duels-table td:nth-child(3), /* Created cell in pending tables */
+.duels-table th:nth-child(4), /* Expires header in pending tables */
+.duels-table td:nth-child(4) { /* Expires cell in pending tables */
+  min-width: 85px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.875rem;
+}
+
+/* Time Limit column - compact but readable */
+.duels-table th:nth-child(5), /* Time Limit header in pending tables */
+.duels-table td:nth-child(5) { /* Time Limit cell in pending tables */
+  min-width: 75px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.duels-table thead th {
+  position: -webkit-sticky; /* For Safari */
+  position: sticky;
+  top: 0;
+  background-color: var(--background-color); /* Darker background for sticky header */
+  z-index: 2; /* Ensure header is above scrolling content */
+}
+
+/* Sortable column headers */
+.duels-table thead th[style*="cursor: pointer"] {
+  transition: background-color 0.2s ease;
+  user-select: none;
+}
+
+.duels-table thead th[style*="cursor: pointer"]:hover {
+  background-color: rgba(251, 191, 36, 0.1);
+}
+
+/* Add vertical borders to all table cells except the last one in a row */
+.duels-table th:not(:last-child),
+.duels-table td:not(:last-child) {
+  border-right: 1px solid var(--border-color);
+}
+
+/* Score badges styling */
+.score-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  min-width: 30px;
+  text-align: center;
+}
+
+.score-badge.your-score {
+  background-color: rgba(16, 185, 129, 0.2); /* Green tint */
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.score-badge.opponent-score {
+  background-color: rgba(239, 68, 68, 0.2); /* Red tint */
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* This overrides any global styles to ensure the actions are centered. */
+.duels-table .actions-cell {
+  text-align: center;
+}
+
+/* This handles the case where there are two buttons (Accept/Decline) */
+.duel-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Ensure consistent alignment across all screen sizes */
+.duels-page .page-header {
+  width: 100%; /* Match the container width constraint */
+  box-sizing: border-box;
+}
+
+/* Responsive design - prioritize horizontal scrolling over compression */
+@media (max-width: 768px) {
+  .duels-table th {
+    font-size: 0.7rem;
+    padding: 0.4rem 0.3rem;
+  }
+
+  .duels-table td {
+    padding: 0.4rem 0.3rem;
+    font-size: 0.75rem;
+  }
+
+  .duels-table-container {
+    overflow-x: auto; /* Force horizontal scrolling on mobile */
+    overflow-y: visible; /* Don't clip content vertically */
+    max-height: 70vh; /* Limit height on mobile */
+  }
+
+  .duels-table {
+    min-width: 750px; /* Maintain full table width on mobile - force scrolling */
+  }
+
+  /* Adjust page margins for mobile */
+  .duels-page .container {
+    margin: 0 2%; /* Reduced margins on mobile */
+    width: 96%; /* Increased content width on mobile */
+    padding: 0.5rem;
+  }
+
+  .duels-page .page-header {
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .duels-page .page-header h2 {
+    font-size: 1.5rem;
+    text-align: center;
+  }
+
+  .duels-page .page-header .btn-primary {
+    width: 100%;
+    text-align: center;
+  }
+
+  .duel-category-title {
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .status-badge {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.4rem;
+  }
+
+  .expiration-box {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.3rem;
+  }
+}
+
+/* Button styling in actions column */
+.duels-table .actions-cell .btn {
+  margin: 0.125rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+/* Yellow styling for Submit Session button */
+.duels-table .actions-cell .btn-primary {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #f97316 100%);
+  border: none;
+  color: #1a1a1a;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+  text-shadow: none;
+  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
+  cursor: pointer;
+}
+
+.duels-table .actions-cell .btn-primary:hover {
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 50%, #ea580c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(251, 191, 36, 0.4);
+}
+
+.duels-table .actions-cell .btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
+}
+
+/* Reduce padding on the expiration cell to better fit the styled box */
+.duels-table .expiration-cell {
+  padding: 0.25rem 0.5rem;
+  vertical-align: middle;
+}

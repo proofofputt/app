@@ -1,0 +1,463 @@
+import { Pool } from 'pg';
+import jwt from 'jsonwebtoken';
+import { setCORSHeaders } from '../utils/cors.js';
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+function verifyToken(req) {
+  return new Promise((resolve) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return resolve(null);
+    }
+
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+        return resolve(null);
+      }
+      resolve(decoded);
+    });
+  });
+}
+
+export default async function handler(req, res) {
+  // Set CORS headers
+  setCORSHeaders(req, res);
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  let client;
+  try {
+    client = await pool.connect();
+    console.log('Leagues API: Database connected successfully');
+
+    if (req.method === 'GET') {
+      return await handleGetLeagues(req, res, client);
+    } else if (req.method === 'POST') {
+      return await handleCreateLeague(req, res, client);
+    } else {
+      return res.status(405).json({ success: false, message: 'Method Not Allowed' });
+    }
+
+  } catch (error) {
+    console.error('Leagues API error:', error);
+    console.error('Error stack:', error.stack);
+
+    // Always ensure we return the expected structure for GET requests
+    if (req.method === 'GET') {
+      return res.status(200).json({
+        success: false,
+        message: 'Failed to load leagues',
+        my_leagues: [],
+        public_leagues: [],
+        pending_invites: [],
+        error: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Internal server error',
+      error: error.message,
+      details: error.detail || undefined,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  } finally {
+    if (client) {
+      client.release();
+    }
+  }
+}
+
+async function handleGetLeagues(req, res, client) {
+  const { player_id } = req.query;
+
+  if (!player_id) {
+    return res.status(400).json({ success: false, message: 'player_id is required' });
+  }
+
+  // Get leagues where player is a member
+  const memberLeaguesResult = await client.query(`
+    SELECT 
+      l.league_id,
+      l.name,
+      l.description,
+      l.status,
+      l.created_at,
+      l.created_by as creator_id,
+      l.created_by,
+      l.rules,
+      l.privacy_level,
+      creator.name as creator_name,
+      lm.joined_at,
+      (SELECT COUNT(*) FROM league_memberships WHERE league_id = l.league_id) as member_count,
+      (
+        SELECT lr.round_number 
+        FROM league_rounds lr 
+        WHERE lr.league_id = l.league_id 
+        AND lr.status = 'active' 
+        LIMIT 1
+      ) as active_round_number
+    FROM leagues l
+    JOIN league_memberships lm ON l.league_id = lm.league_id
+    JOIN players creator ON l.created_by = creator.player_id
+    WHERE lm.player_id = $1
+    ORDER BY l.created_at DESC
+  `, [player_id]);
+
+  // Get public leagues player is not a member of
+  const publicLeaguesResult = await client.query(`
+    SELECT 
+      l.league_id,
+      l.name,
+      l.description,
+      l.status,
+      l.created_at,
+      l.created_by as creator_id,
+      l.created_by,
+      l.rules,
+      l.privacy_level,
+      creator.name as creator_name,
+      (SELECT COUNT(*) FROM league_memberships WHERE league_id = l.league_id) as member_count,
+      (
+        SELECT lr.round_number 
+        FROM league_rounds lr 
+        WHERE lr.league_id = l.league_id 
+        AND lr.status = 'active' 
+        LIMIT 1
+      ) as active_round_number
+    FROM leagues l
+    JOIN players creator ON l.created_by = creator.player_id
+    WHERE l.privacy_level = 'public'
+    AND l.league_id NOT IN (
+      SELECT league_id FROM league_memberships WHERE player_id = $1
+    )
+    AND l.status IN ('active', 'setup')
+    ORDER BY l.created_at DESC
+    LIMIT 20
+  `, [player_id]);
+
+  return res.status(200).json({
+    success: true,
+    my_leagues: memberLeaguesResult.rows,
+    public_leagues: publicLeaguesResult.rows,
+    pending_invites: [] // Populated by separate endpoint /players/[id]/league-invitations
+  });
+}
+
+async function handleCreateLeague(req, res, client) {
+  // Verify authentication for league creation
+  const user = await verifyToken(req);
+  if (!user) {
+    return res.status(401).json({ success: false, message: 'Authentication required' });
+  }
+
+  const { name, description, settings, start_time, invite_new_players, new_player_contacts } = req.body;
+
+  if (!name) {
+    return res.status(400).json({ success: false, message: 'League name is required' });
+  }
+
+  // Process and validate league settings
+  const leagueSettings = settings || {};
+  
+  // Ensure putting distance is set, default to 7.0 feet
+  if (!leagueSettings.putting_distance_feet) {
+    leagueSettings.putting_distance_feet = 7.0;
+  }
+  
+  // Validate putting distance range (3.0 - 10.0 feet)
+  if (leagueSettings.putting_distance_feet < 3.0 || leagueSettings.putting_distance_feet > 10.0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Putting distance must be between 3.0 and 10.0 feet'
+    });
+  }
+
+  // Validate new player contacts if provided
+  if (invite_new_players && (!new_player_contacts || !Array.isArray(new_player_contacts) || new_player_contacts.length === 0)) {
+    return res.status(400).json({
+      success: false,
+      message: 'new_player_contacts array is required when invite_new_players is true'
+    });
+  }
+
+  if (invite_new_players) {
+    for (const contact of new_player_contacts) {
+      if (!contact.type || !contact.value || !['email', 'phone'].includes(contact.type)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Each new_player_contact must have type (email/phone) and value'
+        });
+      }
+    }
+  }
+
+  // Validate playerId exists
+  if (!user.playerId) {
+    return res.status(400).json({ success: false, message: 'Invalid user token - missing playerId' });
+  }
+
+  // Determine competition mode (default to time_limit for backwards compatibility)
+  const competitionMode = leagueSettings.competition_mode || 'time_limit';
+
+  // Validate competition mode
+  if (!['time_limit', 'shoot_out'].includes(competitionMode)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid competition mode. Must be "time_limit" or "shoot_out"'
+    });
+  }
+
+  // Create league with default settings (including validated putting distance)
+  const defaultSettings = {
+    privacy: 'public',
+    num_rounds: 4,
+    round_duration_hours: 168, // 1 week
+    competition_mode: competitionMode,
+    scoring_type: 'total_makes',
+    allow_late_joiners: true,
+    allow_player_invites: true,
+    allow_catch_up_submissions: true, // Default to allowing catch-up for better continuity
+    putting_distance_feet: 7.0, // Default putting distance
+    ...leagueSettings // Use validated settings with putting distance
+  };
+
+  // Handle shoot-out mode specific settings
+  if (competitionMode === 'shoot_out') {
+    // Valid shoot-out attempt options
+    const validAttempts = [5, 10, 21, 50, 77, 100, 210, 420, 777, 1000, 2100];
+    const maxAttempts = defaultSettings.max_attempts || 21; // Default to 21
+
+    if (!validAttempts.includes(maxAttempts)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid max_attempts for shoot-out mode. Must be one of: ${validAttempts.join(', ')}`
+      });
+    }
+
+    // Store max_attempts and clear time limit for shoot-out mode
+    defaultSettings.max_attempts = maxAttempts;
+    delete defaultSettings.time_limit_minutes;
+  } else {
+    // Ensure time limit exists for time_limit mode
+    if (!defaultSettings.time_limit_minutes) {
+      defaultSettings.time_limit_minutes = 30; // Default 30 minutes
+    }
+  }
+
+  const isIRL = defaultSettings.is_irl || false;
+
+  // First verify the user exists in the players table
+  console.log(`[DEBUG] Checking if player ${user.playerId} exists in players table`);
+  const playerCheck = await client.query(`
+    SELECT player_id, name, email FROM players WHERE player_id = $1
+  `, [user.playerId]);
+
+  console.log(`[DEBUG] Player check result:`, playerCheck.rows);
+
+  if (playerCheck.rows.length === 0) {
+    console.error(`[ERROR] Player ${user.playerId} not found in players table`);
+    return res.status(400).json({
+      success: false,
+      message: `Player not found: ${user.playerId}. Please try logging out and logging back in.`
+    });
+  }
+
+  console.log(`[DEBUG] Player ${user.playerId} exists: ${playerCheck.rows[0].name} (${playerCheck.rows[0].email})`);
+
+  let temporaryPlayerIds = [];
+  
+  // Create temporary players for IRL mode
+  if (isIRL) {
+    const numPlayers = defaultSettings.num_players || 4;
+    const playerNames = defaultSettings.player_names || {};
+    
+    for (let i = 1; i <= numPlayers; i++) {
+      const playerName = playerNames[i] || `Player ${i}`;
+      const tempEmail = `temp_player_${Date.now()}_${i}@irl.local`;
+      
+      const tempPlayerResult = await client.query(`
+        INSERT INTO players (name, email, created_at)
+        VALUES ($1, $2, NOW())
+        RETURNING player_id, name
+      `, [playerName, tempEmail]);
+      
+      temporaryPlayerIds.push(tempPlayerResult.rows[0].player_id);
+    }
+    
+    console.log(`[DEBUG] Created ${temporaryPlayerIds.length} temporary players for IRL league:`, temporaryPlayerIds);
+  }
+
+  // Try to create league with minimal required fields first
+  console.log(`[DEBUG] Creating league with created_by=${user.playerId}, name="${name}"`);
+  console.log(`[DEBUG] Full INSERT params:`, {
+    name,
+    description,
+    created_by: user.playerId,
+    privacy_level: defaultSettings.privacy || 'public'
+  });
+
+  const leagueResult = await client.query(`
+    INSERT INTO leagues (name, description, created_by, rules, privacy_level, status, created_at)
+    VALUES ($1, $2, $3, $4, $5, 'setup', NOW())
+    RETURNING league_id, name, description, rules, privacy_level, created_by
+  `, [name, description, user.playerId, JSON.stringify(defaultSettings), defaultSettings.privacy || 'public']);
+
+  console.log(`[DEBUG] League created successfully:`, leagueResult.rows[0]);
+
+  const league = leagueResult.rows[0];
+
+  // Add creator as first member
+  try {
+    await client.query(`
+      INSERT INTO league_memberships (league_id, player_id, joined_at)
+      VALUES ($1, $2, NOW())
+    `, [league.league_id, user.playerId]);
+    console.log(`[DEBUG] League membership created for player ${user.playerId} in league ${league.league_id}`);
+  } catch (membershipError) {
+    console.error(`[ERROR] Failed to create league membership:`, membershipError.message);
+    console.error(`[ERROR] League: ${league.league_id}, Player: ${user.playerId}`);
+    throw membershipError; // Re-throw to fail the league creation if membership fails
+  }
+
+  // Add temporary players as members for IRL mode
+  if (isIRL && temporaryPlayerIds.length > 0) {
+    try {
+      for (const tempPlayerId of temporaryPlayerIds) {
+        await client.query(`
+          INSERT INTO league_memberships (league_id, player_id, joined_at)
+          VALUES ($1, $2, NOW())
+        `, [league.league_id, tempPlayerId]);
+      }
+      console.log(`[DEBUG] Added ${temporaryPlayerIds.length} temporary players to league ${league.league_id}`);
+    } catch (membershipError) {
+      console.error(`[ERROR] Failed to create temporary player memberships:`, membershipError.message);
+      throw membershipError; // Re-throw to fail the league creation if membership fails
+    }
+  }
+
+  // Create league rounds automatically
+  try {
+    const numRounds = defaultSettings.num_rounds || 4;
+    const roundDurationHours = defaultSettings.round_duration_hours || 168; // 1 week default
+
+    // Use provided start_time or default to now
+    const leagueStartTime = start_time ? new Date(start_time) : new Date();
+
+    console.log(`[DEBUG] Creating ${numRounds} rounds starting at ${leagueStartTime.toISOString()}`);
+
+    for (let roundNum = 1; roundNum <= numRounds; roundNum++) {
+      const roundStart = new Date(leagueStartTime.getTime() + ((roundNum - 1) * roundDurationHours * 60 * 60 * 1000));
+      const roundEnd = new Date(roundStart.getTime() + (roundDurationHours * 60 * 60 * 1000));
+
+      console.log(`[DEBUG] Round ${roundNum}: ${roundStart.toISOString()} to ${roundEnd.toISOString()}`);
+
+      await client.query(`
+        INSERT INTO league_rounds (league_id, round_number, start_time, end_time, status, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+      `, [
+        league.league_id,
+        roundNum,
+        roundStart,
+        roundEnd,
+        roundNum === 1 ? 'active' : 'scheduled'
+      ]);
+    }
+
+    // Update league status to active
+    await client.query(`
+      UPDATE leagues
+      SET status = 'active', updated_at = NOW()
+      WHERE league_id = $1
+    `, [league.league_id]);
+
+    console.log(`[DEBUG] Created ${numRounds} rounds for league ${league.league_id}`);
+  } catch (roundsError) {
+    console.error(`[ERROR] Failed to create league rounds:`, roundsError.message);
+    console.error(`[ERROR] Full error:`, roundsError);
+    // Don't fail the league creation if rounds fail - can be created later
+  }
+
+  // Get temporary player info if IRL mode
+  let temporaryPlayers = null;
+  if (isIRL && temporaryPlayerIds.length > 0) {
+    const tempPlayersResult = await client.query(`
+      SELECT player_id, name FROM players WHERE player_id = ANY($1)
+    `, [temporaryPlayerIds]);
+    
+    temporaryPlayers = tempPlayersResult.rows;
+  }
+
+  // Create email/phone invitations for new players
+  let newPlayerInvitations = [];
+  
+  if (invite_new_players && new_player_contacts && new_player_contacts.length > 0) {
+    console.log(`[DEBUG] Creating ${new_player_contacts.length} new player invitations for league ${league.league_id}`);
+    
+    for (const contact of new_player_contacts) {
+      try {
+        // Create a temporary player for the invited contact
+        // Create temporary player with only basic fields that exist in production
+        const tempPlayerResult = await client.query(`
+          INSERT INTO players (name, email, created_at)
+          VALUES ($1, $2, NOW())
+          RETURNING player_id
+        `, [
+          `Invited ${contact.type === 'email' ? 'Email' : 'Phone'} (${contact.value})`,
+          contact.type === 'email' ? contact.value : `temp_${Date.now()}@phone.local`
+        ]);
+        
+        const tempPlayerId = tempPlayerResult.rows[0].player_id;
+        
+        // Track new player invitation details (simplified - no separate table)
+        const playerInvitation = {
+          contact_type: contact.type,
+          contact_value: contact.value,
+          status: 'pending',
+          created_at: new Date().toISOString(),
+          invited_player_id: tempPlayerId
+        };
+        newPlayerInvitations.push(playerInvitation);
+
+        // Note: League creator is already stored in leagues.created_by field
+        // Invited player info is tracked in newPlayerInvitations array
+
+        console.log(`[DEBUG] Created temporary player ${tempPlayerId} and league invitation for ${contact.type}: ${contact.value}`);
+      } catch (inviteError) {
+        console.error(`[ERROR] Failed to create invitation for ${contact.type}: ${contact.value}`, inviteError.message);
+        // Continue with other invitations even if one fails
+      }
+    }
+  }
+
+  // Prepare success message based on features used
+  let successMessage = 'League created successfully';
+  if (isIRL) {
+    successMessage = 'IRL League created successfully';
+  } else if (newPlayerInvitations.length > 0) {
+    successMessage = `League created successfully with ${newPlayerInvitations.length} invitation(s) sent`;
+  }
+
+  return res.status(201).json({
+    success: true,
+    message: successMessage,
+    league: {
+      league_id: league.league_id,
+      name: league.name,
+      description: league.description,
+      rules: league.rules,
+      status: 'setup',
+      creator_id: league.created_by,
+      is_irl: isIRL,
+      temporary_players: temporaryPlayers,
+      new_player_invitations: newPlayerInvitations.length > 0 ? newPlayerInvitations : undefined
+    }
+  });
+}

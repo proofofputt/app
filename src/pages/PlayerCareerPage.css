@@ -1,0 +1,444 @@
+/*
+  Styles for the Career Stats page.
+  Base table styles (font, padding, basic borders) are inherited from App.css.
+  This file adds container styles, hover effects, and specific header styles.
+*/
+
+/* Reduced margins for better space utilization */
+.career-stats-page {
+  margin-left: 10%;
+  margin-right: 10%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Profile Section with Handicap Display */
+.profile-section {
+  display: flex;
+  gap: 2rem;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+
+.profile-info {
+  flex: 1;
+  display: flex;
+  gap: 1.5rem;
+}
+
+.profile-avatar {
+  flex-shrink: 0;
+}
+
+.avatar-image {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 2px solid var(--primary-color);
+}
+
+.avatar-placeholder {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--primary-color), var(--masters-green));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  font-weight: bold;
+  color: white;
+  border: 2px solid var(--primary-color);
+}
+
+.profile-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.profile-details h3 {
+  margin: 0;
+  color: var(--primary-color);
+  font-size: 1.5rem;
+}
+
+.profile-bio {
+  margin: 0;
+  color: var(--text-color-secondary);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.social-links {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.social-links a {
+  color: var(--sand-color);
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.social-links a:hover {
+  background-color: var(--masters-green-light);
+  color: var(--sand-color-hover);
+}
+
+/* Handicap Display - Square on Right */
+.handicap-display {
+  width: 200px;
+  height: 200px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--masters-green), var(--primary-color));
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 3px solid var(--primary-color);
+}
+
+.handicap-label {
+  color: white;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.handicap-value {
+  color: white;
+  font-size: 3.5rem;
+  font-weight: bold;
+  line-height: 1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.handicap-pending {
+  color: white;
+  font-size: 4rem;
+  font-weight: bold;
+  line-height: 1;
+  opacity: 0.5;
+}
+
+.handicap-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.75rem;
+  text-align: center;
+  margin-top: 0.5rem;
+  line-height: 1.2;
+}
+
+.handicap-info {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.7rem;
+  text-align: center;
+  margin-top: 0.5rem;
+  line-height: 1.2;
+  max-width: 150px;
+}
+
+.recalculate-btn {
+  margin-top: 1rem;
+  padding: 0.4rem 0.8rem;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+  color: white;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.recalculate-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-color: white;
+}
+
+.career-stats-page .career-stats-table {
+  border: 1px solid var(--border-color);
+  background-color: var(--surface-color);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 1.5rem;
+  margin-bottom: 2.1rem;
+  border-spacing: 0; /* Removes default spacing between cells */
+  border-collapse: collapse; /* Ensure borders align perfectly */
+}
+
+/* Add vertical borders between columns, using the same color as row underlines */
+.career-stats-page .career-stats-table th:not(:last-child),
+.career-stats-page .career-stats-table td:not(:last-child) {
+  border-right: 1px solid var(--border-color);
+}
+
+/* General cell padding */
+.career-stats-page .career-stats-table th,
+.career-stats-page .career-stats-table td {
+  padding: 1.6rem 1.8rem; /* Reduced padding for a tighter look */
+}
+
+/* Style for the main table headers to give them a distinct look */
+.career-stats-page .career-stats-table thead th {
+  background-color: var(--background-color);
+  color: var(--primary-color);
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 2px solid var(--primary-color); /* Add a distinct, primary-colored border */
+}
+
+.career-stats-page .career-stats-table thead th:first-child {
+  text-align: left;
+  font-size: 1.1rem; /* Make the title larger */
+  text-transform: none; /* Normal case for titles */
+  color: var(--primary-color); /* Use primary accent color for the title */
+}
+
+/* Column alignment is now handled globally in App.css for consistency */
+/* Style for the category header rows within the table body */
+.career-stats-page .career-stats-table .table-category-header td {
+  background-color: var(--background-color);
+  color: var(--primary-color);
+  font-weight: bold;
+  text-align: center;
+  border-top: 1px solid var(--border-color);
+}
+
+/* Add hover effect to data rows, but not header rows */
+.career-stats-page .career-stats-table tbody tr:not(.table-category-header):hover {
+  background-color: var(--masters-green-light);
+}
+
+/* Remove bottom border from the last row in a table body */
+.career-stats-page .career-stats-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Style for placeholder rows like "No data" */
+.career-stats-page .career-stats-table td[style*="italic"] {
+  text-align: center;
+  color: var(--text-color-secondary);
+  opacity: 0.7;
+  padding: 1rem 0.8rem; /* Adjusted padding for consistency */
+}
+
+/* New styles for the split table layout */
+.stats-split-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  align-items: start; /* Prevents tables from stretching to match height */
+}
+
+
+
+.upgrade-prompt {
+  background-color: var(--surface-color);
+  border: 1px solid var(--primary-color);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.upgrade-prompt h3 {
+  color: var(--primary-color);
+  margin-top: 0;
+}
+
+/* New styles for the summary tables at the bottom - match stats-split-grid exactly */
+.summary-tables-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  margin-bottom: 2rem;
+  align-items: start; /* Align tables at the start to match the upper section */
+}
+
+.summary-table-container {
+  /* Remove container styling to match stats tables exactly */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.summary-table-container .career-stats-table {
+  /* Tables should inherit the same styling as stats tables */
+  width: 100%;
+  margin-top: 1.5rem;
+  margin-bottom: 0;
+}
+
+.summary-table-container h3 {
+  margin-top: 0;
+  margin-bottom: 0;
+  color: var(--primary-color);
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  padding: 0.75rem 0;
+}
+
+.summary-table-container .career-stats-table a {
+  color: var(--sand-color);
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.summary-table-container .career-stats-table a:hover {
+  color: var(--sand-color-hover);
+  text-decoration: underline;
+}
+
+/* Ensure consistent table cell alignment in summary tables */
+.summary-table-container .career-stats-table th,
+.summary-table-container .career-stats-table td {
+  text-align: left;
+  vertical-align: middle;
+  padding: 0.75rem 1rem;
+}
+
+.summary-table-container .career-stats-table th:not(:first-child),
+.summary-table-container .career-stats-table td:not(:first-child) {
+  text-align: center; /* Center align numeric/status columns */
+}
+
+/* Status badge styling for better alignment */
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.status-won { background-color: #22C55E; color: white; }
+.status-lost { background-color: #EF4444; color: white; }
+.status-draw { background-color: #6B7280; color: white; }
+.status-pending { background-color: #F59E0B; color: white; }
+.status-active { background-color: #3B82F6; color: white; }
+.status-completed { background-color: #10B981; color: white; }
+
+/* Responsive design for summary tables */
+@media (max-width: 768px) {
+  .summary-tables-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .summary-table-container h3 {
+    font-size: 1.1rem;
+    padding: 0.5rem 0;
+  }
+}
+
+/* Certificate section styling for when it's enabled */
+.certificates-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: var(--surface-color);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.certificates-section h3 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: var(--primary-color);
+  text-align: center;
+  font-size: 1.4rem;
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 0.75rem;
+}
+
+.certificates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.certificate-card {
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.certificate-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive adjustments for the full page */
+@media (max-width: 1200px) {
+  .career-stats-page {
+    margin-left: 7%;
+    margin-right: 7%;
+  }
+}
+
+@media (max-width: 1024px) {
+  .career-stats-page {
+    margin-left: 5%;
+    margin-right: 5%;
+  }
+
+  .stats-split-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .career-stats-page {
+    margin-left: 2%;
+    margin-right: 2%;
+    gap: 1rem;
+  }
+
+  .certificates-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .profile-section {
+    flex-direction: column;
+  }
+
+  .profile-info {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .handicap-display {
+    width: 100%;
+    height: 180px;
+  }
+}

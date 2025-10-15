@@ -1,0 +1,297 @@
+.duel-results {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.duel-results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.duel-title h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.duel-title a {
+  color: #2c5234;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.duel-title a:hover {
+  text-decoration: underline;
+}
+
+.duel-meta {
+  text-align: right;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.duel-date,
+.duel-completed {
+  margin-bottom: 0.5rem;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-active {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.status-completed {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-declined,
+.status-expired {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.winner-announcement {
+  text-align: center;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.winner-you {
+  color: #28a745;
+  font-size: 1.8rem;
+  font-weight: bold;
+  text-shadow: 0 1px 2px rgba(40, 167, 69, 0.3);
+}
+
+.winner-opponent {
+  color: #dc3545;
+  font-size: 1.8rem;
+  font-weight: bold;
+  text-shadow: 0 1px 2px rgba(220, 53, 69, 0.3);
+}
+
+.performance-comparison h4 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 1.5rem;
+  font-size: 1.3rem;
+}
+
+.player-headers {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.player-header {
+  text-align: center;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.player-header.current a {
+  color: #2c5234;
+}
+
+.player-header.opponent a {
+  color: #5a6268;
+}
+
+.vs-divider {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #6c757d;
+  text-align: center;
+}
+
+.stats-grid {
+  display: grid;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-comparison {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #e9ecef;
+}
+
+.stat-label {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.stat-values {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+.stat-value {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #666;
+  padding: 0.5rem;
+  border-radius: 6px;
+  background: white;
+}
+
+.stat-value.better {
+  color: #28a745;
+  background: #d4edda;
+  border: 2px solid #c3e6cb;
+}
+
+.stat-vs {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #6c757d;
+  text-align: center;
+}
+
+.detailed-breakdown {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e5e5e5;
+}
+
+.detailed-breakdown h5 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.breakdown-comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.breakdown-section h6 {
+  text-align: center;
+  color: #2c5234;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  margin-bottom: 0.5rem;
+  background: white;
+  border-radius: 6px;
+  border-left: 3px solid #2c5234;
+}
+
+.breakdown-item .location {
+  font-weight: 500;
+  color: #333;
+}
+
+.breakdown-item .count {
+  font-weight: 600;
+  color: #2c5234;
+}
+
+.active-duel-info,
+.inactive-duel-info {
+  text-align: center;
+  padding: 2rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  color: #495057;
+}
+
+.submission-status {
+  margin-top: 1rem;
+  font-weight: 600;
+  padding: 1rem;
+  border-radius: 6px;
+  background: white;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .duel-results {
+    padding: 1rem;
+  }
+  
+  .duel-results-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .duel-meta {
+    text-align: left;
+  }
+  
+  .player-headers {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  
+  .vs-divider {
+    order: 2;
+    margin: 0.5rem 0;
+  }
+  
+  .stat-values {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .stat-vs {
+    order: 2;
+  }
+  
+  .breakdown-comparison {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .winner-announcement {
+    padding: 1rem;
+  }
+  
+  .winner-you,
+  .winner-opponent {
+    font-size: 1.4rem;
+  }
+}

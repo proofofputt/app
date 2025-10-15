@@ -1,0 +1,38 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/((?!api/|assets/|_next/|favicon.ico|logo.svg|logo.png|POP.Proof_Of_Putt.Log.576.png).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/process-certificates",
+      "schedule": "0 21 * * 0"
+    },
+    {
+      "path": "/api/cron/send-reminders",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/monthly-analytics-report",
+      "schedule": "0 0 1 * *"
+    },
+    {
+      "path": "/api/cron/expire-subscriptions",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/process-monthly-subscriptions",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/check-expired-subscriptions",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

@@ -1,0 +1,149 @@
+import { Pool } from 'pg';
+import jwt from 'jsonwebtoken';
+import { setCORSHeaders } from '../../../utils/cors.js';
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+export default async function handler(req, res) {
+  setCORSHeaders(req, res);
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, message: 'Method Not Allowed' });
+  }
+
+  try {
+    const { email, google_id, name } = req.body;
+
+    if (!email || !google_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email and google_id are required'
+      });
+    }
+
+    console.log(`[OAuth] Verifying Google user: ${email}`);
+
+    // Check if user exists by email
+    let user = await pool.query(
+      'SELECT * FROM players WHERE email = $1',
+      [email]
+    );
+
+    if (user.rows.length === 0) {
+      // Create new user account for OAuth user
+      console.log(`[OAuth] Creating new user for: ${email}`);
+
+      const display_name = name || email.split('@')[0];
+
+      // Get the next player ID starting from 1000 (matching register.js)
+      const maxIdQuery = await pool.query('SELECT COALESCE(MAX(player_id), 999) as max_id FROM players');
+      const nextPlayerId = Math.max(maxIdQuery.rows[0].max_id + 1, 1000);
+
+      // OAuth users don't have passwords, but password_hash has NOT NULL constraint
+      // Use a placeholder that can't be matched (bcrypt hash of random UUID)
+      const placeholderPasswordHash = '$2a$10$OAUTH_USER_NO_PASSWORD_PLACEHOLDER_HASH_CANNOT_LOGIN';
+
+      const insertResult = await pool.query(
+        `INSERT INTO players (
+          player_id,
+          email,
+          name,
+          password_hash,
+          google_id,
+          membership_tier,
+          subscription_status,
+          timezone,
+          created_at,
+          updated_at
+        )
+         VALUES ($1, $2, $3, $4, $5, 'basic', 'active', 'America/New_York', NOW(), NOW())
+         RETURNING *`,
+        [
+          nextPlayerId,
+          email,
+          display_name,
+          placeholderPasswordHash,
+          google_id
+        ]
+      );
+
+      user = insertResult;
+
+      // Initialize player stats (matching register.js)
+      const newPlayerId = user.rows[0].player_id;
+      await pool.query(
+        `INSERT INTO player_stats (
+          player_id,
+          total_sessions,
+          total_putts,
+          total_makes,
+          total_misses,
+          make_percentage,
+          best_streak,
+          created_at,
+          updated_at
+        )
+        VALUES ($1, 0, 0, 0, 0, 0.0, 0, NOW(), NOW())
+        ON CONFLICT (player_id) DO NOTHING`,
+        [newPlayerId]
+      );
+    } else {
+      // Update existing user with Google ID if not set
+      const existingUser = user.rows[0];
+
+      if (!existingUser.google_id) {
+        await pool.query(
+          'UPDATE players SET google_id = $1 WHERE player_id = $2',
+          [google_id, existingUser.player_id]
+        );
+      }
+    }
+
+    const playerData = user.rows[0];
+
+    // Generate JWT token
+    const token = jwt.sign(
+      {
+        player_id: playerData.player_id,
+        email: playerData.email,
+        name: playerData.name
+      },
+      process.env.JWT_SECRET || 'your-secret-key-change-this',
+      { expiresIn: '7d' }
+    );
+
+    console.log(`[OAuth] Authentication successful for: ${playerData.email}`);
+
+    return res.status(200).json({
+      success: true,
+      token: token,
+      player: {
+        player_id: playerData.player_id,
+        email: playerData.email,
+        name: playerData.name,
+        display_name: playerData.name,
+        created_at: playerData.created_at
+      }
+    });
+
+  } catch (error) {
+    console.error('Google OAuth verification error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      stack: error.stack
+    });
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to verify Google authentication',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+}

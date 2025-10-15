@@ -1,0 +1,734 @@
+/* LeaguesPage.css */
+
+.leagues-page {
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 10.5%;
+  box-sizing: border-box;
+}
+
+/* Button groups for league round actions */
+.league-round-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.league-round-actions .btn {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.leagues-page .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Create League Button - Yellow/Orange Gradient to match Create Duel button */
+.leagues-page .page-header .btn-primary {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #f97316 100%);
+  border: none;
+  color: #1a1a1a;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  text-shadow: none;
+  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
+}
+
+.leagues-page .page-header .btn-primary:hover {
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 50%, #ea580c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(251, 191, 36, 0.4);
+}
+
+.leagues-page .page-header .btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
+}
+
+.leagues-section {
+  margin-bottom: 2.5rem;
+}
+
+.leagues-section h3 {
+  margin-bottom: 1rem;
+  color: var(--text-color-primary);
+}
+
+/* League Detail Page */
+.league-detail-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; /* Reduced gap between cards */
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 10.5%;
+  box-sizing: border-box;
+}
+
+/* Reduce vertical margin on the main page header for a tighter layout */
+.league-detail-page .page-header {
+  margin-top: 0.5rem; /* 75% reduction from 2.1rem */
+  margin-bottom: 0.4rem; /* 75% reduction from 1.5rem */
+}
+
+/* League Cards Grid Layout from Prototype */
+.leagues-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.league-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.5rem;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.league-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.league-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.league-card-header h3 {
+  margin: 0;
+  color: var(--primary-color);
+}
+
+.league-card-description {
+  flex-grow: 1;
+  margin: 0.5rem 0 1.5rem;
+  color: var(--text-color-secondary);
+  font-size: 0.9rem;
+}
+
+.league-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+  color: var(--text-color-secondary);
+}
+
+/* Styles for Round Details within LeagueDetailPage */
+.round-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.round-start-time {
+  font-size: 0.95rem;
+  color: var(--text-color-secondary);
+  font-weight: normal;
+  margin-left: 0.75rem;
+}
+
+.round-details {
+  border-top: 1px solid var(--border-color);
+  padding: 1rem 0;
+}
+
+.round-details:first-of-type {
+  border-top: none;
+}
+
+.round-submission-table {
+  width: 100%;
+  margin-top: 1rem;
+  border-collapse: collapse;
+}
+
+.round-submission-table th,
+.round-submission-table td {
+  padding: 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.round-submission-table th {
+  font-weight: bold;
+  color: var(--text-color-secondary);
+  font-size: 0.95rem;
+}
+
+.round-submission-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.round-submission-score {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.points-badge {
+  background-color: var(--primary-color);
+  color: var(--masters-green-dark);
+  padding: 0.15rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.league-leaderboard {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.league-leaderboard li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.25rem 0;
+}
+
+.league-leaderboard strong {
+  color: var(--primary-color);
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.inline-invite-form {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-grow: 1;
+  max-width: 350px; /* Prevent it from getting too wide */
+}
+
+.search-input-wrapper {
+  position: relative;
+  flex-grow: 1;
+}
+
+.inline-invite-input {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  border-radius: 6px;
+}
+
+
+
+.inline-invite-input::placeholder {
+  color: var(--text-white);
+  opacity: 0.7;
+}
+
+/* Override for the invite button to match the color scheme of the sort button */
+.inline-invite-form .btn.btn-secondary {
+  background-color: var(--highlighter-yellow);
+  color: var(--masters-green-dark);
+  border: 1px solid var(--masters-green-dark);
+  opacity: 0.9;
+}
+
+.inline-invite-form .btn.btn-secondary:hover {
+  background-color: var(--highlighter-yellow-hover);
+  opacity: 1;
+}
+
+.inline-invite-form .btn.btn-secondary:disabled {
+  opacity: 1;
+}
+
+.member-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* --- New Pivot Table Styles --- */
+.league-table-wrapper {
+  overflow-x: auto; /* Allows horizontal scrolling for many players */
+  padding-bottom: 1rem; /* Space for scrollbar */
+}
+
+.league-pivot-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 1.5rem;
+  background-color: var(--sand-color); /* Main background matches prototype */
+  color: var(--masters-green-dark); /* Default text color matches prototype */
+}
+
+.league-pivot-table th,
+.league-pivot-table td {
+  border: 1px solid var(--border-color);
+  text-align: center;
+  padding: 0.5rem;
+  min-width: 35px; /* Reduced width for score columns */
+}
+
+.league-pivot-table tbody td {
+  /* Make the scores in the table body yellow and bold to match prototype */
+  color: var(--primary-color);
+  font-weight: bold;
+  background-color: var(--surface-color);
+}
+
+.league-pivot-table thead th {
+  border-bottom: 2px solid var(--primary-color); /* Match prototype border style */
+}
+
+.league-pivot-table .round-label-cell {
+  text-align: left;
+  font-weight: bold;
+  white-space: nowrap;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  vertical-align: middle;
+  min-height: 38px; /* Ensures consistent row height for alignment */
+  gap: 1rem;
+  background-color: var(--sand-color); /* Make this column sandy - matches prototype */
+  color: var(--masters-green-dark); /* Text color for sandy background - matches prototype */
+  min-width: 200px; /* Give the column a minimum width to prevent wrapping */
+}
+
+.round-status-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.round-start-time-label {
+  font-size: 0.9rem;
+  font-weight: normal;
+  color: var(--masters-green-dark);
+  opacity: 0.8;
+}
+
+/* Override default countdown timer styles to be more compact inside the table */
+.round-label-cell .countdown-timer {
+  background-color: var(--surface-color);
+  border: none;
+  padding: 0;
+  font-size: 0.9rem;
+  text-align: right;
+  color: var(--masters-green-dark);
+}
+
+.league-pivot-table .round-label-cell span {
+  flex-grow: 1; /* Make the text take up available space */
+}
+
+.league-pivot-table .player-name-header {
+  text-align: left;
+  vertical-align: bottom;
+  padding-bottom: 0.5rem;
+  background-color: var(--sand-color); /* Match prototype background */
+  color: var(--masters-green-dark); /* Match prototype text color */
+}
+
+.league-pivot-table .player-name {
+  padding-bottom: 140px; /* Use padding to create space for rotated text at the bottom - matches prototype */
+  white-space: nowrap;
+  vertical-align: bottom; /* Align content to the bottom of the cell */
+  position: relative;
+  min-width: 35px; /* Make the column itself thin - matches prototype */
+  max-width: 35px; /* Make the column itself thin - matches prototype */
+  background-color: var(--sand-color); /* Make player name columns sandy - matches prototype */
+}
+
+.league-pivot-table .player-name div {
+  transform: translateX(-50%) rotate(-90deg); /* Center the div and rotate - matches prototype */
+  transform-origin: bottom center; /* Rotate around the bottom-center point - matches prototype */
+  position: absolute;
+  bottom: 24px; /* Position from bottom - matches prototype exactly */
+  left: 50%; /* Center horizontally */
+  width: 130px; /* Width to allow for longer names - matches prototype */
+  text-align: center; /* Center the text within the div */
+}
+
+.league-pivot-table .player-name div a {
+  color: var(--masters-green-dark); /* Match prototype link color */
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.league-pivot-table .player-name div a:hover {
+  text-decoration: underline;
+  color: var(--highlighter-yellow-hover); /* Match prototype hover color */
+}
+
+.league-pivot-table .sort-column {
+  border: none;
+  padding: 0 0.25rem; /* Add a little horizontal padding */
+  background-color: var(--surface-color); /* Use the main dark green background */
+  width: 1%; /* Help the column shrink to its content */
+}
+
+.sort-button {
+  background-color: var(--highlighter-yellow);
+  color: var(--masters-green-dark);
+  border: 1px solid var(--masters-green-dark);
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.sort-button:hover,
+.sort-button.active {
+  background-color: var(--highlighter-yellow-hover);
+  color: var(--masters-green-dark);
+  opacity: 1;
+}
+
+.league-pivot-table tfoot td {
+  background-color: var(--sand-color-hover); /* Match prototype summary background */
+  font-weight: bold;
+  color: var(--masters-green-dark); /* Match prototype summary text color */
+  border-top: 2px solid var(--border-color); /* Add strong separator to the cells */
+}
+
+/* Style for the summary row labels (e.g., "Total Points", "Rank") - matches prototype */
+.league-pivot-table tfoot .summary-row .round-label-cell {
+  background-color: var(--sand-color); /* Keep the label cell sandy - matches prototype */
+  color: var(--masters-green-dark); /* Keep the label text dark green - matches prototype */
+}
+
+/* Remove border from the very last row */
+.league-pivot-table tfoot tr:last-child td {
+  border-bottom: none;
+}
+
+/* --- New League Info & Members Styles --- */
+.card h3 {
+  margin: 0 0 1rem 0;
+  color: var(--text-color-secondary);
+  font-size: 1.2rem;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.75rem;
+}
+
+.league-description {
+  margin: 0.5rem 0 0.75rem; /* Further reduced bottom margin */
+  color: var(--text-color-secondary);
+  font-style: italic;
+}
+
+.league-info-grid {
+  display: flex;
+  justify-content: space-between; /* Creates space between the two tables */
+  width: 90%; /* The combined width of the tables and the gap */
+  margin: 1.5rem auto 0; /* Center the grid and add top margin */
+}
+
+.league-info-table {
+  /* Each table takes up a portion of the flex container's width */
+  /* 45% + 45% = 90%, leaving 10% for the space-between gap */
+  width: 45%;
+  border-collapse: collapse;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  border-spacing: 0;
+  background-color: var(--sand-color);
+  color: var(--masters-green-dark);
+}
+
+.league-info-table thead th {
+  background-color: var(--masters-green-light);
+  color: white;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.league-info-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.league-info-table tr:last-child td {
+  border-bottom: none;
+}
+
+.league-info-table tbody tr:hover {
+  background-color: var(--sand-color-hover);
+}
+
+.league-info-table td:first-child { /* The labels */
+  color: var(--masters-green-dark);
+  font-weight: 600;
+  background-color: transparent;
+  border-right: 1px solid var(--border-color);
+}
+
+.league-info-table td:last-child { /* The values */
+  font-weight: bold;
+  text-align: left;
+}
+
+.member-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+  columns: 2;
+  -webkit-columns: 2;
+  -moz-columns: 2;
+}
+
+.member-list li a {
+  color: var(--sand-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.member-list li a:hover {
+  color: var(--sand-color-hover);
+}
+
+.countdown-timer {
+  background-color: var(--background-color);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  color: var(--text-color-secondary);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.countdown-timer strong {
+  color: var(--primary-color);
+  font-weight: bold;
+  margin-left: 0.5rem;
+  font-family: monospace;
+}
+
+/* --- Styles for Badges and Invite Actions --- */
+.privacy-badge {
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.privacy-badge.public {
+  background-color: var(--masters-green-light);
+  color: var(--masters-green-dark);
+}
+
+.privacy-badge.private {
+  background-color: #eef2ff; /* A light indigo */
+  color: #ff0a0a; /* A darker indigo */
+}
+
+.invite-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* --- New League Table Styles --- */
+.leagues-table-container {
+  width: 100%;
+  background-color: var(--surface-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
+  border: 1px solid var(--border-color);
+  overflow-x: auto; /* Allow horizontal scrolling on small screens */
+}
+
+.leagues-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px; /* Prevent table from getting too narrow */
+}
+
+.leagues-table th,
+.leagues-table td {
+  padding: 0.75rem; /* Slightly reduced padding */
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+  white-space: nowrap; /* Prevent column wrapping */
+}
+
+.leagues-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.leagues-table thead {
+  position: relative;
+}
+
+.leagues-table thead tr {
+  background-color: transparent;
+}
+
+.leagues-table th {
+  background-color: var(--primary-color);
+  color: var(--masters-green-dark);
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem; /* Thinner header */
+  border: none; /* Remove all borders from header */
+}
+
+/* Round the first and last header cells */
+.leagues-table th:first-child {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+.leagues-table th:last-child {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.leagues-table tbody tr:hover {
+  background-color: var(--masters-green-light);
+}
+
+.leagues-table .actions-cell {
+  text-align: right;
+  width: 1%;
+  white-space: nowrap;
+}
+
+.leagues-table .btn-small {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.leagues-table .league-description-cell {
+  color: var(--text-color-secondary);
+  font-size: 0.9rem;
+  max-width: 300px; /* Limit description width */
+  white-space: normal; /* Allow wrapping */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+.leagues-table a {
+  color: var(--masters-green-light);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.leagues-table a:hover {
+  text-decoration: underline;
+}
+
+.leagues-table tbody td:first-child,
+.leagues-table tbody td:first-child a {
+  font-weight: bold;
+  color: var(--text-white);
+}
+
+.loading-indicator {
+  display: inline-block;
+  margin-left: 0.5rem;
+  animation: spin 1s linear infinite;
+  color: var(--masters-green-light);
+  font-size: 1.2em;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* League Members and Invite Section Background */
+.league-members-section {
+  background-color: var(--surface-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  margin-bottom: 3rem; /* Ample bottom margin before page end */
+  border: 1px solid var(--border-color);
+}
+
+.league-members-section h3 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: var(--text-color-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.league-members-section .section-content {
+  background-color: var(--bg-color);
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid var(--border-color-light, rgba(255, 255, 255, 0.1));
+}
+
+/* Ensure league member tables have proper spacing */
+.league-members-section table {
+  margin-bottom: 0;
+}
+
+.league-members-section .inline-invite-form {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* Column separators for leagues table */
+.leagues-table .column-separator {
+  border-right: 2px solid var(--masters-green-light);
+}
+
+.leagues-table th.column-separator {
+  border-right: 2px solid var(--masters-green-light) !important;
+}
+
+.leagues-table .column-separator:last-child {
+  border-right: none;
+}

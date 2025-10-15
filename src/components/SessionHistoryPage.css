@@ -1,0 +1,266 @@
+.session-history-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 10.5%;
+  box-sizing: border-box;
+  max-width: none !important; /* Override any parent max-width constraints */
+}
+
+/* Reduce spacing for session history page header */
+.session-history-page .page-header {
+  margin-bottom: 0.5rem !important; /* Reduce space below Session History title */
+  padding-bottom: 0.25rem !important; /* Reduce padding by 75% */
+}
+
+.session-history-page .page-header h2 {
+  margin: 0.25rem 0 !important; /* Reduce title margins by 75% */
+}
+
+.session-list-container.full-height {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* Important for flexbox scrolling */
+}
+
+.session-table-wrapper {
+  flex-grow: 1;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background-color: var(--surface-color);
+  /* Ensure table utilizes full available width */
+  width: 100%;
+  min-height: 400px; /* Minimum height even with few sessions */
+}
+
+.session-history-page .session-table {
+  width: 100%;
+  min-width: 1200px; /* Increased to accommodate all 12 columns including Type and Actions */
+}
+
+.session-history-page .session-table th,
+.session-history-page .session-table td {
+  padding: 1rem 0.75rem; /* More generous padding for full-width layout */
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.session-history-page .session-table th {
+  background-color: var(--surface-color);
+  color: var(--primary-color);
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.session-history-page .session-table th:first-child {
+  text-align: left;
+}
+
+.session-history-page .session-table tbody tr {
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.session-history-page .session-table tbody tr:hover {
+  background-color: var(--masters-green-light);
+}
+
+.session-history-page .session-table tbody tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.02); /* Subtle zebra striping */
+}
+
+.session-history-page .session-table tbody tr:nth-child(even):hover {
+  background-color: var(--masters-green-light);
+}
+
+/* Locked session styling for non-subscribers */
+.session-history-page .session-table tbody tr.is-locked {
+  opacity: 0.6;
+  position: relative;
+}
+
+.session-history-page .session-table tbody tr.is-locked:after {
+  content: '🔒';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.2rem;
+  opacity: 0.7;
+}
+
+.session-history-page .session-table tbody tr.is-locked:hover {
+  opacity: 0.8;
+  background-color: rgba(24, 132, 0, 0.3);
+}
+
+/* Better column width distribution for full-width table */
+.session-history-page .session-table th:nth-child(1),
+.session-history-page .session-table td:nth-child(1) { width: 120px; }  /* Details button */
+.session-history-page .session-table th:nth-child(2),
+.session-history-page .session-table td:nth-child(2) { width: 120px; }  /* Session # */
+.session-history-page .session-table th:nth-child(3),
+.session-history-page .session-table td:nth-child(3) { width: 80px; }   /* Type */
+.session-history-page .session-table th:nth-child(4),
+.session-history-page .session-table td:nth-child(4) { width: 80px; }   /* Duration */
+.session-history-page .session-table th:nth-child(5),
+.session-history-page .session-table td:nth-child(5) { width: 60px; }   /* Makes */
+.session-history-page .session-table th:nth-child(6),
+.session-history-page .session-table td:nth-child(6) { width: 60px; }   /* Misses */
+.session-history-page .session-table th:nth-child(7),
+.session-history-page .session-table td:nth-child(7) { width: 80px; }   /* Best Streak */
+.session-history-page .session-table th:nth-child(8),
+.session-history-page .session-table td:nth-child(8) { width: 80px; }   /* Fastest 21 */
+.session-history-page .session-table th:nth-child(9),
+.session-history-page .session-table td:nth-child(9) { width: 60px; }   /* PPM */
+.session-history-page .session-table th:nth-child(10),
+.session-history-page .session-table td:nth-child(10) { width: 60px; }  /* MPM */
+.session-history-page .session-table th:nth-child(11),
+.session-history-page .session-table td:nth-child(11) { width: 80px; }  /* Most in 60s */
+
+/* Enhanced spacing for session details on full-width layout */
+.session-history-page .session-details-content {
+  padding: 2rem;
+}
+
+.session-history-page .details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Fixed 3 columns for single row */
+  gap: 2.5rem;
+  max-width: none; /* Allow grid to use full available width */
+  margin-left: 21%; /* Add left margin as requested for session details popup */
+  /* Force single row layout */
+  grid-template-rows: 1fr;
+  grid-auto-flow: column;
+}
+
+/* Add specific margin to the first column (Makes by category) in session history */
+.session-history-page .details-grid .details-section:first-child {
+  margin-left: 2rem;
+}
+
+/* Session Details Header Styling */
+.session-details-header {
+  text-align: center !important;
+  color: var(--primary-color) !important;
+  font-size: 1.25rem !important;
+  font-weight: bold !important;
+  margin: 0.4rem 0 !important; /* Reduced by 80% from default 2rem to 0.4rem */
+  padding-bottom: 0.5rem !important;
+  border-bottom: 3px solid var(--masters-green-medium) !important;
+  width: 100% !important;
+  position: relative !important;
+}
+
+.upgrade-prompt-sessions {
+  background-color: var(--surface-color);
+  border: 1px solid var(--primary-color);
+  border-radius: 12px;
+  padding: 3rem;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.upgrade-prompt-sessions h3 {
+  color: var(--primary-color);
+  margin-top: 0;
+  font-size: 1.5rem;
+}
+
+.upgrade-prompt-sessions .btn {
+  margin-top: 1.5rem;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 1400px) {
+  .session-history-page .session-table {
+    min-width: 1100px; /* Reduced minimum width for tablets */
+  }
+  
+  .session-history-page .session-table th,
+  .session-history-page .session-table td {
+    padding: 0.75rem 0.5rem; /* Reduced padding for smaller screens */
+    font-size: 0.9rem;
+  }
+}
+
+/* Add column and row stroke lines to session history table */
+.session-history-page .session-table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+.session-history-page .session-table th,
+.session-history-page .session-table td {
+  border-right: 1px solid var(--surface-color) !important;
+  border-bottom: 1px solid var(--surface-color) !important;
+}
+
+.session-history-page .session-table th:last-child,
+.session-history-page .session-table td:last-child {
+  border-right: none !important;
+}
+
+.session-history-page .session-table tbody tr:last-child td {
+  border-bottom: none !important;
+}
+
+@media (max-width: 768px) {
+  .session-history-page {
+    padding: 0 2%; /* Reduced margins on mobile */
+  }
+
+  .session-history-page .page-header {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .session-history-page .page-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .session-history-page .session-table {
+    min-width: 1000px; /* Keep reasonable width for mobile scrolling */
+  }
+
+  .session-history-page .session-table th,
+  .session-history-page .session-table td {
+    padding: 0.4rem 0.3rem; /* Minimal padding for mobile */
+    font-size: 0.7rem;
+  }
+
+  .session-history-page .session-table th:nth-child(2) { width: 140px; } /* Shorter date column */
+
+  .session-table-wrapper {
+    min-height: 300px; /* Smaller minimum height on mobile */
+    max-height: 70vh; /* Limit max height on mobile */
+  }
+
+  .session-details-content {
+    padding: 1rem;
+  }
+
+  .session-history-page .details-grid {
+    grid-template-columns: 1fr; /* Stack columns vertically on mobile */
+    gap: 1.5rem;
+    margin-left: 0; /* Remove left margin on mobile */
+  }
+
+  .session-history-page .details-grid .details-section:first-child {
+    margin-left: 0; /* Remove extra margin on mobile */
+  }
+
+  .session-details-header {
+    font-size: 1rem !important;
+  }
+}

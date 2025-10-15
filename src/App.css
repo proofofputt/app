@@ -1,0 +1,1154 @@
+/* --- Global Styles & Variables --- */
+:root {
+  /* Masters Inspired Dark Theme */
+  --masters-green-dark: hsl(137, 92%, 10%);      /* Deep green for the main background */
+  --masters-green-medium: hsl(105, 100%, 18%);    /* Lighter shade for surfaces like cards and tables */
+  --masters-green-light: #188400;     /* For borders or subtle highlights */
+  --highlighter-yellow: #FFD700;      /* Vibrant accent for key elements */
+  --highlighter-yellow-hover: #d58114;/* Darker accent for hover states */
+  --text-white: #ffffff;              /* Primary text color */
+  --sand-color: #f0e6d6;              /* A light sandy color for dropdowns */
+  --sand-color-hover: #e1d5c3;        /* A darker sand for hover states */
+  --text-white-secondary: #ffffff;    /* Changed to white for better contrast */
+
+  /* Theme Mapping */
+  --background-color: var(--masters-green-dark);
+  --surface-color: var(--masters-green-medium);
+  --primary-color: var(--highlighter-yellow);
+  --primary-color-hover: var(--highlighter-yellow-hover);
+  --text-color: var(--text-white);
+  --text-color-secondary: var(--text-white-secondary);
+  --border-color: var(--masters-green-light);
+  --error-color: #f44336; /* Red for errors remains standard */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  background-color: var(--background-color);
+  color: var(--text-color);
+  line-height: 1.5;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: auto; /* Prevent horizontal scrolling on body */
+}
+
+/* --- App Layout --- */
+.App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.container {
+  width: 100%;
+  margin: 0 auto;
+  padding: .75rem;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0.5rem;
+  }
+}
+
+.container-fluid {
+  width: 100%;
+  height: 100%;
+}
+
+/* --- Header --- */
+.app-header {
+  background-color: var(--surface-color);
+  padding: 1.5rem 2rem; /* Reduced vertical padding to accommodate larger logo */
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+}
+
+.logo-img {
+  height: 84px; /* Increased from 68px to 84px for larger logo */
+  width: auto;
+}
+
+.app-header nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Reduce vertical padding on header navigation links for a more compact look */
+.app-header nav .btn {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+/* Header navigation button hover states - only for NavLink buttons in header */
+.app-header nav a.btn:hover {
+  background-color: #ff8c00; /* Orange background on hover */
+  color: #000000; /* Black text on hover for better readability */
+}
+
+/* Responsive header for smaller screens */
+@media (max-width: 768px) {
+  .app-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .logo-link {
+    justify-content: center;
+  }
+
+  .logo-img {
+    height: 60px; /* Smaller logo on mobile */
+  }
+
+  .app-header nav {
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .app-header nav .btn {
+    width: 100%;
+    text-align: center;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Medium screen adjustments */
+@media (max-width: 920px) and (min-width: 769px) {
+  .app-header {
+    padding: 1rem 1.5rem;
+  }
+
+  .app-header nav {
+    gap: 0.5rem;
+  }
+
+  .app-header nav .btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+}
+
+.user-info button {
+  margin-left: 1rem;
+}
+
+/* --- Main Content --- */
+main {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  /* align-items: center; /* Removed to allow full-width content. The padding on child elements will control the width. */ */
+  justify-content: flex-start; /* Align content to the top */
+  overflow-x: auto; /* Allow horizontal scroll if content is too wide */
+  padding-bottom: 2rem; /* Add space at the bottom of the page */
+}
+
+/* --- Auth Forms --- */
+.auth-container {
+  background-color: var(--surface-color);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Wrapper to center the auth form on the page */
+.auth-page-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  flex-grow: 1; /* Takes up the full height of the main container */
+}
+
+.auth-container h2 {
+  margin-top: 0;
+  text-align: center;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0rem;
+  color: var(--text-color-secondary);
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-color);
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.error-message {
+  color: var(--error-color);
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+/* --- Dashboard Enhancements --- */
+.dashboard-actions {
+  margin-bottom: 1rem; /* Reduced space to bring it closer to the title below */
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  background-color: var(--surface-color); /* Added background to make it a distinct bar */
+  padding: 1rem; /* Added padding inside the bar */
+  border-radius: 12px; /* Rounded corners to match other elements */
+  justify-content: center; /* Center the buttons within the bar */
+  box-sizing: border-box; /* Ensure padding is included in the width */
+}
+
+/* --- Dashboard --- */
+.dashboard-grid {
+  display: grid;
+  /* Use a fixed size for cards and center the whole grid block */
+  grid-template-columns: repeat(4, 180px);
+  justify-content: center;
+  gap: 1rem;
+}
+
+/* Responsive wrapping for stat cards */
+@media (max-width: 1024px) {
+  .dashboard-grid {
+    /* On medium screens, wrap to 2x2 grid */
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .stats-card {
+    padding: 0.75rem 1rem;
+  }
+}
+
+@media (max-width: 540px) {
+  .dashboard-grid {
+    /* On small screens, wrap in 2x2 grid to minimize empty space */
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 100%;
+    gap: 0.5rem;
+  }
+
+  .stats-card {
+    padding: 0.5rem 0.6rem;
+  }
+
+  .stats-card h3 {
+    font-size: 0.85rem;
+  }
+
+  .stat-value {
+    font-size: 1rem;
+    padding: 0.2rem;
+  }
+
+  .dashboard-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .dashboard-actions .btn {
+    width: 100%;
+  }
+}
+.stats-summary-bar {
+  display: flex;
+  justify-content: center; /* Center the title to match the centered grid */
+  width: 100%;
+  margin-top: 0;
+}
+.stats-summary-bar h2 {
+  margin: 0;
+}
+.stats-card, .session-list-container {
+  background-color: var(--surface-color);
+  border-radius: 12px;
+  box-shadow: 0 20px 25px rgba(0, 0, 0, 0.08);
+}
+
+.stats-card {
+  padding: 0.5rem 0.75rem;  /* Reduced padding */
+  text-align: center;
+}
+
+.stats-card h3 {
+  margin: 0;
+  color: var(--primary-color); /* Changed from secondary text to primary (yellow) */
+  font-size: 1rem;  /* Reduced from 1.5rem */
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.25rem;  /* Reduced padding */
+  margin-bottom: 0.25rem;  /* Reduced margin */
+}
+
+.stat-value {
+  font-size: 1.1rem;  /* Reduced from 1.5rem */
+  font-weight: bold;
+  color: var(--text-white); /* Changed from yellow to white */
+  margin: 0; /* p tags have margin by default, ensure it's off */
+  background: transparent !important; /* Remove white background */
+  padding: 0.25rem;  /* Reduced padding */
+  border-radius: 6px;
+}
+
+.session-list-container {
+  grid-column: 1 / -1; /* Span full width */
+  margin-top: 1rem;
+  padding: 1rem 1.5rem; /* Reduced bottom padding since pagination is now outside */
+  display: flex; /* Make it a flex container */
+  flex-direction: column; /* Stack children vertically */
+  position: relative; /* For absolute positioning of the button */
+  min-height: 0; /* Important for flex children to shrink */
+}
+
+.session-table-wrapper {
+  overflow-y: auto;
+  margin-top: 1rem; /* Moved from .session-table to here */
+  transition: height 0.3s ease-in-out;
+  max-height: 350px; /* Reduced to fit ~6-7 rows with space for pagination buttons below */
+  position: relative;
+  /* Remove background from wrapper - it will be on the table instead */
+}
+
+/* Expand table when stats are hidden */
+.session-list-container.stats-hidden .session-table-wrapper {
+  max-height: calc(100vh - 250px); /* Expand to fill available viewport space when stats hidden */
+}
+
+/* The height of the wrapper when a session is expanded is now controlled
+   dynamically via JavaScript to "lock" the view. */
+.session-table {
+  width: 100%;
+  border-collapse: collapse;
+  position: relative;
+  z-index: 1;
+  /* margin-top: 1rem; Replaced by margin-top on .session-table-wrapper */
+}
+
+/* Add subtle diagonal striped background pattern to table - "mowed fairway" effect */
+/* Applied to table so it scales with content */
+.session-table::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.02);
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(255, 255, 255, 0.01) 10px,
+    rgba(255, 255, 255, 0.01) 20px
+  );
+  pointer-events: none;
+  z-index: -1;
+}
+
+.session-table th, .session-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.session-table th {
+  color: var(--primary-color); /* Changed from secondary text to primary (yellow) */
+  position: -webkit-sticky; /* For Safari */
+  position: sticky;
+  top: 0;
+  background-color: var(--surface-color); /* Match the container background to hide content scrolling underneath */
+  z-index: 10; /* Ensure it's above the scrolling content */
+}
+
+.session-table tbody tr {
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.session-table tbody tr:not(.session-details-row):hover {
+  background-color: var(--masters-green-light);
+}
+
+/* The .is-expanded-parent class is now used by JS to identify the row,
+   but no special sticky styling is needed. */
+/* Style for the "View Full History" button at the bottom right of the session list */
+/* --- Profile Dropdown --- */
+.profile-dropdown {
+  position: relative;
+  display: inline-block; /* Now the button itself is the flex container */
+}
+
+.profile-button {
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-white); /* Ensure icon inherits white color */
+  padding: 0.25rem 1rem; /* Reduced vertical padding */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase; /* Added to match other buttons */
+}
+
+/* Target the SVG inside the profile button to give it a fixed size */
+.profile-button svg {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0; /* Prevents the icon from shrinking if the name is long */
+}
+
+.dropdown-header {
+  padding: 12px 16px;
+  font-weight: bold;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dropdown-menu {
+  display: block;
+  position: absolute;
+  top: 100%; /* Position the top of the menu at the bottom of the parent */
+  right: 0;
+  background-color: var(--sand-color);
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 100;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  margin-top: 8px;
+}
+
+.dropdown-menu .dropdown-item {
+  /* Common styles for both NavLink (a) and button */
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  /* Reset styles that might come from button or a */
+  background: none;
+  border: none;
+  text-decoration: none; /* Removes underline from NavLink */
+  text-transform: none; /* Override uppercase from global button style */
+  letter-spacing: normal; /* Override letter-spacing from global button style */
+  /* Apply requested colors */
+  color: var(--masters-green-dark); /* Dark green font */
+  transition: background-color 0.2s;
+}
+
+.dropdown-menu .dropdown-item:hover {
+  background-color: var(--sand-color-hover);
+}
+
+.dropdown-menu .dropdown-item.unread {
+  color: var(--error-color); /* A strong red color for unread notifications */
+  font-weight: bold;
+}
+
+.dropdown-divider {
+  height: 1px;
+  margin: 0.5rem 0;
+  background-color: var(--border-color);
+  opacity: 0.5;
+}
+
+/* --- Expandable Session Row Details --- */
+.session-details-row td {
+  padding: 0 !important; /* Override other padding */
+  background-color: var(--masters-green-dark); /* Reverted as requested */
+  border-bottom: 2px solid var(--primary-color);
+}
+
+.session-details-content {
+  padding: 1.5rem;
+  /* Match the parent TD's background */
+  background-color: var(--masters-green-dark);
+  min-height: 400px; /* Ensure details content has substantial height */
+  display: flex;
+  flex-direction: column;
+}
+
+.session-details-content h3 {
+  margin-top: 0;
+  color: var(--primary-color);
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  /* Removed left margin to center the grid */
+  /* Force single row layout */
+  grid-template-rows: 1fr;
+  grid-auto-flow: column;
+  flex-grow: 1; /* Allow grid to expand to fill available space */
+  align-content: start; /* Align content to the top */
+  justify-content: center; /* Center the grid horizontally */
+  text-align: center; /* Center-align all content within the grid */
+  margin-bottom: 2rem; /* Add margin at bottom of session details */
+}
+
+/* Removed the extra margin on first column */
+
+.details-section h4 {
+  margin-top: 1rem; /* Match h5 margin-top for consistent spacing */
+  margin-bottom: 0.5rem;
+  color: var(--primary-color); /* Changed to yellow like table headers */
+  font-size: 1.3rem; /* Increased font size for category names */
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+  text-align: center; /* Center-align section headers */
+}
+
+.details-section h5 {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem; /* Slightly smaller than category but bigger than default */
+  color: var(--text-white);
+  font-weight: 500;
+  text-align: center; /* Center-align subsection headers */
+}
+
+.details-section ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  text-align: center; /* Center-align list items */
+}
+
+.details-section ul.putt-list {
+  font-family: monospace;
+}
+
+
+/* --- Buttons & Controls --- */
+.btn {
+  background-color: var(--primary-color); /* Highlighter Yellow */
+  color: var(--masters-green-dark); /* Dark text for contrast */
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-decoration: none; /* Remove underline for links */
+  display: inline-block; /* Allow padding and margin to work */
+}
+
+@media (max-width: 768px) {
+  .btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    letter-spacing: 0.3px;
+  }
+}
+
+.btn:hover {
+  background-color: var(--primary-color-hover); /* Darker Highlighter */
+}
+
+.btn.active {
+  background-color: var(--primary-color-hover);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+  color: var(--masters-green-dark);
+}
+
+.btn:disabled {
+  background-color: #555;
+  color: #999;
+  cursor: not-allowed;
+}
+
+
+
+/* Specific Button Styles */
+button.btn-secondary, .btn-secondary {
+  background-color: var(--masters-green-light);
+  color: var(--text-color);
+}
+
+button.btn-secondary:hover, .btn-secondary:hover {
+  background-color: #009c7c; /* Slightly brighter green */
+}
+
+button.btn-tertiary, .btn-tertiary {
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+button.btn-tertiary:hover, .btn-tertiary:hover {
+  background-color: var(--surface-color);
+  border-color: var(--text-color-secondary);
+}
+
+button.btn-danger, .btn-danger {
+  background-color: var(--error-color);
+  color: var(--text-white);
+}
+
+button.btn-danger:hover, .btn-danger:hover {
+  background-color: #c82333; /* A common darker red */
+}
+
+/* --- Gated Content Styles --- */
+.blurred-stat {
+  filter: blur(4px);
+  -webkit-filter: blur(4px);
+  color: transparent;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+  cursor: help;
+  user-select: none;
+  transition: filter 0.2s ease-in-out;
+}
+
+
+/* --- Notification --- */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  background-color: var(--primary-color);
+  color: var(--masters-green-dark);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  font-weight: bold;
+}
+
+.notification.error {
+  background-color: var(--error-color);
+  color: var(--text-white);
+}
+
+/* --- Account Management --- */
+.account-management {
+  margin-top: 2rem;
+  background-color: var(--surface-color);
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);
+}
+
+.account-management h3 {
+  margin-top: 0;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.table-placeholder-row td {
+  text-align: center;
+  font-style: italic;
+  color: var(--text-color-secondary);
+}
+
+.details-section .placeholder-text {
+  font-style: italic;
+  opacity: 0.7;
+}
+
+/* --- Leaderboard --- */
+.leaderboard-container {
+  margin-top: 2rem;
+  width: 100%;
+}
+
+.leaderboard-summary-bar {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.leaderboard-summary-bar h2 {
+  margin: 0;
+}
+
+.leaderboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.leaderboard-card {
+  background-color: var(--background-color);
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);
+}
+
+.leaderboard-card h3 {
+  margin: 0 0 0.75rem 0;
+  color: var(--primary-color); /* Changed from secondary text to primary (yellow) */
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+  text-align: center;
+}
+
+.leaderboard-card ol {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.leaderboard-card li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.leaderboard-card .leader-name {
+  font-weight: 500;
+}
+
+.leaderboard-card .leader-name a {
+  color: inherit; /* Default color for all players */
+  text-decoration: none;
+}
+
+.leaderboard-card .leader-name a:hover {
+  text-decoration: underline;
+}
+
+/* Highlight current player in orange */
+.leaderboard-card .leader-name.current-player a {
+  color: #ff8c00; /* Orange color for current player */
+  font-weight: 600;
+}
+
+.leaderboard-card .leader-value {
+  font-weight: bold;
+  color: var(--text-white); /* Changed from primary (yellow) to white */
+}
+
+.leaderboard-card li.unclaimed {
+  /* opacity: 0.6; */ /* Removed for better visibility */
+  font-style: italic;
+  color: var(--text-color-secondary); /* Explicitly set color */
+}
+
+.leaderboard-card .placeholder-text {
+  text-align: center;
+  font-style: italic;
+  color: var(--text-color-secondary);
+  opacity: 0.7;
+}
+
+/* --- Modal Styles --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-content {
+  background-color: var(--surface-color);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 500px;
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .modal-content {
+    padding: 1.5rem;
+    width: 95%;
+    max-height: 85vh;
+  }
+
+  .modal-content h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .modal-actions button {
+    width: 100%;
+  }
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: var(--primary-color);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.modal-actions button {
+  min-width: 100px;
+}
+
+.modal-actions-left {
+  display: flex;
+  margin-right: auto;
+}
+
+.modal-actions-right {
+  display: flex;
+  gap: 1rem;
+}
+
+.delete-confirmation {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: var(--surface-color);
+  border-radius: 8px;
+  border: 2px solid var(--error-color);
+}
+
+.delete-confirmation h3 {
+  margin: 0 0 1rem 0;
+  color: var(--error-color);
+  font-size: 1.2em;
+}
+
+.delete-confirmation p {
+  margin: 0.5rem 0;
+  color: var(--text-color);
+}
+
+.warning-text {
+  color: var(--error-color);
+  font-weight: 500;
+  font-style: italic;
+}
+
+/* --- Search Results (for Modals) --- */
+.search-results {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0 0;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: var(--background-color);
+}
+
+.search-results li {
+  padding: 0.75rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.search-results li:last-child {
+  border-bottom: none;
+}
+
+.search-results li:hover {
+  background-color: var(--masters-green-light);
+}
+
+.search-results li.selected {
+  background-color: var(--primary-color);
+  color: var(--masters-green-dark);
+}
+
+/* --- Session Select List (for Modals) --- */
+.session-list {
+  margin-top: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+.session-item {
+  padding: 0.75rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.session-item:last-child {
+  border-bottom: none;
+}
+
+.session-item:hover {
+  background-color: var(--masters-green-light);
+}
+
+.session-item.selected {
+  background-color: var(--primary-color);
+  color: var(--masters-green-dark);
+}
+
+.session-item p {
+  margin: 0;
+}
+
+/* --- Duels Page --- */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2.1rem;
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.page-header h2 {
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
+  .page-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .page-header .btn {
+    width: 100%;
+  }
+}
+
+.duels-table-container {
+  width: 100%;
+  background-color: var(--surface-color);
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.duels-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.duels-table th, .duels-table td {
+  padding: 1rem 1.25rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+  height: 3.5rem; /* Fixed height for header rows */
+  line-height: 1.75rem; /* Adjust line-height to vertically center text within fixed height */
+}
+
+.duels-table th {
+  color: var(--text-color);
+  background-color: var(--masters-green-dark);
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  letter-spacing: 0.75px;
+}
+
+.duels-table a {
+  color: var(--sand-color);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.duels-table a:hover {
+  text-decoration: underline;
+}
+
+.duels-table tbody tr:hover {
+  background-color: var(--masters-green-light);
+}
+
+.duels-table tbody tr.expandable {
+  cursor: pointer;
+}
+
+.duels-table .actions-cell {
+  text-align: right;
+}
+
+.session-table button,
+.duels-table button {
+  padding: 0.25rem 0.75rem; /* Reduced padding for compact table rows */
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: none; /* Keep button text normal case in tables */
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25em 0.6em;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.375rem;
+  text-transform: capitalize;
+}
+
+.status-badge.status-scheduled {
+  padding: 0.4em 0.8em;
+  font-size: 1rem;
+  font-weight: 600;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-badge.status-pending {
+  color: #000;
+  background-color: #ffc107; /* Yellow */
+}
+
+.status-badge.status-accepted,
+.status-badge.status-registering,
+.status-badge.status-active {
+  color: #fff;
+  background-color: #17a2b8; /* Teal */
+}
+
+.status-badge.status-completed,
+.status-badge.status-won {
+  color: #fff;
+  background-color: #28a745; /* Green */
+}
+
+.status-badge.status-declined,
+.status-badge.status-expired,
+.status-badge.status-scheduled,
+.status-badge.status-draw {
+  color: #ffffff;
+  background-color: #495057; /* Darker gray for better contrast */
+}
+
+.status-badge.status-lost {
+  color: #fff;
+  background-color: #dc3545; /* A shade of red */
+}
+
+/* --- Career Stats Page --- */
+.career-stats-container {
+  width: 100%;
+  background-color: var(--surface-color);
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.career-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.career-stats-table th, .career-stats-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.career-stats-table td:first-child {
+  font-weight: bold;
+}
+
+.career-stats-table th:nth-child(2),
+.career-stats-table td:nth-child(2) {
+  /* Center align the 'All-Time Best' column and reduce its width */
+  text-align: center;
+  width: 21%; /* Final width adjustment to prevent wrapping */
+}
+
+.career-stats-table th:nth-child(3),
+.career-stats-table td:nth-child(3) {
+  /* Center align the 'All-Time Total' column */
+  text-align: center;
+  width: 21%; /* Adjusted width */
+}
+
+.career-stats-table thead th {
+  color: var(--primary-color);
+  text-transform: uppercase;
+  font-size: 0.9rem;
+}
+
+.career-stats-table .category-group-header th {
+  background-color: var(--masters-green-dark);
+  color: var(--primary-color);
+  padding-top: 1.5rem;
+  padding-bottom: 0.5rem;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.career-stats-table .category-sub-group-header th {
+  background-color: var(--masters-green-dark);
+  font-style: italic;
+  color: var(--text-color-secondary);
+  text-align: center;
+  padding-top: 1rem;
+}
+
+.career-stats-table .sub-row-category {
+  padding-left: 2.5rem;
+}

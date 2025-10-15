@@ -1,0 +1,273 @@
+.networking-preferences-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: var(--background-color);
+  color: var(--text-color);
+  min-height: 100vh;
+}
+
+.preferences-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.preferences-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--primary-color);
+}
+
+.header-description {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  color: var(--text-color-secondary);
+  max-width: 800px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.preferences-content {
+  background: var(--surface-color);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Master Toggle Section */
+.master-toggle-section {
+  background: rgba(255, 215, 0, 0.1);
+  border: 2px solid var(--primary-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.master-toggle {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+}
+
+.master-toggle input[type="checkbox"] {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.toggle-label {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.toggle-help {
+  margin: 1rem 0 0 2.5rem;
+  font-size: 0.95rem;
+  opacity: 0.9;
+  color: var(--text-color);
+  line-height: 1.5;
+}
+
+/* Preferences Sections */
+.preferences-section {
+  margin-bottom: 2.5rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.preferences-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.preferences-section h2 {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+  color: var(--primary-color);
+}
+
+.section-description {
+  font-size: 0.95rem;
+  color: var(--text-color-secondary);
+  margin-bottom: 1.5rem;
+  opacity: 0.9;
+}
+
+/* Form Elements */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--background-color);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-color);
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="number"]:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.form-group select {
+  cursor: pointer;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+/* Checkboxes */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  font-weight: normal;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.checkbox-label span {
+  color: var(--text-color);
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+/* Privacy Section */
+.privacy-section {
+  background: rgba(255, 215, 0, 0.05);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+/* Disabled State */
+.disabled-state {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin-top: 2rem;
+}
+
+.disabled-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.disabled-state h3 {
+  font-size: 1.5rem;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+.disabled-state p {
+  font-size: 1.05rem;
+  color: var(--text-color-secondary);
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Save Button */
+.form-actions {
+  text-align: center;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.save-btn {
+  padding: 1rem 2.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  min-width: 300px;
+}
+
+.save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .networking-preferences-page {
+    padding: 1rem;
+  }
+
+  .preferences-header h1 {
+    font-size: 2rem;
+  }
+
+  .header-description {
+    font-size: 1rem;
+  }
+
+  .preferences-content {
+    padding: 1.5rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .toggle-help {
+    margin-left: 0;
+  }
+
+  .save-btn {
+    min-width: 100%;
+    padding: 0.875rem 1.5rem;
+  }
+
+  .checkbox-group {
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .preferences-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .preferences-section h2 {
+    font-size: 1.5rem;
+  }
+
+  .toggle-label {
+    font-size: 1.1rem;
+  }
+}

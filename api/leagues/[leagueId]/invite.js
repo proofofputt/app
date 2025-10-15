@@ -1,0 +1,250 @@
+import { Pool } from 'pg';
+import jwt from 'jsonwebtoken';
+import { setCORSHeaders } from '../../../utils/cors.js';
+import { sendLeagueInviteEmail } from '../../../utils/emailService.js';
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+function verifyToken(req) {
+  return new Promise((resolve) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return resolve(null);
+    }
+
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+        return resolve(null);
+      }
+      resolve(decoded);
+    });
+  });
+}
+
+export default async function handler(req, res) {
+  // Set CORS headers
+  setCORSHeaders(req, res);
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, message: 'Method Not Allowed' });
+  }
+
+  // Verify authentication
+  const user = await verifyToken(req);
+  if (!user) {
+    return res.status(401).json({ success: false, message: 'Authentication required' });
+  }
+
+  const { leagueId } = req.query;
+  const { inviter_id, invitee_id, league_invited_player_id, invitation_message } = req.body;
+
+  // Support both naming conventions for transition period
+  const inviterId = inviter_id || user.playerId;
+  const inviteeId = invitee_id || league_invited_player_id;
+
+  if (!leagueId || !inviteeId) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'leagueId and invitee player ID are required' 
+    });
+  }
+
+  let client;
+  try {
+    client = await pool.connect();
+    
+    // Get the league and verify permissions
+    const leagueResult = await client.query(`
+      SELECT
+        l.league_id,
+        l.name,
+        l.created_by,
+        l.status,
+        l.rules,
+        lm.member_role
+      FROM leagues l
+      LEFT JOIN league_memberships lm ON l.league_id = lm.league_id AND lm.player_id = $2
+      WHERE l.league_id = $1
+    `, [leagueId, inviterId]);
+
+    if (leagueResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'League not found'
+      });
+    }
+
+    const league = leagueResult.rows[0];
+
+    // Parse rules if needed
+    let leagueRules = {};
+    if (league.rules) {
+      if (typeof league.rules === 'string') {
+        try {
+          leagueRules = JSON.parse(league.rules);
+        } catch (parseError) {
+          console.log(`[invite] Warning: Could not parse league rules for league ${leagueId}: ${parseError.message}`);
+          leagueRules = {};
+        }
+      } else {
+        leagueRules = league.rules;
+      }
+    }
+
+    // Check if user has permission to invite (creator, admin, or if league allows member invites)
+    const canInvite = (
+      league.created_by === parseInt(inviterId) ||
+      league.member_role === 'admin' ||
+      (league.member_role === 'member' && leagueRules.allow_player_invites)
+    );
+
+    if (!canInvite) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'You do not have permission to invite players to this league' 
+      });
+    }
+
+    // Check if league is accepting new members
+    if (!['setup', 'registering', 'active'].includes(league.status)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Cannot invite players to league with status: ${league.status}` 
+      });
+    }
+
+    // Check if invitee exists
+    const inviteeResult = await client.query(`
+      SELECT player_id, name, email FROM players WHERE player_id = $1
+    `, [inviteeId]);
+
+    if (inviteeResult.rows.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Invited player not found' 
+      });
+    }
+
+    const invitee = inviteeResult.rows[0];
+
+    // Check if player is already a member
+    const membershipResult = await client.query(`
+      SELECT league_id, player_id FROM league_memberships
+      WHERE league_id = $1 AND player_id = $2
+    `, [leagueId, inviteeId]);
+
+    if (membershipResult.rows.length > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Player is already a member of this league' 
+      });
+    }
+
+    // Check for existing pending invitation
+    const existingInviteResult = await client.query(`
+      SELECT invitation_id FROM league_invitations
+      WHERE league_id = $1 AND invited_player_id = $2 AND status = 'pending'
+    `, [leagueId, inviteeId]);
+
+    if (existingInviteResult.rows.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Player already has a pending invitation to this league'
+      });
+    }
+
+    // Create the invitation
+    const invitationResult = await client.query(`
+      INSERT INTO league_invitations (
+        league_id,
+        inviting_player_id,
+        invited_player_id,
+        status,
+        message,
+        invitation_method,
+        expires_at,
+        created_at
+      )
+      VALUES ($1, $2, $3, 'pending', $4, 'username', NOW() + INTERVAL '7 days', NOW())
+      RETURNING
+        invitation_id,
+        league_id,
+        inviting_player_id,
+        invited_player_id,
+        status,
+        created_at,
+        expires_at
+    `, [leagueId, inviterId, inviteeId, invitation_message || null]);
+
+    const invitation = invitationResult.rows[0];
+
+    // Get inviter name for response
+    const inviterResult = await client.query(`
+      SELECT name, email FROM players WHERE player_id = $1
+    `, [inviterId]);
+
+    const inviterName = inviterResult.rows[0]?.name || 'A player';
+
+    // Send email notification to invited player
+    if (invitee?.email) {
+      try {
+        await sendLeagueInviteEmail(
+          invitee.email,
+          inviterName,
+          {
+            name: league.name,
+            description: league.description,
+            status: league.status,
+            memberCount: league.member_count || 0
+          }
+        );
+        console.log(`League invitation email sent to ${invitee.email}`);
+      } catch (emailError) {
+        console.error('Failed to send invitation email:', emailError);
+        // Don't fail the invitation if email fails
+      }
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: `League invitation sent to ${invitee.name}`,
+      invitation: {
+        invitation_id: invitation.invitation_id,
+        league_id: invitation.league_id,
+        league_name: league.name,
+        inviter_id: invitation.inviting_player_id,
+        inviter_name: inviterName,
+        invited_player_id: invitation.invited_player_id,
+        invited_player_name: invitee.name,
+        invitation_status: invitation.status,
+        invited_at: invitation.created_at,
+        expires_at: invitation.expires_at
+      }
+    });
+
+  } catch (error) {
+    console.error('League invite error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      leagueId,
+      inviterId,
+      inviteeId
+    });
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to send league invitation',
+      error: error.message,
+      details: error.detail || error.hint
+    });
+  } finally {
+    if (client) client.release();
+  }
+}
