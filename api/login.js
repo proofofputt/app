@@ -56,7 +56,7 @@ export default async function handler(req, res) {
     console.log('[dev-server] Connecting to database...');
     // 1. Find the user by email
     // The 'username' column was removed from the query as it does not exist in the current schema.
-    const userQuery = await pool.query('SELECT player_id, email, password_hash, subscription_status, timezone, membership_tier FROM players WHERE email = $1', [email]);
+    const userQuery = await pool.query('SELECT player_id, email, password_hash, subscription_status, timezone, membership_tier, is_admin FROM players WHERE email = $1', [email]);
     const player = userQuery.rows[0];
 
     if (!player) {
@@ -96,6 +96,7 @@ export default async function handler(req, res) {
       subscription_status: player.subscription_status,
       timezone: player.timezone,
       membership_tier: player.membership_tier || 'free', // Default to 'free' if not set
+      is_admin: player.is_admin || false, // Include admin status
     };
 
     console.log(`Login successful for player_id: ${player.player_id}`);
