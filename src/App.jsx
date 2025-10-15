@@ -20,6 +20,7 @@ import ContactsPage from './pages/ContactsPage';
 import CommentsPage from './pages/CommentsPage';
 import AdminFeedbackPage from './pages/AdminFeedbackPage';
 import AdminSubscriptionsPage from './pages/AdminSubscriptionsPage';
+import ClubsPage from './pages/ClubsPage';
 import MyGifts from './components/MyGifts';
 import Header from './components/Header';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -131,6 +132,7 @@ const AppContent = () => {
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/link-account" element={<LinkAccountPage />} />
           <Route path="/setup-account" element={<SetupAccountPage />} />
+          <Route path="/clubs" element={<ClubsPage />} />
 
           {/* Root Route - Dashboard if authenticated, otherwise redirect to login */}
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

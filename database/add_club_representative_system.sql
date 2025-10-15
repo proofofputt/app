@@ -260,7 +260,50 @@ CREATE INDEX IF NOT EXISTS idx_club_invites_email ON club_player_invites(invite_
 CREATE INDEX IF NOT EXISTS idx_club_invites_status ON club_player_invites(status);
 
 -- ============================================================================
--- 7. ALTER EXISTING TABLES
+-- 7. CLUB CLAIM REQUESTS TABLE
+-- ============================================================================
+-- Tracks user requests to claim/manage a club
+-- Requires admin approval before granting representative access
+
+CREATE TABLE IF NOT EXISTS club_claim_requests (
+  claim_id SERIAL PRIMARY KEY,
+
+  -- Relationships
+  club_id INTEGER NOT NULL REFERENCES clubs(club_id) ON DELETE CASCADE,
+  player_id INTEGER NOT NULL REFERENCES players(player_id) ON DELETE CASCADE,
+
+  -- Claim Information
+  position VARCHAR(100), -- e.g., "General Manager", "Head Professional", "Owner"
+  work_email VARCHAR(255), -- Work email for verification
+  work_phone VARCHAR(50), -- Work phone for verification
+  verification_notes TEXT, -- Any additional information to verify identity
+
+  -- Request Details
+  message TEXT, -- Why they want to claim this club
+
+  -- Status
+  status VARCHAR(50) DEFAULT 'pending', -- pending, approved, denied
+
+  -- Admin Review
+  reviewed_by_admin_id INTEGER REFERENCES players(player_id),
+  reviewed_at TIMESTAMP,
+  admin_notes TEXT, -- Notes from admin review
+
+  -- Metadata
+  requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  -- Constraints
+  CONSTRAINT unique_pending_claim UNIQUE(club_id, player_id, status)
+);
+
+-- Indexes for club_claim_requests table
+CREATE INDEX IF NOT EXISTS idx_claim_requests_club ON club_claim_requests(club_id);
+CREATE INDEX IF NOT EXISTS idx_claim_requests_player ON club_claim_requests(player_id);
+CREATE INDEX IF NOT EXISTS idx_claim_requests_status ON club_claim_requests(status);
+CREATE INDEX IF NOT EXISTS idx_claim_requests_pending ON club_claim_requests(status, requested_at) WHERE status = 'pending';
+
+-- ============================================================================
+-- 8. ALTER EXISTING TABLES
 -- ============================================================================
 
 -- Add is_club_rep flag to players table
@@ -353,9 +396,12 @@ EXECUTE FUNCTION create_affiliation_on_grant();
 -- ============================================================================
 -- MIGRATION COMPLETE
 -- ============================================================================
--- Tables created: 6 new tables
+-- Tables created: 7 new tables
+--   - clubs, club_representatives, club_subscription_bundles,
+--   - club_subscription_grants, player_club_affiliations,
+--   - club_player_invites, club_claim_requests
 -- Tables modified: 3 existing tables (players, leagues, player_referrals)
--- Indexes created: 20+ optimized indexes
+-- Indexes created: 24 optimized indexes
 -- Triggers created: 3 automation triggers
 --
 -- Next steps:
