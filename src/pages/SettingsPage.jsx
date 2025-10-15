@@ -101,7 +101,7 @@ const SettingsPage = () => {
 
   useEffect(() => {
     if (playerData) {
-      setName(playerData.name || '');
+      setName(playerData.display_name || playerData.name || '');
       setPhone(playerData.phone || '');
       setTimezone(playerData.timezone || 'UTC');
       setSocials({
@@ -134,7 +134,7 @@ const SettingsPage = () => {
   const handleInfoSubmit = async (e) => {
     e.preventDefault();
     try {
-      await apiUpdatePlayer(playerData.player_id, { name, phone, timezone });
+      await apiUpdatePlayer(playerData.player_id, { display_name: name, phone, timezone });
       showNotification('Account info updated successfully!');
       await refreshData();
     } catch (err) {

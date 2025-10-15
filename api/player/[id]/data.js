@@ -56,7 +56,7 @@ export default async function handler(req, res) {
     try {
       // Get player basic info with display_name from users table
       const playerResult = await client.query(
-        `SELECT p.player_id, p.name, p.email, p.membership_tier, p.timezone, p.created_at, p.referral_code, p.is_admin,
+        `SELECT p.player_id, p.name, p.email, p.membership_tier, p.timezone, p.created_at, p.referral_code, p.is_admin, p.is_club_rep,
                 u.display_name, u.username
          FROM players p
          LEFT JOIN users u ON p.player_id = u.id
@@ -163,6 +163,7 @@ export default async function handler(req, res) {
         created_at: player.created_at,
         referral_code: player.referral_code,
         is_admin: player.is_admin || false,
+        is_club_rep: player.is_club_rep || false,
 
         // Embedded stats object (like prototype)
         stats: {
