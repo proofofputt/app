@@ -273,7 +273,7 @@ const AdminSubscriptionsPage = () => {
             className="btn btn-primary"
             onClick={() => setShowManualGenerate(!showManualGenerate)}
           >
-            Manual Gift Code Generation
+            Send Codes
           </button>
         </div>
       </div>
@@ -282,7 +282,7 @@ const AdminSubscriptionsPage = () => {
       {showManualGenerate && (
         <div className="modal-overlay" onClick={() => setShowManualGenerate(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>Manually Generate Gift Codes</h3>
+            <h3>Send Codes</h3>
             <form onSubmit={handleManualGenerate}>
               <div className="form-group">
                 <label>Search Player</label>

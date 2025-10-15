@@ -9,7 +9,7 @@
 
 import { Pool } from 'pg';
 import { setCORSHeaders } from '../../../../utils/cors.js';
-import { verifyAdminToken } from '../../../../utils/auth.js';
+import { verifyAdmin } from '../../../../utils/adminAuth.js';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -30,11 +30,11 @@ export default async function handler(req, res) {
   }
 
   // Verify admin authentication
-  const adminCheck = await verifyAdminToken(req);
-  if (!adminCheck.isValid) {
-    return res.status(adminCheck.status).json({
+  const adminCheck = await verifyAdmin(req);
+  if (!adminCheck.isAdmin) {
+    return res.status(adminCheck.error === 'Authentication required' ? 401 : 403).json({
       success: false,
-      message: adminCheck.message,
+      message: adminCheck.error,
     });
   }
 
