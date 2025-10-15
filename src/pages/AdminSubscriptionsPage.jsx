@@ -43,6 +43,13 @@ const AdminSubscriptionsPage = () => {
     orderId: ''
   });
 
+  // Player search for manual generation
+  const [playerSearchQuery, setPlayerSearchQuery] = useState('');
+  const [playerSearchResults, setPlayerSearchResults] = useState([]);
+  const [isSearchingPlayers, setIsSearchingPlayers] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [showPlayerResults, setShowPlayerResults] = useState(false);
+
   useEffect(() => {
     if (playerData?.player_id && playerData?.is_admin) {
       loadOrders();
@@ -142,6 +149,46 @@ const AdminSubscriptionsPage = () => {
     }
   };
 
+  const searchPlayers = async (query) => {
+    if (!query || query.trim().length < 2) {
+      setPlayerSearchResults([]);
+      setShowPlayerResults(false);
+      return;
+    }
+
+    setIsSearchingPlayers(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`/api/admin/players/search?q=${encodeURIComponent(query)}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setPlayerSearchResults(data.players || []);
+        setShowPlayerResults(true);
+      } else {
+        showNotification(data.message || 'Failed to search players', true);
+      }
+    } catch (error) {
+      console.error('Error searching players:', error);
+      showNotification('Failed to search players', true);
+    } finally {
+      setIsSearchingPlayers(false);
+    }
+  };
+
+  const selectPlayer = (player) => {
+    setSelectedPlayer(player);
+    setManualGenerateForm({ ...manualGenerateForm, playerId: player.playerId.toString() });
+    setPlayerSearchQuery('');
+    setPlayerSearchResults([]);
+    setShowPlayerResults(false);
+  };
+
   const handleManualGenerate = async (e) => {
     e.preventDefault();
 
@@ -173,6 +220,8 @@ const AdminSubscriptionsPage = () => {
           reason: '',
           orderId: ''
         });
+        setSelectedPlayer(null);
+        setPlayerSearchQuery('');
         // Reload orders to show updated data
         loadOrders();
       } else {
@@ -236,13 +285,66 @@ const AdminSubscriptionsPage = () => {
             <h3>Manually Generate Gift Codes</h3>
             <form onSubmit={handleManualGenerate}>
               <div className="form-group">
+                <label>Search Player</label>
+                <div className="player-search-container">
+                  <input
+                    type="text"
+                    value={playerSearchQuery}
+                    onChange={(e) => {
+                      setPlayerSearchQuery(e.target.value);
+                      searchPlayers(e.target.value);
+                    }}
+                    placeholder="Search by name, email, or player ID"
+                    className="player-search-input"
+                  />
+                  {isSearchingPlayers && <span className="search-loading">Searching...</span>}
+                  {showPlayerResults && playerSearchResults.length > 0 && (
+                    <div className="player-search-results">
+                      {playerSearchResults.map(player => (
+                        <div
+                          key={player.playerId}
+                          className="player-search-result-item"
+                          onClick={() => selectPlayer(player)}
+                        >
+                          <div className="player-result-name">{player.name}</div>
+                          <div className="player-result-email">{player.email}</div>
+                          <div className="player-result-id">ID: {player.playerId}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {showPlayerResults && playerSearchResults.length === 0 && !isSearchingPlayers && (
+                    <div className="player-search-results">
+                      <div className="no-results">No players found</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="form-group">
                 <label>Player ID *</label>
                 <input
                   type="number"
                   value={manualGenerateForm.playerId}
                   onChange={(e) => setManualGenerateForm({...manualGenerateForm, playerId: e.target.value})}
                   required
+                  disabled={!!selectedPlayer}
                 />
+                {selectedPlayer && (
+                  <div className="selected-player-info">
+                    <strong>Selected:</strong> {selectedPlayer.name} ({selectedPlayer.email})
+                    <button
+                      type="button"
+                      className="btn-link"
+                      onClick={() => {
+                        setSelectedPlayer(null);
+                        setManualGenerateForm({...manualGenerateForm, playerId: ''});
+                      }}
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
