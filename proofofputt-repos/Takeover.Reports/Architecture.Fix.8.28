@@ -1,0 +1,220 @@
+# CRITICAL: Desktop Application Architecture Fix
+**Date:** August 28, 2025  
+**Issue:** Computer Vision Processing Location & Data Structure  
+**Priority:** CRITICAL - Must fix before launch  
+
+---
+
+## Problem Identified
+
+The current Tauri desktop application is incorrectly architected as just a web wrapper. The computer vision processing should run locally and generate **detailed frame-by-frame session data**, not just summary statistics.
+
+## Current Data Structure Requirements
+
+Based on `session_reporter.py` and session export examples, the desktop app must generate:
+
+### Frame-by-Frame Classification Log (`putt_classification_log.csv`):
+```csv
+current_frame_time,classification,detailed_classification,ball_x,ball_y,transition_history
+0.1234,WAITING,"Waiting for Putt",245.6,178.9,"WAITING"
+0.5678,MAKE,"MAKE - Direct to Hole",298.4,201.2,"WAITING->PUTT_IN_PROGRESS->BALL_IN_HOLE"
+1.2345,MISS,"MISS - Catch Area",245.6,178.9,"WAITING->PUTT_IN_PROGRESS->BALL_IN_CATCH"
+```
+
+### Session Summary Report (`session_report.csv`):
+```csv
+Player Name,wake
+Report Generated At,20250819_002656
+Total Putts,45
+Total Makes,32
+Make Percentage,71.11%
+Max Consecutive Makes,8
+Fastest 21 Makes (seconds),127.43
+Most Makes in 60 seconds,12
+Session Duration (seconds),458.67
+Putts Per Minute,5.89
+
+Putt History:
+Putt Index,Time (s),Classification,Detailed Classification
+1,12.34,MAKE,"MAKE - Direct to Hole"
+2,28.91,MISS,"MISS - Catch Area"
+3,45.67,MAKE,"MAKE - Via Ramp"
+```
+
+## Why Detailed Data is Essential
+
+The backend's `SessionReporter` class calculates time-based statistics like:
+- **Fastest 21 Makes**: Requires timestamps of each make
+- **Most Makes in 60 seconds**: Sliding window analysis of timestamps  
+- **Putts Per Minute**: Session duration vs total putts
+- **Consecutive streak analysis**: Sequential putt classifications
+- **Category breakdowns**: Detailed classification strings
+
+**Simple "putt counts" won't work** - the backend needs the rich temporal data.
+
+---
+
+## Correct Architecture
+
+### Desktop Application (Local Processing):
+```
+Tauri App:
+├── Camera capture & YOLOv8 detection
+├── Frame-by-frame ROI analysis  
+├── Real-time putt classification
+├── Session data logging (CSV generation)
+└── Results transmission to backend
+```
+
+**Generated Data:**
+1. **Real-time frame data**: `current_frame_time, classification, detailed_classification, ball_x, ball_y, transition_history`
+2. **Session metadata**: Player info, session timing, camera settings
+3. **Complete putt history**: Every classified event with precise timestamps
+
+### Backend (Data Processing & Social Features):
+```
+Flask API:
+├── Session data ingestion endpoint
+├── SessionReporter processing of received data
+├── Statistics calculation and storage  
+├── League/duel management
+├── Social features & notifications
+└── User management & authentication
+```
+
+**Receives from Desktop:**
+- Complete session CSV data (frame-by-frame logs)
+- Session metadata and settings
+- Player context (league/duel participation)
+
+---
+
+## Implementation Requirements
+
+### 1. Tauri Python Integration
+```toml
+# Cargo.toml
+[dependencies]
+tauri = { version = "1.5", features = ["shell-sidecar"] }
+```
+
+```json
+// tauri.conf.json
+{
+  "tauri": {
+    "bundle": {
+      "externalBin": ["python/run_tracker"],
+      "resources": ["models/best.pt", "python/*"]
+    },
+    "allowlist": {
+      "shell": {
+        "sidecar": true,
+        "scope": ["python/run_tracker"]
+      }
+    }
+  }
+}
+```
+
+### 2. Local Session Data Generation
+**Move to desktop:**
+- `backend/video_processor.py` → `desktop/python/video_processor.py`
+- `backend/putt_classifier.py` → `desktop/python/putt_classifier.py`  
+- `backend/run_tracker.py` → `desktop/python/run_tracker.py`
+- `backend/models/best.pt` → `desktop/models/best.pt`
+
+**Desktop generates:**
+```python
+# Frame-by-frame logging in desktop app
+putt_classification_log.csv:
+current_frame_time,classification,detailed_classification,ball_x,ball_y,transition_history
+0.1667,WAITING,"Waiting for Putt",0,0,""
+0.3334,PUTT_IN_PROGRESS,"Putt in Progress",245.6,178.9,"WAITING"
+0.5001,BALL_IN_HOLE,"Ball in Hole",298.4,201.2,"WAITING->PUTT_IN_PROGRESS"
+0.6668,MAKE,"MAKE - Direct to Hole",298.4,201.2,"WAITING->PUTT_IN_PROGRESS->BALL_IN_HOLE"
+```
+
+### 3. Backend Session Ingestion Endpoint
+```python
+@app.route('/sessions/submit', methods=['POST'])
+def submit_session():
+    # Receive complete session data
+    session_data = request.json
+    putt_log_entries = session_data['putt_log_entries']
+    session_metadata = session_data['metadata']
+    
+    # Use existing SessionReporter for processing
+    reporter = SessionReporter(putt_log_entries)
+    reporter.process_data()
+    
+    # Store processed results
+    data_manager.store_session_results(player_id, reporter.get_statistics())
+```
+
+### 4. Data Transmission Protocol
+**Desktop → Backend:**
+```json
+{
+  "player_id": 123,
+  "session_metadata": {
+    "start_time": "2025-08-28T15:30:00Z",
+    "end_time": "2025-08-28T15:37:45Z", 
+    "camera_settings": {...},
+    "roi_configuration": {...}
+  },
+  "putt_log_entries": [
+    {
+      "current_frame_time": "0.1667",
+      "classification": "WAITING",
+      "detailed_classification": "Waiting for Putt",
+      "ball_x": "0",
+      "ball_y": "0", 
+      "transition_history": ""
+    },
+    {
+      "current_frame_time": "0.6668",
+      "classification": "MAKE",
+      "detailed_classification": "MAKE - Direct to Hole",
+      "ball_x": "298.4",
+      "ball_y": "201.2",
+      "transition_history": "WAITING->PUTT_IN_PROGRESS->BALL_IN_HOLE"
+    }
+  ]
+}
+```
+
+---
+
+## Critical Data Preservation
+
+**The desktop app MUST generate the same data structure as the current backend:**
+
+1. **Frame-level granularity**: Every frame's classification state
+2. **Precise timestamps**: For time-based calculations  
+3. **Ball coordinates**: For trajectory analysis
+4. **Transition history**: State machine progression
+5. **Detailed classifications**: Make/miss categorization
+
+This ensures the backend's existing `SessionReporter` and statistics calculations continue to work without modification.
+
+---
+
+## Launch Impact
+
+**BLOCK LAUNCH** until this architecture is corrected. The current web-wrapper approach:
+- ❌ Cannot generate required frame-by-frame data
+- ❌ Lacks computer vision processing capability  
+- ❌ Missing local YOLOv8 model and classification logic
+- ❌ Would break all time-based statistics ("Fastest 21 Makes", etc.)
+
+**Correct architecture enables:**
+- ✅ Local real-time processing with no latency
+- ✅ Complete session data generation
+- ✅ Privacy (no video streaming)
+- ✅ Offline capability  
+- ✅ Proper statistics calculation
+- ✅ Scalable architecture
+
+---
+
+This fix is essential - the backend's sophisticated statistics engine depends on rich temporal data that only local processing can provide.
