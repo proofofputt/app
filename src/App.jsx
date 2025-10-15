@@ -20,6 +20,7 @@ import ContactsPage from './pages/ContactsPage';
 import CommentsPage from './pages/CommentsPage';
 import AdminFeedbackPage from './pages/AdminFeedbackPage';
 import AdminSubscriptionsPage from './pages/AdminSubscriptionsPage';
+import AdminClubUpdatesPage from './pages/AdminClubUpdatesPage';
 import ClubsPage from './pages/ClubsPage';
 import MyGifts from './components/MyGifts';
 import Header from './components/Header';
@@ -154,6 +155,7 @@ const AppContent = () => {
           <Route path="/gifts" element={<ProtectedRoute><MyGifts /></ProtectedRoute>} />
           <Route path="/admin/feedback" element={<ProtectedRoute><AdminFeedbackPage /></ProtectedRoute>} />
           <Route path="/admin/subscriptions" element={<ProtectedRoute><AdminSubscriptionsPage /></ProtectedRoute>} />
+          <Route path="/admin/club-updates" element={<ProtectedRoute><AdminClubUpdatesPage /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>
