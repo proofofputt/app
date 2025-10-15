@@ -672,6 +672,122 @@ export const sendFeedbackStatusUpdateEmail = async (email, name, threadDetails, 
 };
 
 /**
+ * Send alert to admin team when a club claim request is submitted
+ */
+export const sendClubClaimAlertEmail = async (adminEmail, claimDetails, playerInfo, clubInfo) => {
+  const adminLink = `${APP_URL}/admin/clubs/claims`;
+
+  const msg = {
+    to: adminEmail,
+    from: {
+      email: FROM_EMAIL,
+      name: APP_NAME
+    },
+    subject: `New Club Claim Request: ${clubInfo.name}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>New Club Claim Request</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #2d3748; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #0a5d1a 0%, #2d5016 100%); color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="margin: 0; font-size: 28px; font-weight: 600;">🏌️ New Club Claim Request</h1>
+          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Awaiting Admin Review</p>
+        </div>
+
+        <div style="background: #f7fafc; padding: 30px 20px; border-radius: 0 0 8px 8px;">
+          <h2 style="color: #2d5016; margin-top: 0;">Club Representative Request</h2>
+
+          <div style="background: white; border: 2px solid #2d5016; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h3 style="color: #2d5016; margin-top: 0;">🏌️ Club Details</h3>
+            <p><strong>Club Name:</strong> ${clubInfo.name}</p>
+            <p><strong>Location:</strong> ${clubInfo.address_city || 'N/A'}, ${clubInfo.address_state || 'N/A'}</p>
+            ${clubInfo.website ? `<p><strong>Website:</strong> <a href="${clubInfo.website}">${clubInfo.website}</a></p>` : ''}
+            <p><strong>Club ID:</strong> #${clubInfo.club_id}</p>
+          </div>
+
+          <div style="background: #f0f8f0; border: 1px solid #4a6741; border-radius: 6px; padding: 15px; margin: 20px 0;">
+            <h4 style="color: #2d5016; margin-top: 0; margin-bottom: 10px;">👤 Requester Information</h4>
+            <p style="margin: 5px 0;"><strong>Name:</strong> ${playerInfo.name}</p>
+            <p style="margin: 5px 0;"><strong>Email:</strong> ${playerInfo.email}</p>
+            <p style="margin: 5px 0;"><strong>Player ID:</strong> ${playerInfo.player_id}</p>
+          </div>
+
+          <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 15px; margin: 20px 0;">
+            <h4 style="color: #856404; margin-top: 0; margin-bottom: 10px;">✅ Verification Details</h4>
+            <p style="margin: 5px 0;"><strong>Position:</strong> ${claimDetails.position}</p>
+            <p style="margin: 5px 0;"><strong>Work Email:</strong> ${claimDetails.work_email}</p>
+            ${claimDetails.work_phone ? `<p style="margin: 5px 0;"><strong>Work Phone:</strong> ${claimDetails.work_phone}</p>` : ''}
+            ${claimDetails.verification_notes ? `<p style="margin: 10px 0 0 0;"><strong>Notes:</strong> ${claimDetails.verification_notes}</p>` : ''}
+          </div>
+
+          ${claimDetails.message ? `
+          <div style="background: #e3f2fd; border-left: 4px solid #1976d2; border-radius: 4px; padding: 15px; margin: 20px 0;">
+            <strong style="color: #1976d2;">💬 Message from Requester:</strong>
+            <p style="margin: 10px 0 0 0; color: #2d3748;">${claimDetails.message}</p>
+          </div>
+          ` : ''}
+
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${adminLink}" style="background: linear-gradient(135deg, #0a5d1a 0%, #2d5016 100%); color: white; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: 600; display: inline-block;">Review Claim Request</a>
+          </div>
+
+          <p style="color: #718096; font-size: 14px;">
+            Please review the verification details above and approve or deny this request from the admin dashboard.
+          </p>
+
+          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+
+          <p style="color: #718096; font-size: 12px; text-align: center;">
+            © ${new Date().getFullYear()} ${APP_NAME} Admin System<br>
+            This is an automated alert for admin team members
+          </p>
+        </div>
+      </body>
+      </html>
+    `,
+    text: `
+      NEW CLUB CLAIM REQUEST
+
+      Club Details:
+      - Club Name: ${clubInfo.name}
+      - Location: ${clubInfo.address_city || 'N/A'}, ${clubInfo.address_state || 'N/A'}
+      ${clubInfo.website ? `- Website: ${clubInfo.website}` : ''}
+      - Club ID: #${clubInfo.club_id}
+
+      Requester Information:
+      - Name: ${playerInfo.name}
+      - Email: ${playerInfo.email}
+      - Player ID: ${playerInfo.player_id}
+
+      Verification Details:
+      - Position: ${claimDetails.position}
+      - Work Email: ${claimDetails.work_email}
+      ${claimDetails.work_phone ? `- Work Phone: ${claimDetails.work_phone}` : ''}
+      ${claimDetails.verification_notes ? `- Notes: ${claimDetails.verification_notes}` : ''}
+
+      ${claimDetails.message ? `Message from Requester:\n${claimDetails.message}\n` : ''}
+
+      Review and approve/deny this request: ${adminLink}
+
+      This is an automated alert for admin team members.
+    `
+  };
+
+  try {
+    await sgMail.send(msg);
+    console.log(`Club claim alert email sent to admin ${adminEmail}`);
+    return { success: true };
+  } catch (error) {
+    console.error('Error sending club claim alert email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
  * Send alert to admin team when new high-priority feedback is submitted
  */
 export const sendNewFeedbackAlertEmail = async (adminEmail, feedbackDetails, playerInfo) => {

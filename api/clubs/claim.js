@@ -11,10 +11,13 @@
 import { Pool } from 'pg';
 import { setCORSHeaders } from '../../utils/cors.js';
 import { verifyToken } from '../../utils/auth.js';
+import { sendClubClaimAlertEmail } from '../../utils/emailService.js';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
+
+const ADMIN_EMAIL = 'pop@proofofputt.com';
 
 export default async function handler(req, res) {
   setCORSHeaders(req, res);
@@ -127,11 +130,83 @@ export default async function handler(req, res) {
       ]
     );
 
+    const claim = result.rows[0];
+
+    // Get player info for notifications
+    const playerResult = await pool.query(
+      'SELECT player_id, name, email FROM players WHERE player_id = $1',
+      [user.playerId]
+    );
+    const playerInfo = playerResult.rows[0];
+
+    // Send in-app notifications to all admins
+    try {
+      const adminsResult = await pool.query(
+        'SELECT player_id FROM players WHERE is_admin = TRUE'
+      );
+
+      const notificationPromises = adminsResult.rows.map(admin =>
+        pool.query(
+          `INSERT INTO notifications (
+            player_id,
+            type,
+            title,
+            message,
+            link_path,
+            data,
+            read_status
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [
+            admin.player_id,
+            'club_claim_request',
+            'New Club Claim Request',
+            `${playerInfo.name} has requested to represent ${club.name}`,
+            '/admin/clubs/claims',
+            JSON.stringify({
+              claim_id: claim.claim_id,
+              club_id: club.club_id,
+              club_name: club.name,
+              player_id: user.playerId,
+              player_name: playerInfo.name,
+              position: position,
+            }),
+            false,
+          ]
+        )
+      );
+
+      await Promise.all(notificationPromises);
+      console.log(`Sent in-app notifications to ${adminsResult.rows.length} admins`);
+    } catch (notifError) {
+      console.error('Error sending in-app notifications:', notifError);
+      // Don't fail the request if notifications fail
+    }
+
+    // Send email notification to pop@proofofputt.com
+    try {
+      await sendClubClaimAlertEmail(
+        ADMIN_EMAIL,
+        {
+          position,
+          work_email,
+          work_phone,
+          verification_notes,
+          message,
+        },
+        playerInfo,
+        club
+      );
+      console.log(`Sent club claim alert email to ${ADMIN_EMAIL}`);
+    } catch (emailError) {
+      console.error('Error sending email notification:', emailError);
+      // Don't fail the request if email fails
+    }
+
     return res.status(201).json({
       success: true,
       message: `Your claim request for ${club.name} has been submitted and is pending admin approval`,
       claim: {
-        ...result.rows[0],
+        ...claim,
         club_name: club.name,
         club_location: `${club.address_city}, ${club.address_state}`,
       },
