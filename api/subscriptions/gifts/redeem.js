@@ -118,6 +118,21 @@ export default async function handler(req, res) {
       [oneYearFromNow, user.playerId]
     );
 
+    // Create referral credit for the gift code owner
+    // This tracks that the owner referred the redeemer
+    await client.query(
+      `INSERT INTO player_referrals (
+        referrer_id,
+        referred_player_id,
+        referral_source,
+        created_at
+      ) VALUES ($1, $2, 'gift_code', NOW())
+      ON CONFLICT (referrer_id, referred_player_id) DO NOTHING`,
+      [gift.owner_user_id, user.playerId]
+    );
+
+    console.log(`[Gift Redemption] Created referral credit: ${gift.owner_user_id} → ${user.playerId}`);
+
     // Get updated player info
     const playerResult = await client.query(
       'SELECT player_id, name, email, subscription_status, membership_tier, subscription_expires_at FROM players WHERE player_id = $1',

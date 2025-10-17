@@ -538,7 +538,6 @@ const SettingsPage = () => {
                             <div key={giftCode.id} className="gift-invite-row">
                               <div className="gift-code-label">
                                 <span className="gift-code-text">{giftCode.gift_code}</span>
-                                {giftCode.is_redeemed && <span className="redeemed-badge">Redeemed</span>}
                               </div>
                               {!giftCode.is_redeemed && (
                                 <div className="gift-send-form">

@@ -46,8 +46,7 @@ async function createHubSpotCompany(club) {
     name: club.name,
     phone: club.phone || '',
     website: club.website || '',
-    address: club.address_line1 || '',
-    address2: club.address_line2 || '',
+    address: club.address_street || '',
     city: club.address_city || '',
     state: club.address_state || '',
     zip: club.address_postcode || '',
@@ -58,9 +57,9 @@ async function createHubSpotCompany(club) {
     longitude: club.longitude ? club.longitude.toString() : '',
     outreach_status: club.outreach_status || 'not_contacted',
     outreach_priority: club.outreach_priority ? club.outreach_priority.toString() : '5',
-    primary_contact_name: club.primary_contact_name || '',
-    primary_contact_email: club.primary_contact_email || '',
-    primary_contact_phone: club.primary_contact_phone || '',
+    contact_name: club.primary_contact_name || '',
+    contact_email: club.primary_contact_email || '',
+    contact_phone: club.primary_contact_phone || '',
   };
 
   // Remove empty values
@@ -104,7 +103,7 @@ async function getUnsyncedClubs(limit = null) {
   const query = `
     SELECT
       club_id, name, phone, website,
-      address_line1, address_line2, address_city,
+      address_street, address_city,
       address_state, address_postcode, address_country,
       latitude, longitude,
       primary_contact_name, primary_contact_email, primary_contact_phone,

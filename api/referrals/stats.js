@@ -45,17 +45,17 @@ export default async function handler(req, res) {
   try {
 
     // Get referral statistics
-    // Note: This table needs to be created. For now, we'll return mock data structure
     const stats = {
       totalInvites: 0,
       viewed: 0,
       rejected: 0,
       accountsCreated: 0,
       upgraded: 0,
-      invites: []
+      invites: [],
+      giftCodeRedemptions: 0
     };
 
-    // Check if gift_code_sends table exists and query it
+    // Get gift code sends (invitations sent via Send button)
     try {
       const invitesResult = await pool.query(
         `SELECT
@@ -84,7 +84,8 @@ export default async function handler(req, res) {
         status: row.status || 'pending',
         viewed: row.viewed || false,
         account_created: row.account_created,
-        is_subscriber: row.is_subscribed || false
+        is_subscriber: row.is_subscribed || false,
+        type: 'gift_send'
       }));
 
       // Calculate summary stats
@@ -96,7 +97,53 @@ export default async function handler(req, res) {
 
     } catch (queryError) {
       console.log('Gift code sends table may not exist yet:', queryError.message);
-      // Return empty stats if table doesn't exist
+    }
+
+    // Get gift code redemptions (codes redeemed by others)
+    try {
+      const redemptionsResult = await pool.query(
+        `SELECT
+          ugs.gift_code,
+          ugs.redeemed_at,
+          p.player_id,
+          p.name,
+          p.email,
+          p.is_subscribed,
+          p.membership_tier
+         FROM user_gift_subscriptions ugs
+         INNER JOIN players p ON p.player_id = ugs.redeemed_by_user_id
+         WHERE ugs.owner_user_id = $1
+           AND ugs.is_redeemed = TRUE
+         ORDER BY ugs.redeemed_at DESC
+         LIMIT 50`,
+        [userId]
+      );
+
+      // Add redemptions to invites list
+      const redemptions = redemptionsResult.rows.map(row => ({
+        recipient: row.email || row.name,
+        sent_at: row.redeemed_at,
+        status: 'redeemed',
+        viewed: true,
+        account_created: true,
+        is_subscriber: row.is_subscribed || false,
+        type: 'gift_redemption',
+        gift_code: row.gift_code
+      }));
+
+      stats.invites = [...stats.invites, ...redemptions];
+      stats.giftCodeRedemptions = redemptions.length;
+
+      // Update stats to include redemptions
+      stats.totalInvites += redemptions.length;
+      stats.accountsCreated += redemptions.length;
+      stats.upgraded += redemptions.filter(r => r.is_subscriber).length;
+
+      // Sort all invites by date
+      stats.invites.sort((a, b) => new Date(b.sent_at) - new Date(a.sent_at));
+
+    } catch (queryError) {
+      console.log('Gift code redemptions query error:', queryError.message);
     }
 
     return res.status(200).json({
