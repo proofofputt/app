@@ -376,6 +376,15 @@ export const apiRedeemCoupon = (playerId, couponCode) => {
   }).then(handleResponse);
 };
 
+// Redeem gift code (7-character alphanumeric codes from bundles or admin grants)
+export const apiRedeemGiftCode = (giftCode) => {
+  return fetch(`${API_BASE_URL}/subscriptions/gifts/redeem`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ giftCode: giftCode })
+  }).then(handleResponse);
+};
+
 // --- Friends & Social ---
 export const apiListFriends = (playerId) => 
   fetch(`${API_BASE_URL}/player/${playerId}/friends`, { headers: getHeaders() }).then(handleResponse);

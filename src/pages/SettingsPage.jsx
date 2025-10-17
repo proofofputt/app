@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNotification } from '../context/NotificationContext.jsx';
-import { apiUpdatePlayer, apiUpdatePlayerSocials, apiRedeemCoupon, apiCancelSubscription, apiUpdateNotificationPreferences } from '../api.js';
+import { apiUpdatePlayer, apiUpdatePlayerSocials, apiRedeemCoupon, apiRedeemGiftCode, apiCancelSubscription, apiUpdateNotificationPreferences } from '../api.js';
 import ChangePassword from '../components/ChangePassword.jsx';
 import './SettingsPage.css';
 
@@ -178,8 +178,22 @@ const SettingsPage = () => {
       showNotification('Please enter a coupon code.', true);
       return;
     }
+
+    const code = couponCode.trim().toUpperCase();
+
     try {
-      const response = await apiRedeemCoupon(playerData.player_id, couponCode.trim());
+      // Detect gift code format: exactly 7 alphanumeric characters
+      const isGiftCode = /^[A-Z0-9]{7}$/.test(code);
+
+      let response;
+      if (isGiftCode) {
+        console.log('[Redeem] Detected gift code format:', code);
+        response = await apiRedeemGiftCode(code);
+      } else {
+        console.log('[Redeem] Detected coupon code format:', code);
+        response = await apiRedeemCoupon(playerData.player_id, code);
+      }
+
       showNotification(response.message);
       setCouponCode('');
       window.location.reload();
