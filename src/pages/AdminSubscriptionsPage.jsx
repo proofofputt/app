@@ -410,10 +410,10 @@ const AdminSubscriptionsPage = () => {
         <h3>User Subscription History Lookup</h3>
         <div className="lookup-form">
           <input
-            type="number"
+            type="text"
             value={userHistoryId}
             onChange={(e) => setUserHistoryId(e.target.value)}
-            placeholder="Enter Player ID"
+            placeholder="Enter Player ID, Email, or Name"
           />
           <button
             className="btn btn-primary"
@@ -429,6 +429,15 @@ const AdminSubscriptionsPage = () => {
             <div className="user-history-header">
               <h4>{userHistory.player.displayName || userHistory.player.name}</h4>
               <span className="user-email">{userHistory.player.email}</span>
+              <span className="user-player-id" style={{
+                display: 'block',
+                fontSize: '14px',
+                color: '#666',
+                marginTop: '4px',
+                fontWeight: 'bold'
+              }}>
+                Player ID: {userHistory.player.playerId}
+              </span>
             </div>
 
             <div className="history-summary">

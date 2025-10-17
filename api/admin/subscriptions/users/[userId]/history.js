@@ -44,37 +44,73 @@ export default async function handler(req, res) {
   if (!userId) {
     return res.status(400).json({
       success: false,
-      message: 'User ID is required'
+      message: 'User ID, email, or name is required'
     });
   }
 
   try {
-    // Get player info
-    const playerQuery = `
-      SELECT
-        player_id,
-        name,
-        email,
-        display_name,
-        membership_tier,
-        subscription_status,
-        subscription_tier,
-        subscription_billing_cycle,
-        subscription_started_at,
-        subscription_current_period_start,
-        subscription_current_period_end,
-        subscription_cancel_at_period_end,
-        is_subscribed,
-        zaprite_customer_id,
-        zaprite_subscription_id,
-        zaprite_payment_method,
-        created_at,
-        updated_at
-      FROM players
-      WHERE player_id = $1
-    `;
+    // Get player info - support lookup by player_id, email, or name
+    let playerQuery;
+    let queryParams;
 
-    const playerResult = await pool.query(playerQuery, [userId]);
+    // Check if userId is numeric (player_id lookup)
+    if (!isNaN(userId) && Number.isInteger(Number(userId))) {
+      playerQuery = `
+        SELECT
+          player_id,
+          name,
+          email,
+          display_name,
+          membership_tier,
+          subscription_status,
+          subscription_tier,
+          subscription_billing_cycle,
+          subscription_started_at,
+          subscription_current_period_start,
+          subscription_current_period_end,
+          subscription_cancel_at_period_end,
+          is_subscribed,
+          zaprite_customer_id,
+          zaprite_subscription_id,
+          zaprite_payment_method,
+          created_at,
+          updated_at
+        FROM players
+        WHERE player_id = $1
+      `;
+      queryParams = [parseInt(userId)];
+    } else {
+      // Search by email or name (case-insensitive partial match)
+      playerQuery = `
+        SELECT
+          player_id,
+          name,
+          email,
+          display_name,
+          membership_tier,
+          subscription_status,
+          subscription_tier,
+          subscription_billing_cycle,
+          subscription_started_at,
+          subscription_current_period_start,
+          subscription_current_period_end,
+          subscription_cancel_at_period_end,
+          is_subscribed,
+          zaprite_customer_id,
+          zaprite_subscription_id,
+          zaprite_payment_method,
+          created_at,
+          updated_at
+        FROM players
+        WHERE LOWER(email) = LOWER($1)
+           OR LOWER(name) LIKE LOWER($1)
+           OR LOWER(display_name) LIKE LOWER($1)
+        LIMIT 1
+      `;
+      queryParams = [userId.trim()];
+    }
+
+    const playerResult = await pool.query(playerQuery, queryParams);
 
     if (playerResult.rows.length === 0) {
       return res.status(404).json({
