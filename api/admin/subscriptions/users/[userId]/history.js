@@ -81,6 +81,7 @@ export default async function handler(req, res) {
       queryParams = [parseInt(userId)];
     } else {
       // Search by email or name (case-insensitive partial match)
+      const searchTerm = userId.trim();
       playerQuery = `
         SELECT
           player_id,
@@ -103,11 +104,14 @@ export default async function handler(req, res) {
           updated_at
         FROM players
         WHERE LOWER(email) = LOWER($1)
-           OR LOWER(name) LIKE LOWER($1)
-           OR LOWER(display_name) LIKE LOWER($1)
+           OR LOWER(email) LIKE LOWER($2)
+           OR LOWER(name) LIKE LOWER($2)
+           OR LOWER(display_name) LIKE LOWER($2)
+        ORDER BY
+          CASE WHEN LOWER(email) = LOWER($1) THEN 1 ELSE 2 END
         LIMIT 1
       `;
-      queryParams = [userId.trim()];
+      queryParams = [searchTerm, `%${searchTerm}%`];
     }
 
     const playerResult = await pool.query(playerQuery, queryParams);
