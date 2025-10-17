@@ -145,7 +145,7 @@ export default async function handler(req, res) {
       ORDER BY created_at DESC
     `;
 
-    const ordersResult = await pool.query(ordersQuery, [userId]);
+    const ordersResult = await pool.query(ordersQuery, [player.player_id]);
 
     // Get gift codes owned by user
     const ownedGiftCodesQuery = `
@@ -162,7 +162,7 @@ export default async function handler(req, res) {
       ORDER BY created_at DESC
     `;
 
-    const ownedGiftCodesResult = await pool.query(ownedGiftCodesQuery, [userId]);
+    const ownedGiftCodesResult = await pool.query(ownedGiftCodesQuery, [player.player_id]);
 
     // Get gift codes redeemed by user (where they received the gift)
     const redeemedGiftCodesQuery = `
@@ -181,7 +181,7 @@ export default async function handler(req, res) {
       ORDER BY ugs.redeemed_at DESC
     `;
 
-    const redeemedGiftCodesResult = await pool.query(redeemedGiftCodesQuery, [userId]);
+    const redeemedGiftCodesResult = await pool.query(redeemedGiftCodesQuery, [player.player_id]);
 
     // Get subscription change timeline (from zaprite_events)
     const timeline = ordersResult.rows.map(event => ({

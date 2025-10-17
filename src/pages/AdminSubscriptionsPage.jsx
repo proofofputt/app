@@ -427,7 +427,9 @@ const AdminSubscriptionsPage = () => {
         {userHistory && (
           <div className="user-history-card">
             <div className="user-history-header">
-              <h4>{userHistory.player.displayName || userHistory.player.name}</h4>
+              <h4>
+                {userHistory.player.displayName ? userHistory.player.displayName : (userHistory.player.name || 'Unknown User')}
+              </h4>
               <span className="user-email">{userHistory.player.email}</span>
               <span className="user-player-id" style={{
                 display: 'block',
