@@ -364,11 +364,30 @@ async function handleOrderPaid(playerId, eventData) {
 }
 
 /**
- * Generate gift codes for user
+ * Generate gift codes for user (7-character alphanumeric, no prefix)
  */
 async function generateGiftCodes(playerId, quantity, bundleId = null) {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
   for (let i = 0; i < quantity; i++) {
-    const giftCode = `GIFT-${crypto.randomBytes(8).toString('hex').toUpperCase()}`;
+    // Generate 7-character code
+    let giftCode = '';
+    const randomBytes = crypto.randomBytes(7);
+
+    for (let j = 0; j < 7; j++) {
+      giftCode += characters[randomBytes[j] % characters.length];
+    }
+
+    // Check for uniqueness (very unlikely to collide)
+    const existing = await pool.query(
+      'SELECT id FROM user_gift_subscriptions WHERE gift_code = $1',
+      [giftCode]
+    );
+
+    if (existing.rows.length > 0) {
+      i--; // Retry this iteration
+      continue;
+    }
 
     await pool.query(
       `INSERT INTO user_gift_subscriptions (
