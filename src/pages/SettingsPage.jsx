@@ -490,6 +490,26 @@ const SettingsPage = () => {
         </div>
       </div>
 
+      {/* Gift Code Redemption - Single Section for All Users */}
+      <div className="settings-section full-width-section">
+        <h3>Redeem Gift Code</h3>
+        <p className="gift-code-intro">Have a gift code or promo code? Enter it below to activate your subscription.</p>
+        <form onSubmit={handleRedeemCoupon} className="coupon-form-inline">
+          <div className="coupon-form-group">
+            <div className="coupon-form-input-row">
+              <input
+                type="text"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value)}
+                placeholder="Enter Code (e.g., ABC1234 or EARLY)"
+                className="coupon-input"
+              />
+              <button type="submit" className="btn btn-primary">Redeem</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
       <div className="settings-section full-width-section">
         <h3>Manage Subscription</h3>
         {(() => {
@@ -546,25 +566,7 @@ const SettingsPage = () => {
                         )}
                       </div>
 
-                      <div className="coupon-section">
-                        <form onSubmit={handleRedeemCoupon} className="coupon-form-inline">
-                          <div className="coupon-form-group">
-                            <label htmlFor="coupon-input">Have a Gift Code?</label>
-                            <div className="coupon-form-input-row">
-                              <input
-                                id="coupon-input"
-                                type="text"
-                                value={couponCode}
-                                onChange={(e) => setCouponCode(e.target.value)}
-                                placeholder="Enter Code"
-                                className="coupon-input"
-                              />
-                              <button type="submit" className="btn btn-sm">Redeem</button>
-                            </div>
-                          </div>
-                        </form>
-
-                        <div className="referral-link-section">
+                      <div className="referral-link-section">
                           <label>Your Referral Link</label>
                           <div className="referral-link-row">
                             <input
@@ -657,25 +659,7 @@ const SettingsPage = () => {
                       </div>
                     </div>
 
-                    <div className="coupon-section">
-                      <form onSubmit={handleRedeemCoupon} className="coupon-form-inline">
-                        <div className="coupon-form-group">
-                          <label htmlFor="coupon-input-free">Have a Gift Code?</label>
-                          <div className="coupon-form-input-row">
-                            <input
-                              id="coupon-input-free"
-                              type="text"
-                              value={couponCode}
-                              onChange={(e) => setCouponCode(e.target.value)}
-                              placeholder="Enter Code"
-                              className="coupon-input"
-                            />
-                            <button type="submit" className="btn btn-sm">Redeem</button>
-                          </div>
-                        </div>
-                      </form>
-
-                      <div className="referral-link-section">
+                    <div className="referral-link-section">
                         <label>Your Referral Link</label>
                         <div className="referral-link-row">
                           <input
