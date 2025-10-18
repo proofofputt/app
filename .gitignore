@@ -17,7 +17,11 @@ dist-ssr
 .env.local
 .env.production
 .env.development
+.env.development.local
 sendgrid.env
+
+# Bitcoin/Nigiri development
+nigiri_data/
 
 # Editor directories and files
 .vscode/*

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { apiCreateLeague } from '../api';
 import { useAuth } from '../context/AuthContext';
+import LeaguePrizePoolSection from './bitcoin/LeaguePrizePoolSection';
 import './CreateLeagueModal.css';
 
 const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
@@ -28,6 +29,13 @@ const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
   const [savedPlayerNames, setSavedPlayerNames] = useState([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Bitcoin prize pool state (hidden - won't render unless BITCOIN_CONFIG.ENABLED=true)
+  const [prizePoolEnabled, setPrizePoolEnabled] = useState(false);
+  const [prizePoolType, setPrizePoolType] = useState('entry_fees');
+  const [entryFeeSats, setEntryFeeSats] = useState(10000);
+  const [creatorPrizeSats, setCreatorPrizeSats] = useState(0);
+  const [prizeDistribution, setPrizeDistribution] = useState({ 1: 50, 2: 30, 3: 20 });
 
   // Load saved player names from localStorage
   useEffect(() => {
@@ -387,6 +395,22 @@ const CreateLeagueModal = ({ onClose, onLeagueCreated }) => {
               <option value="monthly">Monthly on Start Day</option>
             </select>
           </div>
+
+          {/* Bitcoin prize pool section - hidden by default, only shows if BITCOIN_CONFIG.ENABLED=true */}
+          <LeaguePrizePoolSection
+            prizePoolEnabled={prizePoolEnabled}
+            setPrizePoolEnabled={setPrizePoolEnabled}
+            prizePoolType={prizePoolType}
+            setPrizePoolType={setPrizePoolType}
+            entryFeeSats={entryFeeSats}
+            setEntryFeeSats={setEntryFeeSats}
+            creatorPrizeSats={creatorPrizeSats}
+            setCreatorPrizeSats={setCreatorPrizeSats}
+            prizeDistribution={prizeDistribution}
+            setPrizeDistribution={setPrizeDistribution}
+            estimatedParticipants={numPlayers}
+          />
+
           {error && <p className="error-message">{error}</p>}
           <div className="modal-actions">
             <button type="button" onClick={onClose} disabled={isLoading}>Cancel</button>

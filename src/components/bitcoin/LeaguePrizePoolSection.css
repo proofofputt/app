@@ -1,0 +1,260 @@
+/* League Prize Pool Section Styles */
+
+.league-prize-pool-section {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.prize-toggle {
+  margin-bottom: 1rem;
+}
+
+.prize-config {
+  animation: slideDown 0.3s ease-out;
+}
+
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: #fff;
+  border: 2px solid #dee2e6;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.radio-option:hover {
+  border-color: #0d6efd;
+  background: #f8f9ff;
+}
+
+.radio-option input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.radio-option input[type="radio"]:checked {
+  accent-color: #0d6efd;
+}
+
+.radio-option div {
+  flex: 1;
+}
+
+.radio-option strong {
+  display: block;
+  margin-bottom: 0.125rem;
+}
+
+.radio-option small {
+  color: #6c757d;
+  font-size: 0.8125rem;
+}
+
+.prize-input {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+}
+
+.prize-input:focus {
+  outline: none;
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.prize-pool-summary {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-top: 1rem;
+}
+
+.prize-pool-summary h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
+  color: #495057;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.summary-row:last-of-type {
+  border-bottom: none;
+}
+
+.summary-row.fee {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.summary-row.total {
+  border-top: 2px solid #dee2e6;
+  padding-top: 0.75rem;
+  margin-top: 0.5rem;
+  font-size: 1.05rem;
+}
+
+.summary-row .highlight {
+  color: #198754;
+  font-size: 1.15rem;
+}
+
+.distribution-section {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-top: 1rem;
+}
+
+.distribution-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.distribution-header h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #495057;
+}
+
+.edit-button {
+  background: transparent;
+  border: 1px solid #0d6efd;
+  color: #0d6efd;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.edit-button:hover {
+  background: #0d6efd;
+  color: #fff;
+}
+
+.distribution-editor {
+  background: #f8f9fa;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.editor-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.editor-row:last-child {
+  margin-bottom: 0;
+}
+
+.editor-row label {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.editor-row input {
+  width: 80px;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.payout-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.payout-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 6px;
+  color: #fff;
+}
+
+.payout-row:nth-child(1) {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.payout-row:nth-child(2) {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  opacity: 0.95;
+}
+
+.payout-row:nth-child(3) {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  opacity: 0.9;
+}
+
+.payout-row strong {
+  font-size: 1.05rem;
+}
+
+.escrow-notice {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  background: #e7f3ff;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-top: 1rem;
+  border: 1px solid #b3d9ff;
+}
+
+.lock-icon {
+  font-size: 1.5rem;
+}
+
+.escrow-notice strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #004085;
+}
+
+.escrow-notice p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #004085;
+  line-height: 1.5;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

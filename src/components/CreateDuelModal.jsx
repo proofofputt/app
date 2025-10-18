@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { apiSearchPlayers, apiCreateDuel } from '../api';
 import { useAuth } from '../context/AuthContext';
+import DuelWagerSection from './bitcoin/DuelWagerSection';
 import './CreateDuelModal.css';
 
 // Email validation utility
@@ -29,6 +30,10 @@ const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showNewPlayerOption, setShowNewPlayerOption] = useState(false);
+
+  // Bitcoin wager state (hidden - won't render unless BITCOIN_CONFIG.ENABLED=true)
+  const [wagerEnabled, setWagerEnabled] = useState(false);
+  const [wagerAmount, setWagerAmount] = useState(10000);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -300,6 +305,14 @@ const CreateDuelModal = ({ onClose, onDuelCreated, rematchData = null }) => {
             <span>10.0'</span>
           </div>
         </div>
+
+        {/* Bitcoin wager section - hidden by default, only shows if BITCOIN_CONFIG.ENABLED=true */}
+        <DuelWagerSection
+          wagerEnabled={wagerEnabled}
+          setWagerEnabled={setWagerEnabled}
+          wagerAmount={wagerAmount}
+          setWagerAmount={setWagerAmount}
+        />
 
         {error && <p className="error-message">{error}</p>}
 

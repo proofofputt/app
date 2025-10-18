@@ -1,0 +1,195 @@
+/* Duel Wager Section Styles */
+
+.duel-wager-section {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.wager-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.toggle-label input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.toggle-text {
+  font-size: 1rem;
+}
+
+.beta-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  background: #ffc107;
+  color: #000;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 4px;
+  margin-left: 0.5rem;
+}
+
+.info-button {
+  background: transparent;
+  border: 1px solid #6c757d;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.info-button:hover {
+  background: #e9ecef;
+}
+
+.wager-info-box {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  border-left: 4px solid #0d6efd;
+}
+
+.wager-info-box h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
+}
+
+.wager-info-box ul {
+  margin: 0;
+  padding-left: 1.5rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.wager-info-box li {
+  margin-bottom: 0.375rem;
+}
+
+.wager-config {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.wager-input {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+}
+
+.wager-input:focus {
+  outline: none;
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.input-help {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  color: #6c757d;
+}
+
+.wager-breakdown {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-top: 1rem;
+}
+
+.wager-breakdown h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
+  color: #495057;
+}
+
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.breakdown-row:last-of-type {
+  border-bottom: none;
+}
+
+.breakdown-row.total {
+  border-top: 2px solid #dee2e6;
+  font-weight: 600;
+  padding-top: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.breakdown-row.fee {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.breakdown-row.winner {
+  background: #d1ecf1;
+  margin: 0.5rem -1rem 0;
+  padding: 0.75rem 1rem;
+  border-radius: 0 0 6px 6px;
+}
+
+.breakdown-row.winner .highlight {
+  color: #0c5460;
+  font-size: 1.1rem;
+}
+
+.escrow-notice {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  background: #e7f3ff;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-top: 1rem;
+  border: 1px solid #b3d9ff;
+}
+
+.lock-icon {
+  font-size: 1.5rem;
+}
+
+.escrow-notice strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #004085;
+}
+
+.escrow-notice p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #004085;
+  line-height: 1.5;
+}
