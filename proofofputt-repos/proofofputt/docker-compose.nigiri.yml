@@ -1,0 +1,36 @@
+# ArkadeOS Nigiri local testing environment
+# Start with: docker-compose -f docker-compose.nigiri.yml up -d
+# Stop with: docker-compose -f docker-compose.nigiri.yml down
+#
+# This runs a local Bitcoin regtest network with Arkade server
+# for development and testing of bitcoin payment features
+#
+# Arkade Server: http://localhost:7070
+# Bitcoin RPC: localhost:18443
+# Electrs: localhost:50001
+
+version: '3.8'
+
+services:
+  nigiri:
+    image: vulpemventures/nigiri:latest
+    command: start --ark
+    ports:
+      - "7070:7070"  # Arkade server
+      - "18443:18443"  # Bitcoin regtest RPC
+      - "50001:50001"  # Electrs
+    volumes:
+      - nigiri_data:/root/.nigiri
+    environment:
+      - ARK_ENABLED=true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7070"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+volumes:
+  nigiri_data:
+    driver: local
