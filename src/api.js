@@ -376,6 +376,15 @@ export const apiRedeemCoupon = (playerId, couponCode) => {
   }).then(handleResponse);
 };
 
+// Redeem gift code (7-character alphanumeric codes from bundles or admin grants)
+export const apiRedeemGiftCode = (giftCode) => {
+  return fetch(`${API_BASE_URL}/subscriptions/gifts/redeem`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ giftCode: giftCode })
+  }).then(handleResponse);
+};
+
 // --- Friends & Social ---
 export const apiListFriends = (playerId) => 
   fetch(`${API_BASE_URL}/player/${playerId}/friends`, { headers: getHeaders() }).then(handleResponse);
@@ -498,4 +507,56 @@ export const apiAdminRespondToThread = (threadId, messageText, autoInProgress = 
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify({ thread_id: threadId, message_text: messageText, auto_in_progress: autoInProgress })
+  }).then(handleResponse);
+
+// --- Admin: User Management ---
+export const apiAdminGetUsers = (filters = {}, pagination = {}) => {
+  const params = new URLSearchParams();
+
+  if (filters.search) params.append('search', filters.search);
+  if (filters.membership_tier) params.append('membership_tier', filters.membership_tier);
+  if (filters.sort_by) params.append('sort_by', filters.sort_by);
+  if (filters.sort_order) params.append('sort_order', filters.sort_order);
+  if (pagination.limit) params.append('limit', pagination.limit);
+  if (pagination.offset) params.append('offset', pagination.offset);
+
+  const queryString = params.toString();
+  const url = queryString ? `${API_BASE_URL}/admin/users?${queryString}` : `${API_BASE_URL}/admin/users`;
+
+  return fetch(url, { headers: getHeaders() }).then(handleResponse);
+};
+
+export const apiAdminGetPlayerProfile = (playerId) =>
+  fetch(`${API_BASE_URL}/admin/users/${playerId}`, { headers: getHeaders() }).then(handleResponse);
+
+// --- Coach Access: Session Sharing ---
+export const apiGrantCoachAccess = (coachPlayerId, accessLevel = 'full_sessions', notes = null) =>
+  fetch(`${API_BASE_URL}/coach-access/grant`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ coach_player_id: coachPlayerId, access_level: accessLevel, notes })
+  }).then(handleResponse);
+
+export const apiRevokeCoachAccess = (grantId = null, coachPlayerId = null) =>
+  fetch(`${API_BASE_URL}/coach-access/revoke`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ grant_id: grantId, coach_player_id: coachPlayerId })
+  }).then(handleResponse);
+
+export const apiGetMyCoachGrants = (status = 'active') =>
+  fetch(`${API_BASE_URL}/coach-access/my-grants?status=${status}`, { headers: getHeaders() }).then(handleResponse);
+
+export const apiGetMyStudents = (status = 'active') =>
+  fetch(`${API_BASE_URL}/coach-access/students?status=${status}`, { headers: getHeaders() }).then(handleResponse);
+
+// --- Contacts & Friends ---
+export const apiGetFriends = (status = 'accepted', includeStats = true) =>
+  fetch(`${API_BASE_URL}/contacts/friends?status=${status}&include_stats=${includeStats}`, { headers: getHeaders() }).then(handleResponse);
+
+export const apiToggleCoachAccess = (friendId, enable, accessLevel = 'full_sessions', notes = null) =>
+  fetch(`${API_BASE_URL}/contacts/toggle-coach-access`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ friend_id: friendId, enable, access_level: accessLevel, notes })
   }).then(handleResponse);

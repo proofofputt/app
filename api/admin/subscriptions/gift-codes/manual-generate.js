@@ -110,10 +110,30 @@ export default async function handler(req, res) {
       }
     }
 
-    // Generate gift codes
+    // Generate gift codes (7 characters, alphanumeric, no prefix)
     const generatedCodes = [];
     for (let i = 0; i < quantity; i++) {
-      const giftCode = `GIFT-${crypto.randomBytes(8).toString('hex').toUpperCase()}`;
+      // Generate 7-character alphanumeric code (uppercase for clarity)
+      // Use crypto for secure random generation
+      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let giftCode = '';
+      const randomBytes = crypto.randomBytes(7);
+
+      for (let j = 0; j < 7; j++) {
+        giftCode += characters[randomBytes[j] % characters.length];
+      }
+
+      // Ensure uniqueness by checking if code already exists
+      const existingCode = await client.query(
+        'SELECT id FROM user_gift_subscriptions WHERE gift_code = $1',
+        [giftCode]
+      );
+
+      // If code exists (very unlikely), regenerate
+      if (existingCode.rows.length > 0) {
+        i--; // Retry this iteration
+        continue;
+      }
 
       await client.query(
         `INSERT INTO user_gift_subscriptions (

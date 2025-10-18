@@ -13,7 +13,7 @@ const Header = () => {
         <nav>
           <NavLink to="/duels" className={({ isActive }) => `btn ${isActive ? 'active' : ''}`}>Duels</NavLink>
           <NavLink to="/leagues" className={({ isActive }) => `btn ${isActive ? 'active' : ''}`}>Leagues</NavLink>
-          
+
           <NavLink to="/" className={({ isActive }) => `btn ${isActive ? 'active' : ''}`} end>Dashboard</NavLink>
           <ProfileDropdown />
         </nav>

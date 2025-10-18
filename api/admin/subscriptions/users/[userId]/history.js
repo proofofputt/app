@@ -44,37 +44,77 @@ export default async function handler(req, res) {
   if (!userId) {
     return res.status(400).json({
       success: false,
-      message: 'User ID is required'
+      message: 'User ID, email, or name is required'
     });
   }
 
   try {
-    // Get player info
-    const playerQuery = `
-      SELECT
-        player_id,
-        name,
-        email,
-        display_name,
-        membership_tier,
-        subscription_status,
-        subscription_tier,
-        subscription_billing_cycle,
-        subscription_started_at,
-        subscription_current_period_start,
-        subscription_current_period_end,
-        subscription_cancel_at_period_end,
-        is_subscribed,
-        zaprite_customer_id,
-        zaprite_subscription_id,
-        zaprite_payment_method,
-        created_at,
-        updated_at
-      FROM players
-      WHERE player_id = $1
-    `;
+    // Get player info - support lookup by player_id, email, or name
+    let playerQuery;
+    let queryParams;
 
-    const playerResult = await pool.query(playerQuery, [userId]);
+    // Check if userId is numeric (player_id lookup)
+    if (!isNaN(userId) && Number.isInteger(Number(userId))) {
+      playerQuery = `
+        SELECT
+          player_id,
+          name,
+          email,
+          display_name,
+          membership_tier,
+          subscription_status,
+          subscription_tier,
+          subscription_billing_cycle,
+          subscription_started_at,
+          subscription_current_period_start,
+          subscription_current_period_end,
+          subscription_cancel_at_period_end,
+          is_subscribed,
+          zaprite_customer_id,
+          zaprite_subscription_id,
+          zaprite_payment_method,
+          created_at,
+          updated_at
+        FROM players
+        WHERE player_id = $1
+      `;
+      queryParams = [parseInt(userId)];
+    } else {
+      // Search by email or name (case-insensitive partial match)
+      const searchTerm = userId.trim();
+      playerQuery = `
+        SELECT
+          player_id,
+          name,
+          email,
+          display_name,
+          membership_tier,
+          subscription_status,
+          subscription_tier,
+          subscription_billing_cycle,
+          subscription_started_at,
+          subscription_current_period_start,
+          subscription_current_period_end,
+          subscription_cancel_at_period_end,
+          is_subscribed,
+          zaprite_customer_id,
+          zaprite_subscription_id,
+          zaprite_payment_method,
+          created_at,
+          updated_at
+        FROM players
+        WHERE LOWER(email) = LOWER($1)
+           OR LOWER(email) LIKE LOWER($2)
+           OR LOWER(name) LIKE LOWER($2)
+           OR LOWER(display_name) LIKE LOWER($2)
+        ORDER BY
+          CASE WHEN LOWER(email) = LOWER($1) THEN 1 ELSE 2 END
+        LIMIT 1
+      `;
+      queryParams = [searchTerm, `%${searchTerm}%`];
+    }
+
+    const playerResult = await pool.query(playerQuery, queryParams);
 
     if (playerResult.rows.length === 0) {
       return res.status(404).json({
@@ -105,7 +145,7 @@ export default async function handler(req, res) {
       ORDER BY created_at DESC
     `;
 
-    const ordersResult = await pool.query(ordersQuery, [userId]);
+    const ordersResult = await pool.query(ordersQuery, [player.player_id]);
 
     // Get gift codes owned by user
     const ownedGiftCodesQuery = `
@@ -122,7 +162,7 @@ export default async function handler(req, res) {
       ORDER BY created_at DESC
     `;
 
-    const ownedGiftCodesResult = await pool.query(ownedGiftCodesQuery, [userId]);
+    const ownedGiftCodesResult = await pool.query(ownedGiftCodesQuery, [player.player_id]);
 
     // Get gift codes redeemed by user (where they received the gift)
     const redeemedGiftCodesQuery = `
@@ -141,7 +181,7 @@ export default async function handler(req, res) {
       ORDER BY ugs.redeemed_at DESC
     `;
 
-    const redeemedGiftCodesResult = await pool.query(redeemedGiftCodesQuery, [userId]);
+    const redeemedGiftCodesResult = await pool.query(redeemedGiftCodesQuery, [player.player_id]);
 
     // Get subscription change timeline (from zaprite_events)
     const timeline = ordersResult.rows.map(event => ({

@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
-import { apiGetLeaderboard } from '../api';
+import { apiGetLeaderboard, apiGetFriends, apiToggleCoachAccess } from '../api';
 import LeaderboardCard from '../components/LeaderboardCard';
 import './ContactsPage.css';
 
 const ContactsPage = () => {
   const { playerData } = useAuth();
   const { showTemporaryNotification: showNotification } = useNotification();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [friendsLeaderboardData, setFriendsLeaderboardData] = useState(null);
+  const [friends, setFriends] = useState([]);
+  const [isLoadingFriends, setIsLoadingFriends] = useState(true);
 
   // Load friends leaderboard data
   useEffect(() => {
@@ -40,6 +44,47 @@ const ContactsPage = () => {
 
     fetchFriendsLeaderboards();
   }, [playerData?.player_id]);
+
+  // Load friends list
+  useEffect(() => {
+    const fetchFriends = async () => {
+      if (!playerData?.player_id) return;
+
+      setIsLoadingFriends(true);
+      try {
+        const data = await apiGetFriends('accepted', true);
+        if (data.success) {
+          setFriends(data.friends || []);
+        }
+      } catch (error) {
+        console.error('Error fetching friends:', error);
+        showNotification('Failed to load friends', true);
+      } finally {
+        setIsLoadingFriends(false);
+      }
+    };
+
+    fetchFriends();
+  }, [playerData?.player_id]);
+
+  const handleToggleCoachAccess = async (friendId, currentlyEnabled) => {
+    try {
+      const result = await apiToggleCoachAccess(friendId, !currentlyEnabled);
+      if (result.success) {
+        showNotification(
+          currentlyEnabled ? 'Coach access revoked' : 'Coach access granted successfully'
+        );
+        // Refresh friends list to show updated status
+        const data = await apiGetFriends('accepted', true);
+        if (data.success) {
+          setFriends(data.friends || []);
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling coach access:', error);
+      showNotification('Failed to update coach access', true);
+    }
+  };
 
   const handleSearch = () => {
     if (!searchTerm.trim()) {
@@ -73,7 +118,12 @@ const ContactsPage = () => {
           </div>
         )}
 
-        <YourFriendsSection />
+        <YourFriendsSection
+          friends={friends}
+          isLoading={isLoadingFriends}
+          onToggleCoachAccess={handleToggleCoachAccess}
+          navigate={navigate}
+        />
 
         <FindFriendsSection
           searchTerm={searchTerm}
@@ -85,31 +135,82 @@ const ContactsPage = () => {
   );
 };
 
-const YourFriendsSection = () => {
+const YourFriendsSection = ({ friends, isLoading, onToggleCoachAccess, navigate }) => {
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Never';
+    return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
   return (
     <div className="friends-section">
       <div className="friends-lists">
         <div className="friends-list-section">
           <h3>Your Friends</h3>
-          <div className="friends-list">
+
+          {isLoading ? (
+            <div className="loading-state">
+              <p>Loading friends...</p>
+            </div>
+          ) : friends.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">👥</div>
-              <p>No friends added yet.</p>
-              <p>Use the search below to find and connect with other players!</p>
+              <p>No friends yet.</p>
+              <p>When someone signs up with your referral code, they'll automatically become your friend!</p>
             </div>
-          </div>
+          ) : (
+            <div className="friends-list">
+              {friends.map((friend) => (
+                <div key={friend.player_id} className={`friend-card ${friend.is_referrer ? 'referrer-card' : ''}`}>
+                  <div className="friend-header">
+                    <div className="friend-info">
+                      <h4>{friend.display_name}</h4>
+                      {friend.is_referrer && (
+                        <span className="referrer-badge">🌟 Your Referrer</span>
+                      )}
+                      {friend.friendship_source === 'referral' && !friend.is_referrer && (
+                        <span className="friend-badge">Referred by you</span>
+                      )}
+                    </div>
+                    <div className="friend-stats">
+                      <span className="stat-item">{friend.total_sessions || 0} sessions</span>
+                      <span className="stat-item">Last: {formatDate(friend.last_session_date)}</span>
+                    </div>
+                  </div>
+
+                  <div className="friend-actions">
+                    <div className="coach-access-section">
+                      <div className="access-toggle">
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={friend.coach_access_granted.has_access}
+                            onChange={() => onToggleCoachAccess(friend.player_id, friend.coach_access_granted.has_access)}
+                          />
+                          <span className="toggle-label">
+                            Grant Coach Access (they can view your sessions)
+                          </span>
+                        </label>
+                      </div>
+
+                      {friend.coach_access_received.has_access && (
+                        <div className="access-status">
+                          <span className="status-indicator">✓ They granted you access</span>
+                          <button
+                            onClick={() => navigate(`/player/${friend.player_id}/sessions`)}
+                            className="btn btn-sm btn-secondary"
+                          >
+                            View Their Sessions
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           <ImportContactsButton />
-        </div>
-
-        <div className="friends-list-section">
-          <h3>Friend Requests</h3>
-          <div className="requests-list">
-            <div className="empty-state">
-              <div className="empty-icon">📮</div>
-              <p>No pending friend requests.</p>
-            </div>
-          </div>
         </div>
       </div>
     </div>

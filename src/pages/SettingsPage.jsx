@@ -3,13 +3,15 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNotification } from '../context/NotificationContext.jsx';
-import { apiUpdatePlayer, apiUpdatePlayerSocials, apiRedeemCoupon, apiCancelSubscription, apiUpdateNotificationPreferences } from '../api.js';
+import { apiUpdatePlayer, apiUpdatePlayerSocials, apiRedeemCoupon, apiRedeemGiftCode, apiCancelSubscription, apiUpdateNotificationPreferences } from '../api.js';
 import ChangePassword from '../components/ChangePassword.jsx';
 import './SettingsPage.css';
 
 const SettingsPage = () => {
   const { playerData, refreshData } = useAuth();
   const { showTemporaryNotification: showNotification } = useNotification();
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [timezone, setTimezone] = useState('');
@@ -101,7 +103,9 @@ const SettingsPage = () => {
 
   useEffect(() => {
     if (playerData) {
-      setName(playerData.name || '');
+      setFirstName(playerData.first_name || '');
+      setLastName(playerData.last_name || '');
+      setName(playerData.display_name || playerData.name || '');
       setPhone(playerData.phone || '');
       setTimezone(playerData.timezone || 'UTC');
       setSocials({
@@ -134,7 +138,13 @@ const SettingsPage = () => {
   const handleInfoSubmit = async (e) => {
     e.preventDefault();
     try {
-      await apiUpdatePlayer(playerData.player_id, { name, phone, timezone });
+      await apiUpdatePlayer(playerData.player_id, {
+        first_name: firstName,
+        last_name: lastName,
+        display_name: name,
+        phone,
+        timezone
+      });
       showNotification('Account info updated successfully!');
       await refreshData();
     } catch (err) {
@@ -178,8 +188,22 @@ const SettingsPage = () => {
       showNotification('Please enter a coupon code.', true);
       return;
     }
+
+    const code = couponCode.trim().toUpperCase();
+
     try {
-      const response = await apiRedeemCoupon(playerData.player_id, couponCode.trim());
+      // Detect gift code format: exactly 7 alphanumeric characters
+      const isGiftCode = /^[A-Z0-9]{7}$/.test(code);
+
+      let response;
+      if (isGiftCode) {
+        console.log('[Redeem] Detected gift code format:', code);
+        response = await apiRedeemGiftCode(code);
+      } else {
+        console.log('[Redeem] Detected coupon code format:', code);
+        response = await apiRedeemCoupon(playerData.player_id, code);
+      }
+
       showNotification(response.message);
       setCouponCode('');
       window.location.reload();
@@ -425,6 +449,16 @@ const SettingsPage = () => {
               <label>Email</label>
               <input type="email" value={playerData.email} disabled />
             </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>First Name</label>
+                <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Tiger" />
+              </div>
+              <div className="form-group">
+                <label>Last Name</label>
+                <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Woods" />
+              </div>
+            </div>
             <div className="form-group">
               <label>Display Name</label>
               <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
@@ -432,15 +466,6 @@ const SettingsPage = () => {
             <div className="form-group">
               <label>Phone Number</label>
               <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 (555) 123-4567" />
-            </div>
-            <div className="form-group">
-              <label>Timezone</label>
-              <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className="form-control">
-                {availableTimezones.map(tz => (
-                  <option key={tz} value={tz}>{tz}</option>
-                ))}
-              </select>
-              <p className="form-hint">Select your local timezone.</p>
             </div>
             <button type="submit" className="btn">Save Account Info</button>
           </form>
@@ -464,6 +489,15 @@ const SettingsPage = () => {
 
         <div className="settings-section">
           <h3>Email Notifications</h3>
+          <div className="form-group">
+            <label>Timezone</label>
+            <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className="form-control">
+              {availableTimezones.map(tz => (
+                <option key={tz} value={tz}>{tz}</option>
+              ))}
+            </select>
+            <p className="form-hint">Select your local timezone.</p>
+          </div>
           <div className="notification-toggles">
             <label><input type="checkbox" checked={notificationPreferences.duel_requests} onChange={() => handlePreferenceToggle('duel_requests')} /> Duel Requests</label>
             <label><input type="checkbox" checked={notificationPreferences.duel_updates} onChange={() => handlePreferenceToggle('duel_updates')} /> Duel Results & Updates</label>
@@ -474,6 +508,26 @@ const SettingsPage = () => {
           </div>
           <button onClick={handlePreferencesSave} className="btn">Save Preferences</button>
         </div>
+      </div>
+
+      {/* Gift Code Redemption - Single Section for All Users */}
+      <div className="settings-section full-width-section">
+        <h3>Redeem Gift Code</h3>
+        <p className="gift-code-intro">Have a gift code or promo code? Enter it below to activate your subscription.</p>
+        <form onSubmit={handleRedeemCoupon} className="coupon-form-inline">
+          <div className="coupon-form-group">
+            <div className="coupon-form-input-row">
+              <input
+                type="text"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value)}
+                placeholder="Enter Code (e.g., ABC1234 or EARLY)"
+                className="coupon-input"
+              />
+              <button type="submit" className="btn btn-primary">Redeem</button>
+            </div>
+          </div>
+        </form>
       </div>
 
       <div className="settings-section full-width-section">
@@ -504,7 +558,6 @@ const SettingsPage = () => {
                             <div key={giftCode.id} className="gift-invite-row">
                               <div className="gift-code-label">
                                 <span className="gift-code-text">{giftCode.gift_code}</span>
-                                {giftCode.is_redeemed && <span className="redeemed-badge">Redeemed</span>}
                               </div>
                               {!giftCode.is_redeemed && (
                                 <div className="gift-send-form">
@@ -532,25 +585,7 @@ const SettingsPage = () => {
                         )}
                       </div>
 
-                      <div className="coupon-section">
-                        <form onSubmit={handleRedeemCoupon} className="coupon-form-inline">
-                          <div className="coupon-form-group">
-                            <label htmlFor="coupon-input">Have a Gift Code?</label>
-                            <div className="coupon-form-input-row">
-                              <input
-                                id="coupon-input"
-                                type="text"
-                                value={couponCode}
-                                onChange={(e) => setCouponCode(e.target.value)}
-                                placeholder="Enter Code"
-                                className="coupon-input"
-                              />
-                              <button type="submit" className="btn btn-sm">Redeem</button>
-                            </div>
-                          </div>
-                        </form>
-
-                        <div className="referral-link-section">
+                      <div className="referral-link-section">
                           <label>Your Referral Link</label>
                           <div className="referral-link-row">
                             <input
@@ -571,7 +606,6 @@ const SettingsPage = () => {
                         </div>
                       </div>
                     </div>
-                  </div>
 
                   {/* Right Column: Bundle Options */}
                   <div className="bundles-column">
@@ -643,25 +677,7 @@ const SettingsPage = () => {
                       </div>
                     </div>
 
-                    <div className="coupon-section">
-                      <form onSubmit={handleRedeemCoupon} className="coupon-form-inline">
-                        <div className="coupon-form-group">
-                          <label htmlFor="coupon-input-free">Have a Gift Code?</label>
-                          <div className="coupon-form-input-row">
-                            <input
-                              id="coupon-input-free"
-                              type="text"
-                              value={couponCode}
-                              onChange={(e) => setCouponCode(e.target.value)}
-                              placeholder="Enter Code"
-                              className="coupon-input"
-                            />
-                            <button type="submit" className="btn btn-sm">Redeem</button>
-                          </div>
-                        </div>
-                      </form>
-
-                      <div className="referral-link-section">
+                    <div className="referral-link-section">
                         <label>Your Referral Link</label>
                         <div className="referral-link-row">
                           <input
@@ -676,7 +692,6 @@ const SettingsPage = () => {
                       </div>
                     </div>
                   </div>
-                </div>
               );
           }
         })()}

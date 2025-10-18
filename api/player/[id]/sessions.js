@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import { setCORSHeaders } from '../../../utils/cors.js';
+import jwt from 'jsonwebtoken';
 
 let pool = null;
 if (process.env.DATABASE_URL) {
@@ -8,6 +9,58 @@ if (process.env.DATABASE_URL) {
   });
 } else {
   console.warn('DATABASE_URL not configured - using mock data');
+}
+
+// Verify JWT and extract player_id
+function getPlayerIdFromToken(req) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+
+  try {
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return decoded.playerId;
+  } catch (error) {
+    console.error('[Sessions API] Token verification error:', error.message);
+    return null;
+  }
+}
+
+// Check if requesting user has access to view sessions
+async function checkSessionAccess(dbClient, requestedPlayerId, requestingPlayerId) {
+  // User can always view their own sessions
+  if (requestedPlayerId === requestingPlayerId) {
+    return { hasAccess: true, accessType: 'self' };
+  }
+
+  // Check if requesting user is admin
+  const adminCheck = await dbClient.query(
+    'SELECT is_admin FROM players WHERE player_id = $1',
+    [requestingPlayerId]
+  );
+
+  if (adminCheck.rows.length > 0 && adminCheck.rows[0].is_admin) {
+    return { hasAccess: true, accessType: 'admin' };
+  }
+
+  // Check if requesting user has coach access grant
+  const coachAccessCheck = await dbClient.query(
+    `SELECT access_level FROM coach_access_grants
+     WHERE student_player_id = $1 AND coach_player_id = $2 AND status = 'active'`,
+    [requestedPlayerId, requestingPlayerId]
+  );
+
+  if (coachAccessCheck.rows.length > 0) {
+    return {
+      hasAccess: true,
+      accessType: 'coach',
+      accessLevel: coachAccessCheck.rows[0].access_level
+    };
+  }
+
+  return { hasAccess: false };
 }
 
 // Transform detailed makes categories into overview format
@@ -51,7 +104,7 @@ function formatDuration(seconds) {
 
 export default async function handler(req, res) {
   setCORSHeaders(req, res);
-  
+
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -62,10 +115,31 @@ export default async function handler(req, res) {
     try {
       let sessions = [];
       let totalSessions = 0;
-      
+
       if (pool) {
         const dbClient = await pool.connect();
         try {
+          // Verify authentication and access control
+          const requestingPlayerId = getPlayerIdFromToken(req);
+          if (!requestingPlayerId) {
+            dbClient.release();
+            return res.status(401).json({ error: 'Authentication required' });
+          }
+
+          const requestedPlayerId = parseInt(playerId);
+          const accessCheck = await checkSessionAccess(dbClient, requestedPlayerId, requestingPlayerId);
+
+          if (!accessCheck.hasAccess) {
+            dbClient.release();
+            return res.status(403).json({
+              error: 'Access denied',
+              message: 'You do not have permission to view these sessions'
+            });
+          }
+
+          console.log(`[Sessions API] Access granted: ${accessCheck.accessType} (Player ${requestingPlayerId} viewing Player ${requestedPlayerId})`);
+
+
           // Get total count of sessions first
           const countResult = await dbClient.query(
             'SELECT COUNT(*) FROM sessions WHERE player_id = $1',

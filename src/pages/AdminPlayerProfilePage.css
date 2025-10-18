@@ -1,0 +1,286 @@
+.admin-player-profile-page {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.profile-header {
+  margin-bottom: 2rem;
+}
+
+.profile-header .back-button {
+  margin-bottom: 1rem;
+}
+
+.profile-header h1 {
+  margin: 0;
+  color: var(--primary-color);
+  font-size: 2rem;
+}
+
+/* Loading and Error States */
+.loading-container,
+.error-container,
+.access-denied {
+  background-color: var(--surface-color);
+  padding: 3rem;
+  border-radius: 12px;
+  text-align: center;
+  margin-top: 3rem;
+}
+
+.loading-spinner {
+  border: 4px solid var(--border-color);
+  border-top: 4px solid var(--primary-color);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-container h2,
+.access-denied h2 {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+/* Profile Sections */
+.profile-section {
+  background-color: var(--surface-color);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.profile-section h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: var(--text-color);
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 0.75rem;
+  font-size: 1.5rem;
+}
+
+/* Account Information Grid */
+.account-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.info-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-color);
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  font-size: 1rem;
+  color: var(--text-color);
+  font-weight: 500;
+}
+
+.info-value.referral-code {
+  font-family: monospace;
+  background-color: var(--background-color);
+  padding: 0.5rem;
+  border-radius: 4px;
+  color: var(--primary-color);
+}
+
+/* Tier Badge */
+.tier-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.tier-badge.tier-free {
+  background-color: rgba(128, 128, 128, 0.2);
+  color: #888;
+}
+
+.tier-badge.tier-regular {
+  background-color: rgba(52, 211, 153, 0.2);
+  color: var(--primary-color);
+}
+
+.tier-badge.tier-premium {
+  background-color: rgba(255, 215, 0, 0.3);
+  color: #ffb300;
+}
+
+/* Referral Chain */
+.referral-chain {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.referral-level {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.level-indicator {
+  flex-shrink: 0;
+  width: 140px;
+  text-align: right;
+  padding-top: 1rem;
+}
+
+.level-number {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 0.25rem;
+}
+
+.level-badge {
+  display: inline-block;
+  background-color: rgba(var(--primary-color-rgb, 52, 211, 153), 0.2);
+  color: var(--primary-color);
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-top: 0.25rem;
+}
+
+.referrer-card {
+  flex: 1;
+  background-color: var(--background-color);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.referrer-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.referrer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.referrer-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--primary-color);
+}
+
+.referrer-id {
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: var(--text-color);
+  opacity: 0.7;
+}
+
+.referrer-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.referrer-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-label {
+  font-size: 0.9rem;
+  color: var(--text-color);
+  opacity: 0.7;
+  font-weight: 600;
+}
+
+.detail-value {
+  font-size: 0.95rem;
+  color: var(--text-color);
+}
+
+/* No Referrals State */
+.no-referrals {
+  background-color: var(--background-color);
+  border: 2px dashed var(--border-color);
+  border-radius: 12px;
+  padding: 3rem;
+  text-align: center;
+}
+
+.no-referrals p {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-color);
+  opacity: 0.7;
+  font-style: italic;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .admin-player-profile-page {
+    padding: 1rem;
+  }
+
+  .profile-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .account-info-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .referral-level {
+    flex-direction: column;
+  }
+
+  .level-indicator {
+    width: 100%;
+    text-align: left;
+    padding-top: 0;
+  }
+
+  .referrer-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .referrer-detail {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+}

@@ -17,8 +17,19 @@ const BUNDLE_PRICING = {
   4: { quantity: 21, price: 221, discount: 50 }
 };
 
+/**
+ * Generate 7-character alphanumeric gift code (no prefix)
+ */
 function generateGiftCode() {
-  return `GIFT-${crypto.randomBytes(8).toString('hex').toUpperCase()}`;
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  const randomBytes = crypto.randomBytes(7);
+
+  for (let i = 0; i < 7; i++) {
+    code += characters[randomBytes[i] % characters.length];
+  }
+
+  return code;
 }
 
 export default async function handler(req, res) {

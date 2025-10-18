@@ -13,6 +13,7 @@ import DebugPlayerPage from './pages/DebugPlayerPage';
 import SessionHistoryPage from './components/SessionHistoryPage';
 import PlayerCareerPage from './pages/PlayerCareerPage';
 import CoachPage from './components/CoachPage';
+import CoachDashboard from './pages/CoachDashboard';
 import PlayerVsPlayerPage from './pages/PlayerVsPlayerPage';
 import NotificationsPage from './pages/NotificationsPage';
 import ContactsPage from './pages/ContactsPage';
@@ -20,6 +21,10 @@ import ContactsPage from './pages/ContactsPage';
 import CommentsPage from './pages/CommentsPage';
 import AdminFeedbackPage from './pages/AdminFeedbackPage';
 import AdminSubscriptionsPage from './pages/AdminSubscriptionsPage';
+import AdminUsersPage from './pages/AdminUsersPage';
+import AdminPlayerProfilePage from './pages/AdminPlayerProfilePage';
+import AdminClubUpdatesPage from './pages/AdminClubUpdatesPage';
+import ClubsPage from './pages/ClubsPage';
 import MyGifts from './components/MyGifts';
 import Header from './components/Header';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -131,6 +136,7 @@ const AppContent = () => {
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/link-account" element={<LinkAccountPage />} />
           <Route path="/setup-account" element={<SetupAccountPage />} />
+          <Route path="/clubs" element={<ClubsPage />} />
 
           {/* Root Route - Dashboard if authenticated, otherwise redirect to login */}
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -142,6 +148,7 @@ const AppContent = () => {
           <Route path="/leagues" element={<ProtectedRoute><LeaguesPage /></ProtectedRoute>} />
           <Route path="/debug/player" element={<ProtectedRoute><DebugPlayerPage /></ProtectedRoute>} />
           <Route path="/coach" element={<ProtectedRoute><CoachPage /></ProtectedRoute>} />
+          <Route path="/coach/dashboard" element={<ProtectedRoute><CoachDashboard /></ProtectedRoute>} />
           <Route path="/coach/:conversationId" element={<ProtectedRoute><CoachPage /></ProtectedRoute>} />
           <Route path="/players/:player1Id/vs/:player2Id" element={<ProtectedRoute><PlayerVsPlayerPage /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
@@ -152,6 +159,9 @@ const AppContent = () => {
           <Route path="/gifts" element={<ProtectedRoute><MyGifts /></ProtectedRoute>} />
           <Route path="/admin/feedback" element={<ProtectedRoute><AdminFeedbackPage /></ProtectedRoute>} />
           <Route path="/admin/subscriptions" element={<ProtectedRoute><AdminSubscriptionsPage /></ProtectedRoute>} />
+          <Route path="/admin/users/:playerId" element={<ProtectedRoute><AdminPlayerProfilePage /></ProtectedRoute>} />
+          <Route path="/admin/users" element={<ProtectedRoute><AdminUsersPage /></ProtectedRoute>} />
+          <Route path="/admin/club-updates" element={<ProtectedRoute><AdminClubUpdatesPage /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>
