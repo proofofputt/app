@@ -96,6 +96,9 @@ const ProfileDropdown = () => {
               <NavLink to="/admin/subscriptions" className="dropdown-item admin-link" onClick={() => setIsOpen(false)}>
                 Admin Subscriptions
               </NavLink>
+              <NavLink to="/admin/users" className="dropdown-item admin-link" onClick={() => setIsOpen(false)}>
+                Admin Users
+              </NavLink>
             </>
           )}
           <div className="dropdown-divider"></div>
