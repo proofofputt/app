@@ -10,6 +10,8 @@ import './SettingsPage.css';
 const SettingsPage = () => {
   const { playerData, refreshData } = useAuth();
   const { showTemporaryNotification: showNotification } = useNotification();
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [timezone, setTimezone] = useState('');
@@ -101,6 +103,8 @@ const SettingsPage = () => {
 
   useEffect(() => {
     if (playerData) {
+      setFirstName(playerData.first_name || '');
+      setLastName(playerData.last_name || '');
       setName(playerData.display_name || playerData.name || '');
       setPhone(playerData.phone || '');
       setTimezone(playerData.timezone || 'UTC');
@@ -134,7 +138,13 @@ const SettingsPage = () => {
   const handleInfoSubmit = async (e) => {
     e.preventDefault();
     try {
-      await apiUpdatePlayer(playerData.player_id, { display_name: name, phone, timezone });
+      await apiUpdatePlayer(playerData.player_id, {
+        first_name: firstName,
+        last_name: lastName,
+        display_name: name,
+        phone,
+        timezone
+      });
       showNotification('Account info updated successfully!');
       await refreshData();
     } catch (err) {
@@ -439,6 +449,16 @@ const SettingsPage = () => {
               <label>Email</label>
               <input type="email" value={playerData.email} disabled />
             </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>First Name</label>
+                <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Tiger" />
+              </div>
+              <div className="form-group">
+                <label>Last Name</label>
+                <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Woods" />
+              </div>
+            </div>
             <div className="form-group">
               <label>Display Name</label>
               <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
@@ -446,15 +466,6 @@ const SettingsPage = () => {
             <div className="form-group">
               <label>Phone Number</label>
               <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 (555) 123-4567" />
-            </div>
-            <div className="form-group">
-              <label>Timezone</label>
-              <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className="form-control">
-                {availableTimezones.map(tz => (
-                  <option key={tz} value={tz}>{tz}</option>
-                ))}
-              </select>
-              <p className="form-hint">Select your local timezone.</p>
             </div>
             <button type="submit" className="btn">Save Account Info</button>
           </form>
@@ -478,6 +489,15 @@ const SettingsPage = () => {
 
         <div className="settings-section">
           <h3>Email Notifications</h3>
+          <div className="form-group">
+            <label>Timezone</label>
+            <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className="form-control">
+              {availableTimezones.map(tz => (
+                <option key={tz} value={tz}>{tz}</option>
+              ))}
+            </select>
+            <p className="form-hint">Select your local timezone.</p>
+          </div>
           <div className="notification-toggles">
             <label><input type="checkbox" checked={notificationPreferences.duel_requests} onChange={() => handlePreferenceToggle('duel_requests')} /> Duel Requests</label>
             <label><input type="checkbox" checked={notificationPreferences.duel_updates} onChange={() => handlePreferenceToggle('duel_updates')} /> Duel Results & Updates</label>

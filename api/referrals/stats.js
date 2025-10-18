@@ -52,8 +52,40 @@ export default async function handler(req, res) {
       accountsCreated: 0,
       upgraded: 0,
       invites: [],
-      giftCodeRedemptions: 0
+      giftCodeRedemptions: 0,
+      referredBy: null // Only show direct referrer (Level 1), not full chain
     };
+
+    // Get direct referrer information (Level 1 only)
+    // Note: Full 5-level chain is only visible to admins
+    try {
+      const referrerResult = await pool.query(
+        `SELECT
+          p.player_id,
+          p.display_name,
+          p.email,
+          p.created_at as joined_date,
+          p.total_referrals
+         FROM players current
+         INNER JOIN players p ON current.referrer_level_1 = p.player_id
+         WHERE current.player_id = $1`,
+        [userId]
+      );
+
+      if (referrerResult.rows.length > 0) {
+        const referrer = referrerResult.rows[0];
+        stats.referredBy = {
+          player_id: referrer.player_id,
+          display_name: referrer.display_name || referrer.email,
+          email: referrer.email,
+          joined_date: referrer.joined_date,
+          total_referrals: referrer.total_referrals || 0
+        };
+      }
+    } catch (referrerError) {
+      console.log('Could not fetch referrer info (may not have referrer):', referrerError.message);
+      // Not an error - user may not have been referred by anyone
+    }
 
     // Get gift code sends (invitations sent via Send button)
     try {

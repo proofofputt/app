@@ -180,6 +180,135 @@
   margin: 0.5rem 0;
 }
 
+.loading-state {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-color-secondary);
+}
+
+/* Friend Cards */
+.friend-card {
+  background: var(--surface-color);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+}
+
+.friend-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.friend-card.referrer-card {
+  border-color: var(--primary-color);
+  background: linear-gradient(135deg, var(--surface-color) 0%, rgba(52, 211, 153, 0.05) 100%);
+}
+
+.friend-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.friend-info h4 {
+  margin: 0 0 0.5rem 0;
+  color: var(--primary-color);
+  font-size: 1.3rem;
+}
+
+.referrer-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--primary-color), #20c997);
+  color: var(--masters-green-dark);
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-left: 0.5rem;
+}
+
+.friend-badge {
+  display: inline-block;
+  background: rgba(var(--primary-color-rgb, 52, 211, 153), 0.2);
+  color: var(--primary-color);
+  padding: 0.25rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.friend-stats {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.friend-stats .stat-item {
+  font-size: 0.9rem;
+  color: var(--text-color-secondary);
+  font-weight: 500;
+}
+
+/* Coach Access Section */
+.coach-access-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.access-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  padding: 0.75rem;
+  background: var(--background-color);
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.access-toggle label:hover {
+  background: rgba(var(--primary-color-rgb, 52, 211, 153), 0.1);
+}
+
+.access-toggle input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--primary-color);
+}
+
+.toggle-label {
+  font-size: 0.95rem;
+  color: var(--text-color);
+  font-weight: 500;
+}
+
+.access-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(var(--primary-color-rgb, 52, 211, 153), 0.1);
+  border: 1px solid var(--primary-color);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.status-indicator {
+  color: var(--primary-color);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
 /* Import Contacts Section */
 .import-contacts-section {
   margin-top: 1rem;
