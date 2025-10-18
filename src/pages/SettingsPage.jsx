@@ -586,7 +586,6 @@ const SettingsPage = () => {
                         </div>
                       </div>
                     </div>
-                  </div>
 
                   {/* Right Column: Bundle Options */}
                   <div className="bundles-column">
@@ -673,7 +672,6 @@ const SettingsPage = () => {
                       </div>
                     </div>
                   </div>
-                </div>
               );
           }
         })()}
